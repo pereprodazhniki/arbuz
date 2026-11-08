@@ -4394,9 +4394,19 @@ function lbAdd(name, score, ts, key) {
   if (nameProblem(name)) return false;
   if (!isFinite(score) || score <= 0 || score > 1000000) return false;
 
-  var k = key || (name.toLowerCase() + "|" + score + "|" + Math.floor(ts / 1000));
+  var low = name.toLowerCase();
+  var k = key || (low + "|" + score + "|" + Math.floor(ts / 1000));
   if (LB.seen[k]) return false;
   LB.seen[k] = true;
+
+  // один игрок — одна строка, показываем только его лучший результат
+  for (var i = 0; i < LB.scores.length; i++) {
+    if (LB.scores[i].name.toLowerCase() === low) {
+      if (score <= LB.scores[i].score) return false;
+      LB.scores.splice(i, 1);
+      break;
+    }
+  }
 
   LB.scores.push({ name: name, score: score, ts: ts });
   LB.scores.sort(function (a, b) {
