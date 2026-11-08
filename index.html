@@ -4446,6 +4446,7 @@ var LB = {
   storeUrl: "https://api.restful-api.dev/objects/ff808181a09d98f701a1ba42b4ce631a",
   storeReady: false,
   storeScores: null,
+  lastStoreFetch: 0,
   lastPush: 0,
   scores: [],
   seen: {},
@@ -4526,8 +4527,12 @@ function lbNormalizeList(arr) {
   return out;
 }
 
-/* читаем общий архив рейтинга */
-function lbFetchStore() {
+/* читаем общий архив рейтинга (не чаще раза в минуту — у сервиса лимит запросов) */
+function lbFetchStore(force) {
+  var now = Date.now();
+  if (!force && now - LB.lastStoreFetch < 60000) return Promise.resolve(false);
+  LB.lastStoreFetch = now;
+
   return fetch(LB.storeUrl, { cache: "no-store" })
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (data) {
@@ -4811,7 +4816,7 @@ function lbSendScore(score, auto) {
       }
       LB.sending = false;
       /* сразу дописываем рекорд в общий архив, чтобы его увидели все */
-      lbFetchStore().then(function () { lbPushStore(true); });
+      lbFetchStore(true).then(function () { lbPushStore(true); });
       lbFetchArchive();
     })
     .catch(function () {
@@ -4896,10 +4901,9 @@ function initLeaderboard() {
   lbLoad();
   setInterval(function () {
     if (document.hidden) return;
-    lbFetchStore();
     lbFetchArchive();
-    lbFetchLive();
-    lbPushStore(false);
+    /* новые результаты приходят из живой ленты; архив трогаем только при изменениях */
+    lbFetchLive().then(function () { lbPushStore(false); });
   }, 60000);
 }
 
