@@ -1093,18 +1093,70 @@ body.light .jobform__cooldown { background: #f2fff7; border-color: #12803c; colo
 .game__big { font-size: clamp(24px, 4vw, 34px); font-weight: 900; color: #fff; margin: 0; }
 .game__hint { color: var(--muted); margin: 0 0 10px; max-width: 480px; }
 .game__hint b { color: var(--lime); }
+.game__small { font-size: 12px; color: var(--muted); }
+.game__combo {
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(47, 211, 95, .12);
+  overflow: hidden;
+  margin: -2px 0 10px;
+}
+.game__combo i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--green), var(--lime));
+  transition: width .08s linear;
+}
 .game__send { display: flex; flex-direction: column; gap: 8px; align-items: center; width: min(320px, 92%); margin-bottom: 8px; }
 .game__send[hidden] { display: none; }
+.game__send [hidden] { display: none !important; }
 .game__send .input { text-align: center; }
+.game__sendwho { margin: 0; font-size: 14px; color: var(--lime); font-weight: 700; }
 .game__sendnote { margin: 0; font-size: 13px; color: var(--muted); min-height: 16px; }
+.game__link {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+.game__link:hover { color: var(--lime); }
+.game__share { margin-top: 4px; font-size: 14px; padding: 10px 16px; }
+
+.board__toggle {
+  width: 100%;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+  text-align: left;
+}
+.board__toggle:hover { border-color: var(--green); }
+.board__toggle-note { color: var(--muted); font-size: 13px; font-weight: 600; }
+.board__toggle[aria-expanded="true"] { border-color: var(--green-dim); }
+.board__toggle[aria-expanded="true"] .board__toggle-note { color: var(--lime); }
 
 .board {
-  margin-top: 16px;
+  margin-top: 10px;
   background: linear-gradient(180deg, var(--surface-2), var(--surface));
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 16px 18px;
 }
+.board[hidden] { display: none; }
 .board__head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 10px; color: var(--lime); }
 .board__head span { color: var(--muted); font-size: 13px; font-weight: 600; }
 .board__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
@@ -1150,6 +1202,11 @@ body.light .game__big { color: #0d2b19; }
 body.light .game__hint { color: #2f5c42; }
 body.light .game__hint b { color: #12803c; }
 body.light .game__sendnote { color: #3d6b52; }
+body.light .game__sendwho { color: #12803c; }
+body.light .game__link { color: #2f5c42; }
+body.light .game__combo { background: rgba(18, 128, 60, .12); }
+body.light .board__toggle { background: #fff; border-color: #bfe4cc; color: #0d2b19; }
+body.light .board__toggle-note { color: #3d6b52; }
 body.light .board { background: #fff; border-color: #bfe4cc; }
 body.light .board__head { color: #12803c; }
 body.light .board__who { color: #0d2b19; }
@@ -1345,7 +1402,9 @@ body.light .board__item--top { background: #f0ffe0; border-color: #12803c; }
         <span>Жизни: <b id="gameLives">❤️❤️❤️</b></span>
         <span>Комбо: <b id="gameCombo">x1</b></span>
         <button class="game__sound" id="gameSound" type="button" title="Звук игры">🔊</button>
+        <button class="game__sound" id="gamePause" type="button" title="Пауза">⏸</button>
       </div>
+      <div class="game__combo"><i id="gameComboFill"></i></div>
 
       <div class="game__stage">
         <canvas id="gameCanvas" width="900" height="460" aria-label="Игра: режь арбузы"></canvas>
@@ -1353,18 +1412,25 @@ body.light .board__item--top { background: #f0ffe0; border-color: #12803c; }
           <p class="game__big" id="gameOverTitle">Готов резать?</p>
           <p class="game__hint" id="gameOverHint">Тащи мышкой по арбузам. Свиной 🐷 — не трогай, будет взрыв.</p>
           <div class="game__send" id="gameSendBox" hidden>
-            <input class="input" id="gameName" type="text" maxlength="20" placeholder="Имя для рейтинга">
-            <button class="btn btn--big" id="gameSend" type="button">Отправить в рейтинг</button>
+            <p class="game__sendwho" id="gameSendWho" hidden></p>
+            <input class="input" id="gameName" type="text" maxlength="20" placeholder="Только имя, буквами">
+            <button class="btn btn--big" id="gameSend" type="button">Сохранить имя и отправить</button>
+            <button class="game__link" id="gameNameChange" type="button" hidden>Сменить имя</button>
             <p class="game__sendnote" id="gameSendNote"></p>
           </div>
           <button class="btn btn--big" id="gameStart" type="button">Играть</button>
+          <button class="btn btn--ghost game__share" id="gameShare" type="button" hidden>Поделиться результатом</button>
         </div>
       </div>
     </div>
 
-    <div class="board">
+    <button class="board__toggle" id="boardToggle" type="button" aria-expanded="false" aria-controls="boardPanel">
+      <span>🏆 Рейтинг игроков</span>
+      <span class="board__toggle-note" id="boardToggleNote">показать</span>
+    </button>
+    <div class="board" id="boardPanel" hidden>
       <div class="board__head">
-        <b>🏆 Рейтинг игроков</b>
+        <b>Топ-10</b>
         <span id="boardNote">общий для всех</span>
       </div>
       <ol class="board__list" id="boardList"><li class="board__empty">Пока пусто. Стань первым!</li></ol>
@@ -3592,6 +3658,7 @@ var GAME = {
   H: 460,
   running: false,
   over: false,
+  paused: false,
   raf: 0,
   lastTs: 0,
   score: 0,
@@ -3659,6 +3726,19 @@ function gameUpdateHud() {
   }
   if (combo) combo.textContent = "x" + GAME.combo;
   if (sound) sound.textContent = GAME.sound ? "🔊" : "🔇";
+  gameUpdateComboBar();
+}
+
+function gameUpdateComboBar() {
+  var fill = document.getElementById("gameComboFill");
+  if (!fill) return;
+
+  var left = 0;
+  if (GAME.combo > 1) {
+    left = 1 - (GAME.elapsed - GAME.lastSliceAt) / 1.6;
+    if (left < 0) left = 0;
+  }
+  fill.style.width = Math.round(left * 100) + "%";
 }
 
 function gameBurst(x, y, count, colors) {
@@ -3832,40 +3912,100 @@ function gameUpdate(dt) {
     GAME.combo = 1;
     gameUpdateHud();
   }
+
+  gameUpdateComboBar();
+}
+
+function gameDrawMelonBody(ctx, r, type) {
+  var gold = type === "gold";
+
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fillStyle = gold ? "#ffd166" : "#1f9d47";
+  ctx.fill();
+
+  ctx.strokeStyle = gold ? "#b8860b" : "#0f6b30";
+  ctx.lineWidth = Math.max(1.5, r * 0.07);
+  for (var k = 0; k < 6; k++) {
+    var a = k * Math.PI / 3 + 0.2;
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.87, a, a + 0.34);
+    ctx.stroke();
+  }
+
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.74, 0, Math.PI * 2);
+  ctx.fillStyle = gold ? "#ffb703" : "#e63946";
+  ctx.fill();
+
+  ctx.fillStyle = gold ? "#7a4a00" : "#2b0a0e";
+  for (var s = 0; s < 7; s++) {
+    var ang = s * Math.PI * 2 / 7 + 0.35;
+    var rad = r * 0.42;
+    ctx.beginPath();
+    ctx.ellipse(
+      Math.cos(ang) * rad,
+      Math.sin(ang) * rad,
+      Math.max(1.2, r * 0.06),
+      Math.max(1.8, r * 0.1),
+      ang, 0, Math.PI * 2
+    );
+    ctx.fill();
+  }
 }
 
 function gameDrawObject(o) {
   var ctx = GAME.ctx;
+  var r = o.r;
+
   ctx.save();
   ctx.translate(o.x, o.y);
   ctx.rotate(o.rot);
+  ctx.globalAlpha = 1;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
   if (o.type === "bomb") {
-    ctx.globalAlpha = 0.5;
+    var pulse = 1.25 + Math.sin(GAME.elapsed * 7) * 0.08;
     ctx.beginPath();
-    ctx.arc(0, 0, o.r * 1.2, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(255,60,80,.4)";
+    ctx.arc(0, 0, r * pulse, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(255,77,90,.45)";
+    ctx.lineWidth = Math.max(2, r * 0.1);
+    ctx.stroke();
+
+    ctx.shadowColor = "rgba(255,60,80,.8)";
+    ctx.shadowBlur = 18;
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fillStyle = "#2b0a0e";
     ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.font = Math.round(o.r * 2.05) + "px serif";
-    ctx.fillText("🐷", 0, 2);
-  } else if (o.type === "gold") {
-    ctx.shadowColor = "rgba(255,209,102,.95)";
-    ctx.shadowBlur = 22;
-    ctx.font = Math.round(o.r * 2.05) + "px serif";
-    ctx.fillText("🍉", 0, 2);
     ctx.shadowBlur = 0;
-    ctx.globalAlpha = 0.9;
-    ctx.font = Math.round(o.r * 0.8) + "px serif";
-    ctx.fillText("✨", o.r * 0.95, -o.r * 0.95);
-    ctx.globalAlpha = 1;
+
+    ctx.lineWidth = Math.max(2, r * 0.12);
+    ctx.strokeStyle = "#ff4d5a";
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(r * 0.32, -r * 0.78);
+    ctx.quadraticCurveTo(r * 0.95, -r * 1.15, r * 0.55, -r * 1.55);
+    ctx.strokeStyle = "#ffd166";
+    ctx.lineWidth = Math.max(2, r * 0.1);
+    ctx.stroke();
+
+    ctx.font = Math.round(r * 1.15) + "px serif";
+    ctx.fillText("🐷", 0, r * 0.06);
   } else {
-    ctx.shadowColor = "rgba(47,211,95,.7)";
-    ctx.shadowBlur = 16;
-    ctx.font = Math.round(o.r * 2.05) + "px serif";
-    ctx.fillText("🍉", 0, 2);
+    ctx.shadowColor = o.type === "gold" ? "rgba(255,209,102,.9)" : "rgba(47,211,95,.65)";
+    ctx.shadowBlur = o.type === "gold" ? 22 : 14;
+    gameDrawMelonBody(ctx, r, o.type);
+    ctx.shadowBlur = 0;
+
+    if (o.type === "gold") {
+      ctx.globalAlpha = 0.95;
+      ctx.font = Math.round(r * 0.8) + "px serif";
+      ctx.fillText("✨", r * 0.95, -r * 0.95);
+      ctx.globalAlpha = 1;
+    }
   }
 
   ctx.restore();
@@ -3979,7 +4119,7 @@ function gameDrawIdle() {
 }
 
 function gameFrame(ts) {
-  if (!GAME.running) return;
+  if (!GAME.running || GAME.paused) return;
   if (!GAME.lastTs) GAME.lastTs = ts;
   var dt = Math.min(0.05, (ts - GAME.lastTs) / 1000);
   GAME.lastTs = ts;
@@ -4008,21 +4148,53 @@ function gameStart() {
   GAME.flash = 0;
   GAME.pointerDown = false;
   GAME.lastTs = 0;
+  GAME.paused = false;
 
   document.getElementById("gameOverlay").hidden = true;
   document.getElementById("gameOverTitle").textContent = "Готов резать?";
   document.getElementById("gameOverHint").textContent = "Тащи мышкой по арбузам. Свиной 🐷 — не трогай, будет взрыв.";
   document.getElementById("gameStart").textContent = "Играть";
+  document.getElementById("gamePause").textContent = "⏸";
   lbHideSend();
+  gameUpdateComboBar();
 
   gameUpdateHud();
   cancelAnimationFrame(GAME.raf);
   GAME.raf = requestAnimationFrame(gameFrame);
 }
 
+function gameTogglePause() {
+  if (!GAME.running) return;
+
+  if (GAME.paused) {
+    GAME.paused = false;
+    document.getElementById("gamePause").textContent = "⏸";
+    document.getElementById("gameOverlay").hidden = true;
+    document.getElementById("gameOverTitle").textContent = "Готов резать?";
+    document.getElementById("gameOverHint").textContent = "Тащи мышкой по арбузам. Свиной 🐷 — не трогай, будет взрыв.";
+    document.getElementById("gameStart").textContent = "Играть";
+    lbHideSend();
+    GAME.lastTs = 0;
+    cancelAnimationFrame(GAME.raf);
+    GAME.raf = requestAnimationFrame(gameFrame);
+  } else {
+    GAME.paused = true;
+    cancelAnimationFrame(GAME.raf);
+    GAME.raf = 0;
+    document.getElementById("gamePause").textContent = "▶";
+    document.getElementById("gameOverTitle").textContent = "Пауза";
+    document.getElementById("gameOverHint").textContent = "Нажми «Продолжить», чтобы вернуться в игру.";
+    document.getElementById("gameStart").textContent = "Продолжить";
+    lbHideSend();
+    document.getElementById("gameOverlay").hidden = false;
+    gameDraw();
+  }
+}
+
 function gameOver() {
   GAME.running = false;
   GAME.over = true;
+  GAME.paused = false;
   cancelAnimationFrame(GAME.raf);
   GAME.raf = 0;
 
@@ -4031,16 +4203,24 @@ function gameOver() {
     GAME.best = GAME.score;
     write("prz_game_best", GAME.best);
   }
+  GAME.combo = 1;
   gameUpdateHud();
   gameDraw();
 
+  var hint = "Счёт: <b>" + GAME.score + "</b> · Рекорд: <b>" + GAME.best + "</b>";
+  if (isRecord) {
+    hint += "<br>Новый рекорд! 🏆";
+  } else if (GAME.score > 0) {
+    hint += '<br><span class="game__small">В рейтинг уходят только новые рекорды.</span>';
+  }
+
   document.getElementById("gameOverTitle").textContent = "Игра окончена";
-  document.getElementById("gameOverHint").innerHTML =
-    "Счёт: <b>" + GAME.score + "</b> · Рекорд: <b>" + GAME.best + "</b>" +
-    (isRecord ? "<br>Новый рекорд! 🏆" : "");
+  document.getElementById("gameOverHint").innerHTML = hint;
   document.getElementById("gameStart").textContent = "Ещё раз";
   document.getElementById("gameOverlay").hidden = false;
-  lbShowSend();
+  document.getElementById("gamePause").textContent = "⏸";
+  GAME.paused = false;
+  lbOnGameOver(isRecord);
 
   sfxGameOver();
 }
@@ -4164,7 +4344,12 @@ function initGame() {
   canvas.addEventListener("pointercancel", gamePointerUp);
   window.addEventListener("pointerup", gamePointerUp);
 
-  document.getElementById("gameStart").addEventListener("click", gameStart);
+  document.getElementById("gameStart").addEventListener("click", function () {
+    if (GAME.running && GAME.paused) gameTogglePause();
+    else gameStart();
+  });
+
+  document.getElementById("gamePause").addEventListener("click", gameTogglePause);
 
   document.getElementById("gameSound").addEventListener("click", function () {
     GAME.sound = !GAME.sound;
@@ -4173,20 +4358,26 @@ function initGame() {
     toast(GAME.sound ? "Звук игры включён" : "Звук игры выключен");
   });
 
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden && GAME.running && !GAME.paused) gameTogglePause();
+  });
+
   gameUpdateHud();
   gameDrawIdle();
 }
 
 /* ---------- общий рейтинг игры ---------- */
 var LB = {
-  topic: "prz-liga-7b21e4",
-  postUrl: "https://ntfy.sh/prz-liga-7b21e4",
-  liveUrl: "https://ntfy.sh/prz-liga-7b21e4/json?poll=1&since=12h",
+  topic: "prz-liga-2f8d61",
+  postUrl: "https://ntfy.sh/prz-liga-2f8d61",
+  liveUrl: "https://ntfy.sh/prz-liga-2f8d61/json?poll=1&since=12h",
   archiveUrl: "https://raw.githubusercontent.com/pereprodazhniki/arbuz/main/leaderboard.json",
   scores: [],
   seen: {},
   lastSent: read("prz_lb_last", 0) || 0,
-  loaded: false
+  name: String(read("prz_lb_name", "") || "").trim(),
+  loaded: false,
+  sending: false
 };
 
 function lbParse(text) {
@@ -4225,6 +4416,7 @@ function lbRender() {
     empty.className = "board__empty";
     empty.textContent = "Пока пусто. Стань первым!";
     list.appendChild(empty);
+    lbToggleNote();
     return;
   }
 
@@ -4250,6 +4442,31 @@ function lbRender() {
     li.appendChild(score);
     list.appendChild(li);
   });
+  lbToggleNote();
+}
+
+function lbToggleNote() {
+  var panel = document.getElementById("boardPanel");
+  var note = document.getElementById("boardToggleNote");
+  if (!note) return;
+  var open = panel && !panel.hidden;
+  note.textContent = open ? "скрыть" : (LB.scores.length ? "показать · " + LB.scores.length : "показать");
+}
+
+function lbToggle(force) {
+  var panel = document.getElementById("boardPanel");
+  var btn = document.getElementById("boardToggle");
+  if (!panel || !btn) return;
+
+  var open = typeof force === "boolean" ? force : panel.hidden;
+  panel.hidden = !open;
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
+  lbToggleNote();
+
+  if (open) {
+    lbFetchArchive();
+    lbFetchLive();
+  }
 }
 
 function lbNote(text) {
@@ -4284,6 +4501,7 @@ function lbFetchArchive() {
       if (!data) return false;
       var arr = data.scores || data;
       if (!Array.isArray(arr)) return false;
+
       var changed = false;
       for (var i = 0; i < arr.length; i++) {
         var s = arr[i];
@@ -4310,13 +4528,17 @@ function lbLoad() {
 
 function lbHideSend() {
   var box = document.getElementById("gameSendBox");
+  var share = document.getElementById("gameShare");
   if (box) box.hidden = true;
+  if (share) share.hidden = true;
 }
 
-function lbShowSend() {
+function lbShowSend(auto) {
   var box = document.getElementById("gameSendBox");
   var input = document.getElementById("gameName");
   var btn = document.getElementById("gameSend");
+  var who = document.getElementById("gameSendWho");
+  var change = document.getElementById("gameNameChange");
   var note = document.getElementById("gameSendNote");
   if (!box) return;
 
@@ -4326,57 +4548,161 @@ function lbShowSend() {
   }
 
   box.hidden = false;
-  if (note) note.textContent = "";
-  if (btn) {
-    btn.disabled = false;
-    btn.textContent = "Отправить в рейтинг";
+  var saved = LB.name && !nameProblem(LB.name);
+
+  if (auto && saved) {
+    if (input) input.hidden = true;
+    if (btn) btn.hidden = true;
+    if (change) change.hidden = false;
+    if (who) {
+      who.hidden = false;
+      who.textContent = "Рекорд уходит в рейтинг как «" + LB.name + "»";
+    }
+    if (note) note.textContent = "Отправляем…";
+  } else {
+    if (input) input.hidden = false;
+    if (btn) {
+      btn.hidden = false;
+      btn.disabled = false;
+      btn.textContent = "Сохранить имя и отправить";
+    }
+    if (change) change.hidden = true;
+    if (who) who.hidden = true;
+    if (input && !input.value) input.value = LB.name || "";
+    if (note) note.textContent = "";
   }
-  if (input && !input.value) input.value = read("prz_lb_name", "");
 }
 
-function lbSubmit() {
-  var input = document.getElementById("gameName");
-  var btn = document.getElementById("gameSend");
-  var note = document.getElementById("gameSendNote");
-  if (!input || !note) return;
+function lbOnGameOver(isRecord) {
+  lbHideSend();
+  var share = document.getElementById("gameShare");
+  if (share) share.hidden = GAME.score <= 0;
+  if (GAME.score <= 0 || !isRecord) return;
 
-  var name = input.value.trim();
+  var saved = LB.name && !nameProblem(LB.name);
+  lbShowSend(saved);
+  if (saved) lbSendScore(GAME.score, true);
+}
+
+function lbSendScore(score, auto) {
+  if (LB.sending) return;
+
+  var note = document.getElementById("gameSendNote");
+  var btn = document.getElementById("gameSend");
+  var name = LB.name;
   var err = nameProblem(name);
-  if (err) { note.textContent = err; return; }
-  if (GAME.score <= 0) { note.textContent = "Сначала набери очки."; return; }
+
+  if (err) {
+    if (!auto && note) note.textContent = err;
+    return;
+  }
+  if (!isFinite(score) || score <= 0) return;
 
   var now = Date.now();
   var wait = 20000 - (now - LB.lastSent);
   if (wait > 0) {
-    note.textContent = "Подожди " + Math.ceil(wait / 1000) + " с перед следующей отправкой.";
+    if (auto) {
+      lbShowSend(false);
+      var n1 = document.getElementById("gameSendNote");
+      if (n1) n1.textContent = "Подожди " + Math.ceil(wait / 1000) + " с и нажми кнопку.";
+    } else if (note) {
+      note.textContent = "Подожди " + Math.ceil(wait / 1000) + " с перед следующей отправкой.";
+    }
     return;
   }
 
-  var msg = "LB|" + name + "|" + GAME.score + "|" + now;
-  note.textContent = "Отправляем…";
-  if (btn) btn.disabled = true;
+  LB.sending = true;
+  if (btn && !auto) btn.disabled = true;
+  if (note) note.textContent = auto ? "Отправляем рекорд…" : "Отправляем…";
 
-  fetch(LB.postUrl, { method: "POST", body: msg })
+  fetch(LB.postUrl, { method: "POST", body: "LB|" + name + "|" + score + "|" + now })
     .then(function (r) {
       if (!r.ok) throw new Error("bad status");
       LB.lastSent = now;
       write("prz_lb_last", now);
       write("prz_lb_name", name);
-      lbAdd(name, GAME.score, now, "own|" + now);
+      lbAdd(name, score, now, "own|" + now);
       lbRender();
-      note.textContent = "Готово! Ты в общем рейтинге.";
-      if (btn) btn.textContent = "Отправлено ✓";
+      if (note) note.textContent = "Готово! Рекорд в общем рейтинге.";
+      if (btn && !auto) {
+        btn.textContent = "Отправлено ✓";
+        btn.disabled = true;
+      }
+      LB.sending = false;
+      lbFetchArchive();
     })
     .catch(function () {
-      note.textContent = "Не получилось отправить. Проверь интернет и попробуй ещё раз.";
-      if (btn) btn.disabled = false;
+      LB.sending = false;
+      if (auto) {
+        lbShowSend(false);
+        var n2 = document.getElementById("gameSendNote");
+        if (n2) n2.textContent = "Не получилось отправить автоматически. Попробуй ещё раз.";
+      } else if (note) {
+        note.textContent = "Не получилось отправить. Проверь интернет и попробуй ещё раз.";
+        if (btn) btn.disabled = false;
+      }
     });
+}
+
+function lbSubmit() {
+  var input = document.getElementById("gameName");
+  var note = document.getElementById("gameSendNote");
+  if (!input) return;
+
+  var name = input.value.trim();
+  var err = nameProblem(name);
+  if (err) {
+    if (note) note.textContent = err;
+    return;
+  }
+
+  LB.name = name;
+  write("prz_lb_name", name);
+  lbSendScore(GAME.score, false);
+}
+
+function lbChangeName() {
+  LB.name = "";
+  write("prz_lb_name", "");
+
+  var input = document.getElementById("gameName");
+  var btn = document.getElementById("gameSend");
+  var who = document.getElementById("gameSendWho");
+  var change = document.getElementById("gameNameChange");
+  var note = document.getElementById("gameSendNote");
+
+  if (input) {
+    input.hidden = false;
+    input.value = "";
+    input.focus();
+  }
+  if (btn) {
+    btn.hidden = false;
+    btn.disabled = false;
+    btn.textContent = "Сохранить имя и отправить";
+  }
+  if (who) who.hidden = true;
+  if (change) change.hidden = true;
+  if (note) note.textContent = "";
+}
+
+function lbShare() {
+  var text = "Я нарезал " + GAME.score + " очков в «Арбузном слайсере» 🍉 Мой рекорд: " +
+    GAME.best + ". Попробуй побить: https://pereprodazhniki.github.io/arbuz/#game";
+  copyText(text, "Результат скопирован — кидай друзьям");
 }
 
 function initLeaderboard() {
   var send = document.getElementById("gameSend");
   var input = document.getElementById("gameName");
+  var toggle = document.getElementById("boardToggle");
+  var change = document.getElementById("gameNameChange");
+  var share = document.getElementById("gameShare");
+
   if (send) send.addEventListener("click", lbSubmit);
+  if (toggle) toggle.addEventListener("click", function () { lbToggle(); });
+  if (change) change.addEventListener("click", lbChangeName);
+  if (share) share.addEventListener("click", lbShare);
   if (input) {
     input.addEventListener("keydown", function (e) {
       if (e.key === "Enter") { e.preventDefault(); lbSubmit(); }
@@ -4385,7 +4711,10 @@ function initLeaderboard() {
 
   lbRender();
   lbLoad();
-  setInterval(lbFetchLive, 60000);
+  setInterval(function () {
+    lbFetchArchive();
+    lbFetchLive();
+  }, 60000);
 }
 
 /* ---------- старт ---------- */
