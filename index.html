@@ -1086,6 +1086,7 @@ body.light .jobform__cooldown { background: #f2fff7; border-color: #12803c; colo
   gap: 8px;
   text-align: center;
   padding: 20px;
+  overflow-y: auto;
   background: radial-gradient(circle at 50% 50%, rgba(4, 12, 7, .5), rgba(4, 12, 7, .86));
   backdrop-filter: blur(2px);
 }
@@ -1109,10 +1110,12 @@ body.light .jobform__cooldown { background: #f2fff7; border-color: #12803c; colo
   background: linear-gradient(90deg, var(--green), var(--lime));
   transition: width .08s linear;
 }
+.game__name { display: flex; flex-direction: column; gap: 6px; align-items: center; width: min(320px, 92%); }
+.game__namelabel { font-size: 13px; font-weight: 700; color: var(--muted); }
+.game__name .input { text-align: center; }
 .game__send { display: flex; flex-direction: column; gap: 8px; align-items: center; width: min(320px, 92%); margin-bottom: 8px; }
 .game__send[hidden] { display: none; }
 .game__send [hidden] { display: none !important; }
-.game__send .input { text-align: center; }
 .game__sendwho { margin: 0; font-size: 14px; color: var(--lime); font-weight: 700; }
 .game__sendnote { margin: 0; font-size: 13px; color: var(--muted); min-height: 16px; }
 .game__link {
@@ -1411,11 +1414,13 @@ body.light .board__item--top { background: #f0ffe0; border-color: #12803c; }
         <div class="game__overlay" id="gameOverlay">
           <p class="game__big" id="gameOverTitle">Готов резать?</p>
           <p class="game__hint" id="gameOverHint">Тащи мышкой по арбузам. Свиной 🐷 — не трогай, будет взрыв.</p>
+          <div class="game__name">
+            <label class="game__namelabel" for="gameName">Имя для рейтинга</label>
+            <input class="input" id="gameName" type="text" maxlength="30" placeholder="Только имя, буквами">
+          </div>
           <div class="game__send" id="gameSendBox" hidden>
             <p class="game__sendwho" id="gameSendWho" hidden></p>
-            <input class="input" id="gameName" type="text" maxlength="20" placeholder="Только имя, буквами">
-            <button class="btn btn--big" id="gameSend" type="button">Сохранить имя и отправить</button>
-            <button class="game__link" id="gameNameChange" type="button" hidden>Сменить имя</button>
+            <button class="btn btn--big" id="gameSend" type="button">Отправить в рейтинг</button>
             <p class="game__sendnote" id="gameSendNote"></p>
           </div>
           <button class="btn btn--big" id="gameStart" type="button">Играть</button>
@@ -4281,7 +4286,7 @@ function gameOver() {
   if (isRecord) {
     hint += "<br>Новый рекорд! 🏆";
   } else if (GAME.score > 0) {
-    hint += '<br><span class="game__small">В рейтинг уходят только новые рекорды.</span>';
+    hint += '<br><span class="game__small">Результат можно отправить в общий рейтинг.</span>';
   }
 
   document.getElementById("gameOverTitle").textContent = "Игра окончена";
@@ -4719,12 +4724,17 @@ function lbHideSend() {
   if (share) share.hidden = true;
 }
 
+/* имя берём из поля ввода, а если оно пустое — из сохранённого */
+function lbCurrentName() {
+  var input = document.getElementById("gameName");
+  var value = input ? input.value.trim() : "";
+  return value || LB.name;
+}
+
 function lbShowSend(auto) {
   var box = document.getElementById("gameSendBox");
-  var input = document.getElementById("gameName");
   var btn = document.getElementById("gameSend");
   var who = document.getElementById("gameSendWho");
-  var change = document.getElementById("gameNameChange");
   var note = document.getElementById("gameSendNote");
   if (!box) return;
 
@@ -4734,28 +4744,28 @@ function lbShowSend(auto) {
   }
 
   box.hidden = false;
-  var saved = LB.name && !nameProblem(LB.name);
+  var name = lbCurrentName();
+  var saved = name && !nameProblem(name);
 
   if (auto && saved) {
-    if (input) input.hidden = true;
     if (btn) btn.hidden = true;
-    if (change) change.hidden = false;
     if (who) {
       who.hidden = false;
-      who.textContent = "Рекорд уходит в рейтинг как «" + LB.name + "»";
+      who.textContent = "Отправляем рекорд как «" + name + "»";
     }
     if (note) note.textContent = "Отправляем…";
   } else {
-    if (input) input.hidden = false;
     if (btn) {
       btn.hidden = false;
       btn.disabled = false;
-      btn.textContent = "Сохранить имя и отправить";
+      btn.textContent = "Отправить в рейтинг";
     }
-    if (change) change.hidden = true;
     if (who) who.hidden = true;
-    if (input && !input.value) input.value = LB.name || "";
-    if (note) note.textContent = "";
+    if (note) {
+      note.textContent = saved
+        ? "Проверь имя и отправь результат."
+        : "Введи имя выше — и результат уйдёт в общий рейтинг.";
+    }
   }
 }
 
@@ -4763,9 +4773,17 @@ function lbOnGameOver(isRecord) {
   lbHideSend();
   var share = document.getElementById("gameShare");
   if (share) share.hidden = GAME.score <= 0;
-  if (GAME.score <= 0 || !isRecord) return;
+  if (GAME.score <= 0) return;
 
-  var saved = LB.name && !nameProblem(LB.name);
+  /* отправлять можно любой результат, а не только новый рекорд:
+     в таблице всё равно останется лучший результат игрока */
+  var name = lbCurrentName();
+  var saved = name && !nameProblem(name);
+  if (saved) {
+    LB.name = name;
+    write("prz_lb_name", name);
+  }
+
   lbShowSend(saved);
   if (saved) lbSendScore(GAME.score, true);
 }
@@ -4809,7 +4827,13 @@ function lbSendScore(score, auto) {
       write("prz_lb_name", name);
       lbAdd(name, score, now, "own|" + now);
       lbRender();
-      if (note) note.textContent = "Готово! Рекорд в общем рейтинге.";
+      /* показываем таблицу сразу, чтобы результат было видно */
+      lbToggle(true);
+      var panel = document.getElementById("boardPanel");
+      if (panel && panel.scrollIntoView) {
+        try { panel.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
+      }
+      if (note) note.textContent = "Готово! Результат в общем рейтинге.";
       if (btn && !auto) {
         btn.textContent = "Отправлено ✓";
         btn.disabled = true;
@@ -4892,6 +4916,15 @@ function initLeaderboard() {
   if (change) change.addEventListener("click", lbChangeName);
   if (share) share.addEventListener("click", lbShare);
   if (input) {
+    /* показываем сохранённое имя и запоминаем новое сразу при вводе */
+    if (LB.name && !nameProblem(LB.name)) input.value = LB.name;
+    input.addEventListener("input", function () {
+      var name = input.value.trim();
+      if (name && !nameProblem(name)) {
+        LB.name = name;
+        write("prz_lb_name", name);
+      }
+    });
     input.addEventListener("keydown", function (e) {
       if (e.key === "Enter") { e.preventDefault(); lbSubmit(); }
     });
