@@ -4460,7 +4460,8 @@ function lbToggleNote() {
   var note = document.getElementById("boardToggleNote");
   if (!note) return;
   var open = panel && !panel.hidden;
-  note.textContent = open ? "скрыть" : (LB.scores.length ? "показать · " + LB.scores.length : "показать");
+  var n = Math.min(LB.scores.length, 10);
+  note.textContent = open ? "скрыть" : (n ? "показать · " + n : "показать");
 }
 
 function lbToggle(force) {
@@ -4505,7 +4506,8 @@ function lbFetchLive() {
 }
 
 function lbFetchArchive() {
-  return fetch(LB.archiveUrl, { cache: "no-store" })
+  var url = LB.archiveUrl + (LB.archiveUrl.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now();
+  return fetch(url, { cache: "no-store" })
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (data) {
       if (!data) return false;
