@@ -1856,6 +1856,12 @@ if (!read("prz_sold_reset2", false)) {
   write(STORE.sold, 0);
   write("prz_sold_reset2", true);
 }
+/* сброс кеша перед переездом на новый общий счётчик */
+if (!read("prz_sold_reset3", false)) {
+  sold = 0;
+  write(STORE.sold, 0);
+  write("prz_sold_reset3", true);
+}
 
 /* промокоды */
 var COUPONS = {
@@ -2986,20 +2992,88 @@ function addReview(event) {
 
 /* ---------- общий счётчик продаж ---------- */
 var SOLD_API = "https://abacus.jasoncameron.dev";
-var SOLD_NS = "pereprodazhniki-sold-2b71";
+var SOLD_NS = "pereprodazhniki-sold-v2";
 var SOLD_KEY = "total";
+var soldLiveStarted = false;
+
+/* плавно показываем новое общее значение (без повторной отправки на сервер) */
+function setSold(value, animate) {
+  if (typeof value !== "number" || !isFinite(value) || value < 0) return false;
+
+  var from = sold;
+  if (value === from) {
+    renderSold();
+    return false;
+  }
+
+  sold = value;
+  write(STORE.sold, sold);
+
+  if (!animate) {
+    renderSold();
+    return true;
+  }
+
+  var hero = document.getElementById("soldCount");
+  var top = document.getElementById("soldTop");
+  var box = document.getElementById("soldBox");
+
+  if (box) {
+    box.classList.add("is-bump");
+    setTimeout(function () { box.classList.remove("is-bump"); }, 520);
+  }
+
+  var steps = 10;
+  var i = 0;
+  var timer = setInterval(function () {
+    i++;
+    var v = Math.round(from + (sold - from) * (i / steps));
+    if (hero) hero.textContent = v;
+    if (top) top.textContent = v;
+    if (i >= steps) {
+      clearInterval(timer);
+      renderSold();
+    }
+  }, 35);
+
+  return true;
+}
 
 function loadSold() {
-  return fetch(SOLD_API + "/get/" + SOLD_NS + "/" + SOLD_KEY)
+  return fetch(SOLD_API + "/get/" + SOLD_NS + "/" + SOLD_KEY, { cache: "no-store" })
     .then(function (r) { return r.json(); })
     .then(function (d) {
-      if (d && typeof d.value === "number") {
-        sold = d.value;
-        write(STORE.sold, sold);
-        renderSold();
-      }
+      if (d && typeof d.value === "number") setSold(d.value, false);
     })
     .catch(function () {});
+}
+
+/* обновления счётчика в реальном времени для всех посетителей */
+function startSoldLive() {
+  if (soldLiveStarted) return;
+  soldLiveStarted = true;
+
+  if (typeof window.EventSource === "function") {
+    try {
+      var es = new EventSource(SOLD_API + "/stream/" + SOLD_NS + "/" + SOLD_KEY);
+      es.onmessage = function (ev) {
+        try {
+          var d = JSON.parse(ev.data);
+          if (d && typeof d.value === "number") setSold(d.value, true);
+        } catch (e) {}
+      };
+      /* при обрыве EventSource сам переподключается, опрос ниже страхует */
+      es.onerror = function () {};
+    } catch (e) {}
+  }
+
+  setInterval(function () {
+    if (!document.hidden) loadSold();
+  }, 25000);
+
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) loadSold();
+  });
 }
 
 function pushSold(n) {
@@ -3009,15 +3083,11 @@ function pushSold(n) {
   }
   return Promise.all(hits)
     .then(function () {
-      return fetch(SOLD_API + "/get/" + SOLD_NS + "/" + SOLD_KEY);
+      return fetch(SOLD_API + "/get/" + SOLD_NS + "/" + SOLD_KEY, { cache: "no-store" });
     })
     .then(function (r) { return r.json(); })
     .then(function (d) {
-      if (d && typeof d.value === "number") {
-        sold = d.value;
-        write(STORE.sold, sold);
-        renderSold();
-      }
+      if (d && typeof d.value === "number") setSold(d.value, true);
     })
     .catch(function () {});
 }
@@ -4372,6 +4442,11 @@ var LB = {
   postUrl: "https://ntfy.sh/prz-liga-2f8d61",
   liveUrl: "https://ntfy.sh/prz-liga-2f8d61/json?poll=1&since=12h",
   archiveUrl: "https://raw.githubusercontent.com/pereprodazhniki/arbuz/main/leaderboard.json",
+  /* общий архив рейтинга: пишется из браузера игрока, доступен всем */
+  storeUrl: "https://api.restful-api.dev/objects/ff808181a09d98f701a1ba42b4ce631a",
+  storeReady: false,
+  storeScores: null,
+  lastPush: 0,
   scores: [],
   seen: {},
   lastSent: read("prz_lb_last", 0) || 0,
@@ -4414,6 +4489,98 @@ function lbAdd(name, score, ts, key) {
   });
   if (LB.scores.length > 50) LB.scores.length = 50;
   return true;
+}
+
+/* приводим список к одному виду: без мусора, по одному лучшему результату на имя */
+function lbNormalizeList(arr) {
+  if (!Array.isArray(arr)) return [];
+
+  var map = {};
+  var out = [];
+
+  for (var i = 0; i < arr.length; i++) {
+    var s = arr[i];
+    if (!s) continue;
+
+    var name = String(s.name || "").trim();
+    var score = parseInt(s.score, 10);
+    var ts = parseInt(s.ts, 10) || 0;
+
+    if (nameProblem(name)) continue;
+    if (!isFinite(score) || score <= 0 || score > 1000000) continue;
+
+    var low = name.toLowerCase();
+    if (!map[low] || score > map[low].score) {
+      map[low] = { name: name, score: score, ts: ts };
+    }
+  }
+
+  for (var k in map) {
+    if (Object.prototype.hasOwnProperty.call(map, k)) out.push(map[k]);
+  }
+
+  out.sort(function (a, b) {
+    return b.score - a.score || a.ts - b.ts;
+  });
+  if (out.length > 50) out.length = 50;
+  return out;
+}
+
+/* читаем общий архив рейтинга */
+function lbFetchStore() {
+  return fetch(LB.storeUrl, { cache: "no-store" })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (data) {
+      if (!data) return false;
+
+      var arr = (data.data && data.data.scores) || data.scores || [];
+      if (!Array.isArray(arr)) return false;
+
+      LB.storeReady = true;
+      LB.storeScores = lbNormalizeList(arr);
+
+      var changed = false;
+      for (var i = 0; i < arr.length; i++) {
+        var s = arr[i];
+        if (!s) continue;
+        if (lbAdd(s.name, s.score, s.ts || 0, "s|" + (s.name || "") + "|" + s.score + "|" + (s.ts || 0))) changed = true;
+      }
+      if (changed) lbRender();
+      return true;
+    })
+    .catch(function () { return false; });
+}
+
+/* сохраняем общий архив: любой браузер может дописать новые результаты */
+function lbPushStore(force) {
+  if (!LB.storeReady) return Promise.resolve(false);
+
+  var scores = lbNormalizeList(LB.scores);
+  if (!scores.length) return Promise.resolve(false);
+
+  var json = JSON.stringify(scores);
+  if (!force && LB.storeScores && JSON.stringify(LB.storeScores) === json) {
+    return Promise.resolve(false);
+  }
+
+  var now = Date.now();
+  if (!force && now - LB.lastPush < 60000) return Promise.resolve(false);
+  LB.lastPush = now;
+
+  return fetch(LB.storeUrl, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: "prz-liga",
+      data: { updated: new Date().toISOString(), scores: scores }
+    })
+  })
+    .then(function (r) {
+      if (!r.ok) throw new Error("bad status");
+      LB.storeScores = scores;
+      return true;
+    })
+    .catch(function () { return false; });
 }
 
 function lbRender() {
@@ -4475,6 +4642,7 @@ function lbToggle(force) {
   lbToggleNote();
 
   if (open) {
+    lbFetchStore();
     lbFetchArchive();
     lbFetchLive();
   }
@@ -4529,12 +4697,13 @@ function lbFetchArchive() {
 function lbLoad() {
   if (LB.loaded) return;
   LB.loaded = true;
-  Promise.all([lbFetchArchive(), lbFetchLive()]).then(function (res) {
-    var ok = res[0] || res[1];
+  Promise.all([lbFetchStore(), lbFetchArchive(), lbFetchLive()]).then(function (res) {
+    var ok = res[0] || res[1] || res[2];
     var time = new Date();
     lbNote(ok
       ? "общий для всех · " + ("0" + time.getHours()).slice(-2) + ":" + ("0" + time.getMinutes()).slice(-2)
       : "общий для всех · нет связи");
+    lbPushStore(false);
   });
 }
 
@@ -4641,6 +4810,8 @@ function lbSendScore(score, auto) {
         btn.disabled = true;
       }
       LB.sending = false;
+      /* сразу дописываем рекорд в общий архив, чтобы его увидели все */
+      lbFetchStore().then(function () { lbPushStore(true); });
       lbFetchArchive();
     })
     .catch(function () {
@@ -4724,8 +4895,11 @@ function initLeaderboard() {
   lbRender();
   lbLoad();
   setInterval(function () {
+    if (document.hidden) return;
+    lbFetchStore();
     lbFetchArchive();
     lbFetchLive();
+    lbPushStore(false);
   }, 60000);
 }
 
@@ -4736,6 +4910,7 @@ function init() {
   renderShip();
   renderSold();
   loadSold();
+  startSoldLive();
   renderReviews();
   setupShare();
 
