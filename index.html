@@ -1416,10 +1416,10 @@ body.light .board__item--top { background: #f0ffe0; border-color: #12803c; }
         <canvas id="gameCanvas" width="900" height="460" aria-label="Игра: режь арбузы"></canvas>
         <div class="game__overlay" id="gameOverlay">
           <p class="game__big" id="gameOverTitle">Готов резать?</p>
-          <p class="game__hint" id="gameOverHint">Тащи мышкой по арбузам. Свиной 🐷 — не трогай, будет взрыв.</p>
+          <p class="game__hint" id="gameOverHint">Тащи мышкой по арбузам. Свиной 🐷 — не трогай, будет взрыв. Имя выбирается один раз — потом результат обновляется, только если побьёшь свой рекорд.</p>
           <div class="game__name">
-            <label class="game__namelabel" for="gameName">Имя для рейтинга</label>
-            <input class="input" id="gameName" type="text" maxlength="30" placeholder="Только имя, буквами">
+            <label class="game__namelabel" for="gameName">Имя для рейтинга (один раз)</label>
+            <input class="input" id="gameName" type="text" maxlength="30" placeholder="Настоящее имя, например: Иван">
             <p class="game__namehint" id="gameNameHint"></p>
           </div>
           <div class="game__send" id="gameSendBox" hidden>
@@ -2942,13 +2942,81 @@ function hasBadWords(s) {
   return false;
 }
 
-/* строгая проверка имени: только буквы, пробел и дефис */
+/* ---------- проверка имени: только настоящие имена ---------- */
+/* список распространённых имён (в нижнем регистре, ё = е) */
+var NAME_WORDS = (
+  "александр алексей анатолий андрей андрюша антон аркадий арсений артем артемий артур афанасий " +
+  "богдан борис борислав вадим валентин валерий василий виктор виталий владимир владислав всеволод вячеслав " +
+  "гаврила гавриил геннадий георгий герман глеб гордей григорий гриша давид дамир даниил данила даниэль " +
+  "демьян денис дмитрий дима добрыня евгений егор елисей емельян еремей ефим захар иван игнат игорь иларион " +
+  "илья иннокентий иосиф ислам кирилл клавдий клим константин корней костя лаврентий лев леонид лука макар " +
+  "максим макс марат марк мартын матвей мирон мирослав михаил миша назар нестор никита николай нил олег " +
+  "онисим павел пантелей петр платон прохор радим ратмир роман ростислав руслан рустам савва савелий самсон " +
+  "светозар семен сережа сергей станислав степан тарас тимофей тимур тихон трофим федор феликс филипп фрол " +
+  "эдуард эльдар эмиль эрик юлиан юрий юра яков ян ярослав ахмед али амир аслан адам гасан хасан магомед " +
+  "мурат рамиль ринат тагир шамиль юнус юсуп ник " +
+  "александра алина алиса алла альбина анастасия ангелина анна антонина арина агата аделина азалия аида " +
+  "айгуль алсу амелия амина асель валентина валерия варвара василиса вера вероника виктория виолетта " +
+  "владислава галина гульнара гульшат дарья даша диана динара ева евгения екатерина елена елизавета жанна " +
+  "жасмин зарина земфира зинаида злата зоя инна ирина камила карина кира клавдия кристина ксения лариса " +
+  "лейла лена лидия лилиана лилия любовь людмила мадина маргарита марина мария марта маша милана милена " +
+  "мирослава надежда наиля наталья наташа нелли ника нина нонна оксана олеся ольга полина раиса регина " +
+  "римма роза сабина сара света светлана снежана софия софья станислава таисия тамара таня татьяна ульяна " +
+  "эвелина элеонора элина эльвира эльмира эмилия эсмира юлия юля яна ярослава ясмина " +
+  "саша шура женя валя паша вика настя катя оля ира юра ваня петя вася коля алеша леша гоша"
+).split(/\s+/);
+
+var NAME_SET = {};
+(function () {
+  for (var i = 0; i < NAME_WORDS.length; i++) {
+    if (NAME_WORDS[i]) NAME_SET[NAME_WORDS[i]] = true;
+  }
+})();
+
+/* приводим имя к аккуратному виду: «иван петров» → «Иван Петров» */
+function normalizeName(s) {
+  var t = String(s || "").replace(/\s+/g, " ").trim();
+  if (!t) return "";
+  return t.split(" ").map(function (word) {
+    return word.split("-").map(function (part) {
+      if (!part) return part;
+      return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+    }).join("-");
+  }).join(" ");
+}
+
+/* слово похоже на фамилию: есть гласные, нет длинных каш */
+function nameWordOk(word) {
+  var w = String(word || "").toLowerCase().replace(/ё/g, "е");
+  if (w.length < 2 || w.length > 20) return false;
+  var vowels = (w.match(/[аеиоуыэюя]/g) || []).length;
+  if (!vowels) return false;
+  if (vowels < Math.ceil(w.length / 4)) return false;
+  if (/[аеиоуыэюя]{4,}/.test(w)) return false;
+  if (/[^аеиоуыэюя]{4,}/.test(w)) return false;
+  if (/(.)\1\1/.test(w)) return false;
+  return true;
+}
+
+/* первое слово должно быть настоящим именем, остальные — фамилией */
+function looksLikeName(t) {
+  var words = String(t || "").toLowerCase().replace(/ё/g, "е").split(/[ \-]+/).filter(function (w) { return !!w; });
+  if (!words.length) return false;
+  if (!NAME_SET[words[0]]) return false;
+  for (var i = 1; i < words.length; i++) {
+    if (!nameWordOk(words[i])) return false;
+  }
+  return true;
+}
+
+/* строгая проверка имени: только русские буквы и настоящее имя */
 function nameProblem(s) {
-  var t = String(s || "").trim();
+  var t = String(s || "").trim().replace(/\s+/g, " ");
   if (t.length < 2) return "Напиши, как тебя зовут.";
   if (t.length > 30) return "Слишком длинное имя — максимум 30 букв.";
-  if (!/^[А-Яа-яЁёA-Za-z\- ]+$/.test(t)) return "В имени можно только буквы, пробел и дефис.";
+  if (!/^[А-Яа-яЁё\- ]+$/.test(t)) return "В имени можно только русские буквы, пробел и дефис.";
   if (hasBadWords(t)) return "Давай без мата — у нас тут бабушки.";
+  if (!looksLikeName(t)) return "Это не похоже на имя. Напиши настоящее имя, например: Иван или Мария.";
   return null;
 }
 
@@ -4293,10 +4361,13 @@ function gameOver() {
   gameDraw();
 
   var hint = "Счёт: <b>" + GAME.score + "</b> · Рекорд: <b>" + GAME.best + "</b>";
+  var own = lbOwn();
   if (isRecord) {
     hint += "<br>Новый рекорд! 🏆";
   } else if (GAME.score > 0) {
-    hint += '<br><span class="game__small">Результат можно отправить в общий рейтинг.</span>';
+    hint += own
+      ? '<br><span class="game__small">В рейтинге у тебя ' + own.best + ". Побей — и результат обновится.</span>"
+      : '<br><span class="game__small">Результат можно отправить в общий рейтинг.</span>';
   }
 
   document.getElementById("gameOverTitle").textContent = "Игра окончена";
@@ -4466,7 +4537,16 @@ var LB = {
   scores: [],
   seen: {},
   lastSent: read("prz_lb_last", 0) || 0,
-  name: String(read("prz_lb_name", "") || "").trim(),
+  name: normalizeName(read("prz_lb_name", "") || ""),
+  /* одно устройство = одна запись в рейтинге */
+  own: (function () {
+    var o = read("prz_lb_own", null);
+    if (!o || typeof o !== "object") return null;
+    var nm = normalizeName(o.name);
+    var best = parseInt(o.best, 10);
+    if (nameProblem(nm) || !isFinite(best) || best < 0) return null;
+    return { name: nm, best: best };
+  })(),
   loaded: false,
   sending: false
 };
@@ -4478,7 +4558,7 @@ function lbParse(text) {
 }
 
 function lbAdd(name, score, ts, key) {
-  name = String(name || "").trim();
+  name = normalizeName(name);
   score = parseInt(score, 10);
   ts = parseInt(ts, 10) || 0;
 
@@ -4518,7 +4598,7 @@ function lbNormalizeList(arr) {
     var s = arr[i];
     if (!s) continue;
 
-    var name = String(s.name || "").trim();
+    var name = normalizeName(s.name);
     var score = parseInt(s.score, 10);
     var ts = parseInt(s.ts, 10) || 0;
 
@@ -4737,8 +4817,28 @@ function lbHideSend() {
 /* имя берём из поля ввода, а если оно пустое — из сохранённого */
 function lbCurrentName() {
   var input = document.getElementById("gameName");
-  var value = input ? input.value.trim() : "";
+  var value = input ? normalizeName(input.value) : "";
   return value || LB.name;
+}
+
+/* запись этого устройства: одно имя и лучший отправленный результат */
+function lbOwn() {
+  var o = LB.own;
+  if (!o) return null;
+  var name = normalizeName(o.name);
+  var best = parseInt(o.best, 10);
+  if (nameProblem(name) || !isFinite(best) || best < 0) return null;
+  return { name: name, best: best };
+}
+
+function lbSaveOwn(name, best) {
+  name = normalizeName(name);
+  best = parseInt(best, 10);
+  if (nameProblem(name) || !isFinite(best) || best < 0) return;
+  LB.own = { name: name, best: best };
+  LB.name = name;
+  write("prz_lb_own", LB.own);
+  write("prz_lb_name", name);
 }
 
 function lbShowSend(auto) {
@@ -4754,27 +4854,39 @@ function lbShowSend(auto) {
   }
 
   box.hidden = false;
-  var name = lbCurrentName();
+  var own = lbOwn();
+  var name = own ? own.name : lbCurrentName();
   var saved = name && !nameProblem(name);
+
+  /* устройство уже отметилось, а результат хуже — обновлять нечего */
+  if (own && GAME.score <= own.best) {
+    if (btn) btn.hidden = true;
+    if (who) {
+      who.hidden = false;
+      who.textContent = "Ты в рейтинге как «" + own.name + "»";
+    }
+    if (note) note.textContent = "Твой лучший результат: " + own.best + ". Побей его, чтобы обновить.";
+    return;
+  }
 
   if (auto && saved) {
     if (btn) btn.hidden = true;
     if (who) {
       who.hidden = false;
-      who.textContent = "Отправляем рекорд как «" + name + "»";
+      who.textContent = "Отправляем результат как «" + name + "»";
     }
     if (note) note.textContent = "Отправляем…";
   } else {
     if (btn) {
       btn.hidden = false;
       btn.disabled = false;
-      btn.textContent = "Отправить в рейтинг";
+      btn.textContent = own ? "Обновить результат" : "Отправить в рейтинг";
     }
     if (who) who.hidden = true;
     if (note) {
       note.textContent = saved
         ? "Проверь имя и отправь результат."
-        : "Введи имя выше — и результат уйдёт в общий рейтинг.";
+        : "Введи настоящее имя выше — и результат уйдёт в общий рейтинг.";
     }
   }
 }
@@ -4785,8 +4897,15 @@ function lbOnGameOver(isRecord) {
   if (share) share.hidden = GAME.score <= 0;
   if (GAME.score <= 0) return;
 
-  /* отправлять можно любой результат, а не только новый рекорд:
-     в таблице всё равно останется лучший результат игрока */
+  var own = lbOwn();
+  if (own) {
+    /* устройство уже отметилось: имя не меняем, результат только улучшаем */
+    LB.name = own.name;
+    lbShowSend(GAME.score > own.best);
+    if (GAME.score > own.best) lbSendScore(GAME.score, true);
+    return;
+  }
+
   var name = lbCurrentName();
   var saved = name && !nameProblem(name);
   if (saved) {
@@ -4803,7 +4922,8 @@ function lbSendScore(score, auto) {
 
   var note = document.getElementById("gameSendNote");
   var btn = document.getElementById("gameSend");
-  var name = LB.name;
+  var own = lbOwn();
+  var name = own ? own.name : normalizeName(LB.name);
   var err = nameProblem(name);
 
   if (err) {
@@ -4811,6 +4931,12 @@ function lbSendScore(score, auto) {
     return;
   }
   if (!isFinite(score) || score <= 0) return;
+
+  /* с этого устройства отправляем только улучшение */
+  if (own && score <= own.best) {
+    if (note) note.textContent = "Твой лучший результат: " + own.best + ". Побей его, чтобы обновить.";
+    return;
+  }
 
   var now = Date.now();
   var wait = 20000 - (now - LB.lastSent);
@@ -4827,15 +4953,16 @@ function lbSendScore(score, auto) {
 
   LB.sending = true;
   if (btn && !auto) btn.disabled = true;
-  if (note) note.textContent = auto ? "Отправляем рекорд…" : "Отправляем…";
+  if (note) note.textContent = auto ? "Отправляем результат…" : "Отправляем…";
 
   fetch(LB.postUrl, { method: "POST", body: "LB|" + name + "|" + score + "|" + now })
     .then(function (r) {
       if (!r.ok) throw new Error("bad status");
       LB.lastSent = now;
       write("prz_lb_last", now);
-      write("prz_lb_name", name);
       lbAdd(name, score, now, "own|" + now);
+      lbSaveOwn(name, score);
+      lbNameHint();
       lbRender();
       /* показываем таблицу сразу, чтобы результат было видно */
       lbToggle(true);
@@ -4843,13 +4970,13 @@ function lbSendScore(score, auto) {
       if (panel && panel.scrollIntoView) {
         try { panel.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
       }
-      if (note) note.textContent = "Готово! Результат в общем рейтинге.";
+      if (note) note.textContent = "Готово! Твой результат в общем рейтинге.";
       if (btn && !auto) {
         btn.textContent = "Отправлено ✓";
         btn.disabled = true;
       }
       LB.sending = false;
-      /* сразу дописываем рекорд в общий архив, чтобы его увидели все */
+      /* сразу дописываем результат в общий архив, чтобы его увидели все */
       lbFetchStore(true).then(function () { lbPushStore(true); });
       lbFetchArchive();
     })
@@ -4871,7 +4998,19 @@ function lbSubmit() {
   var note = document.getElementById("gameSendNote");
   if (!input) return;
 
-  var name = input.value.trim();
+  var own = lbOwn();
+  if (own) {
+    LB.name = own.name;
+    if (GAME.score <= own.best) {
+      if (note) note.textContent = "Твой лучший результат: " + own.best + ". Побей его, чтобы обновить.";
+      lbNameHint();
+      return;
+    }
+    lbSendScore(GAME.score, false);
+    return;
+  }
+
+  var name = normalizeName(input.value);
   var err = nameProblem(name);
   if (err) {
     if (note) note.textContent = err;
@@ -4880,34 +5019,10 @@ function lbSubmit() {
   }
 
   LB.name = name;
+  input.value = name;
   write("prz_lb_name", name);
   lbNameHint();
   lbSendScore(GAME.score, false);
-}
-
-function lbChangeName() {
-  LB.name = "";
-  write("prz_lb_name", "");
-
-  var input = document.getElementById("gameName");
-  var btn = document.getElementById("gameSend");
-  var who = document.getElementById("gameSendWho");
-  var change = document.getElementById("gameNameChange");
-  var note = document.getElementById("gameSendNote");
-
-  if (input) {
-    input.hidden = false;
-    input.value = "";
-    input.focus();
-  }
-  if (btn) {
-    btn.hidden = false;
-    btn.disabled = false;
-    btn.textContent = "Сохранить имя и отправить";
-  }
-  if (who) who.hidden = true;
-  if (change) change.hidden = true;
-  if (note) note.textContent = "";
 }
 
 function lbShare() {
@@ -4917,48 +5032,80 @@ function lbShare() {
 }
 
 /* подсказка под полем имени: сразу видно, почему имя не принимается */
-function lbNameHint() {
+function lbNameHint(soft) {
   var input = document.getElementById("gameName");
   var hint = document.getElementById("gameNameHint");
   if (!input || !hint) return;
 
-  var value = input.value.trim();
-  var problem = value ? nameProblem(value) : "";
-
-  if (problem) {
-    hint.textContent = problem;
-    hint.className = "game__namehint is-bad";
-  } else if (value) {
-    hint.textContent = "Имя сохранено: «" + value + "»";
+  var own = lbOwn();
+  if (own) {
+    input.readOnly = true;
+    input.value = own.name;
+    hint.textContent = "Ты в рейтинге как «" + own.name + "». Рекорд: " + own.best + ". Побей его, чтобы обновить.";
     hint.className = "game__namehint is-ok";
-  } else {
+    return;
+  }
+
+  input.readOnly = false;
+  var value = normalizeName(input.value);
+
+  if (!value) {
     hint.textContent = "";
     hint.className = "game__namehint";
+    return;
   }
+
+  if (!/^[А-Яа-яЁё\- ]+$/.test(value)) {
+    hint.textContent = "В имени можно только русские буквы, пробел и дефис.";
+    hint.className = "game__namehint is-bad";
+    return;
+  }
+  if (value.length > 30) {
+    hint.textContent = "Слишком длинное имя — максимум 30 букв.";
+    hint.className = "game__namehint is-bad";
+    return;
+  }
+  if (hasBadWords(value)) {
+    hint.textContent = "Давай без мата — у нас тут бабушки.";
+    hint.className = "game__namehint is-bad";
+    return;
+  }
+
+  if (!looksLikeName(value)) {
+    if (soft) {
+      hint.textContent = "Напиши настоящее имя, например: Иван или Мария.";
+      hint.className = "game__namehint";
+    } else {
+      hint.textContent = "Это не похоже на имя. Напиши настоящее имя, например: Иван или Мария.";
+      hint.className = "game__namehint is-bad";
+    }
+    return;
+  }
+
+  hint.textContent = "Имя подойдёт: «" + value + "»";
+  hint.className = "game__namehint is-ok";
 }
 
 function initLeaderboard() {
   var send = document.getElementById("gameSend");
   var input = document.getElementById("gameName");
   var toggle = document.getElementById("boardToggle");
-  var change = document.getElementById("gameNameChange");
   var share = document.getElementById("gameShare");
 
   if (send) send.addEventListener("click", lbSubmit);
   if (toggle) toggle.addEventListener("click", function () { lbToggle(); });
-  if (change) change.addEventListener("click", lbChangeName);
   if (share) share.addEventListener("click", lbShare);
   if (input) {
     /* показываем сохранённое имя и запоминаем новое сразу при вводе */
     if (LB.name && !nameProblem(LB.name)) input.value = LB.name;
     lbNameHint();
     input.addEventListener("input", function () {
-      var name = input.value.trim();
+      var name = normalizeName(input.value);
       if (name && !nameProblem(name)) {
         LB.name = name;
         write("prz_lb_name", name);
       }
-      lbNameHint();
+      lbNameHint(true);
     });
     input.addEventListener("keydown", function (e) {
       if (e.key === "Enter") { e.preventDefault(); lbSubmit(); }
