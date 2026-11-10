@@ -1895,6 +1895,43 @@ function write(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
 }
 
+/* fetch с жёстким таймаутом: сеть не должна подвешивать интерфейс */
+function fetchT(url, opts, ms) {
+  ms = ms || 8000;
+  var ctrl = null;
+  try { ctrl = new AbortController(); } catch (e) { ctrl = null; }
+
+  var o = {};
+  if (opts) {
+    for (var k in opts) {
+      if (Object.prototype.hasOwnProperty.call(opts, k)) o[k] = opts[k];
+    }
+  }
+  if (ctrl) o.signal = ctrl.signal;
+
+  return new Promise(function (resolve, reject) {
+    var done = false;
+    var timer = setTimeout(function () {
+      if (done) return;
+      done = true;
+      if (ctrl) { try { ctrl.abort(); } catch (e) {} }
+      reject(new Error("timeout"));
+    }, ms);
+
+    fetch(url, o).then(function (r) {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      resolve(r);
+    }, function (e) {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      reject(e);
+    });
+  });
+}
+
 var toastTimer = null;
 function toast(text) {
   var el = document.getElementById("toast");
@@ -4556,7 +4593,18 @@ function initGame() {
 var LB = {
   topic: "prz-liga-2f8d61",
   postUrl: "https://ntfy.sh/prz-liga-2f8d61",
+  /* ntfy.sh в России заблокирован — шлём сразу на несколько зеркал */
+  postUrls: [
+    "https://ntfy.sh/prz-liga-2f8d61",
+    "https://ntfy.envs.net/prz-liga-2f8d61",
+    "https://ntfy.adminforge.de/prz-liga-2f8d61"
+  ],
   liveUrl: "https://ntfy.sh/prz-liga-2f8d61/json?poll=1&since=12h",
+  liveUrls: [
+    "https://ntfy.sh/prz-liga-2f8d61/json?poll=1&since=12h",
+    "https://ntfy.envs.net/prz-liga-2f8d61/json?poll=1&since=12h",
+    "https://ntfy.adminforge.de/prz-liga-2f8d61/json?poll=1&since=12h"
+  ],
   archiveUrl: "https://raw.githubusercontent.com/pereprodazhniki/arbuz/main/leaderboard.json",
   /* общий архив рейтинга: пишется из браузера игрока, доступен всем */
   storeUrl: "https://api.restful-api.dev/objects/ff808181a09d98f701a1c3fb7d577947",
@@ -4658,7 +4706,7 @@ function lbFetchStore(force) {
   if (!force && now - LB.lastStoreFetch < 60000) return Promise.resolve(false);
   LB.lastStoreFetch = now;
 
-  return fetch(LB.storeUrl, { cache: "no-store" })
+  return fetchT(LB.storeUrl, { cache: "no-store" }, 8000)
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (data) {
       if (!data) return false;
@@ -4697,14 +4745,14 @@ function lbPushStore(force) {
   if (!force && now - LB.lastPush < 60000) return Promise.resolve(false);
   LB.lastPush = now;
 
-  return fetch(LB.storeUrl, {
+  return fetchT(LB.storeUrl, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       name: "prz-liga",
       data: { updated: new Date().toISOString(), scores: scores }
     })
-  })
+  }, 8000)
     .then(function (r) {
       if (!r.ok) throw new Error("bad status");
       LB.storeScores = scores;
@@ -4772,7 +4820,6 @@ function lbToggle(force) {
   lbToggleNote();
 
   if (open) {
-    lbFetchStore();
     lbFetchArchive();
     lbFetchLive();
   }
@@ -4784,28 +4831,41 @@ function lbNote(text) {
 }
 
 function lbFetchLive() {
-  return fetch(LB.liveUrl, { cache: "no-store" })
-    .then(function (r) { return r.ok ? r.text() : ""; })
-    .then(function (text) {
-      var lines = text.split("\n");
-      var changed = false;
+  var urls = LB.liveUrls && LB.liveUrls.length ? LB.liveUrls : [LB.liveUrl];
+  var jobs = urls.map(function (url) {
+    return fetchT(url, { cache: "no-store" }, 6000)
+      .then(function (r) { return r.ok ? r.text() : ""; })
+      .then(function (text) { return { ok: !!text, text: text }; })
+      .catch(function () { return { ok: false, text: "" }; });
+  });
+
+  return Promise.all(jobs).then(function (res) {
+    var changed = false;
+    var any = false;
+
+    for (var j = 0; j < res.length; j++) {
+      if (!res[j].ok) continue;
+      any = true;
+
+      var lines = res[j].text.split("\n");
       for (var i = 0; i < lines.length; i++) {
         if (!lines[i]) continue;
         var ev;
         try { ev = JSON.parse(lines[i]); } catch (e) { continue; }
         if (!ev || ev.event !== "message" || !ev.message) continue;
         var p = lbParse(ev.message);
-        if (p && lbAdd(p.name, p.score, p.ts, ev.id)) changed = true;
+        if (p && lbAdd(p.name, p.score, p.ts, "live|" + j + "|" + ev.id)) changed = true;
       }
-      if (changed) lbRender();
-      return true;
-    })
-    .catch(function () { return false; });
+    }
+
+    if (changed) lbRender();
+    return any;
+  });
 }
 
 function lbFetchArchive() {
   var url = LB.archiveUrl + (LB.archiveUrl.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now();
-  return fetch(url, { cache: "no-store" })
+  return fetchT(url, { cache: "no-store" }, 8000)
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (data) {
       if (!data) return false;
@@ -4827,13 +4887,12 @@ function lbFetchArchive() {
 function lbLoad() {
   if (LB.loaded) return;
   LB.loaded = true;
-  Promise.all([lbFetchStore(), lbFetchArchive(), lbFetchLive()]).then(function (res) {
-    var ok = res[0] || res[1] || res[2];
+  Promise.all([lbFetchArchive(), lbFetchLive()]).then(function (res) {
+    var ok = res[0] || res[1];
     var time = new Date();
     lbNote(ok
       ? "общий для всех · " + ("0" + time.getHours()).slice(-2) + ":" + ("0" + time.getMinutes()).slice(-2)
       : "общий для всех · нет связи");
-    lbPushStore(false);
   });
 }
 
@@ -4947,6 +5006,27 @@ function lbOnGameOver(isRecord) {
   if (saved) lbSendScore(GAME.score, true);
 }
 
+/* публикуем результат во все доступные зеркала ленты; интерфейс не ждёт */
+function lbPublishLive(name, score, ts) {
+  var urls = LB.postUrls && LB.postUrls.length ? LB.postUrls : [LB.postUrl];
+  var jobs = urls.map(function (url) {
+    return fetchT(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=UTF-8" },
+      body: "LB|" + name + "|" + score + "|" + ts
+    }, 6000)
+      .then(function (r) { return !!r.ok; })
+      .catch(function () { return false; });
+  });
+
+  return Promise.all(jobs).then(function (res) {
+    for (var i = 0; i < res.length; i++) {
+      if (res[i]) return true;
+    }
+    return false;
+  });
+}
+
 function lbSendScore(score, auto) {
   if (LB.sending) return;
 
@@ -4983,44 +5063,35 @@ function lbSendScore(score, auto) {
 
   LB.sending = true;
   if (btn && !auto) btn.disabled = true;
-  if (note) note.textContent = auto ? "Отправляем результат…" : "Отправляем…";
 
-  fetch(LB.postUrl, { method: "POST", body: "LB|" + name + "|" + score + "|" + now })
-    .then(function (r) {
-      if (!r.ok) throw new Error("bad status");
-      LB.lastSent = now;
-      write("prz_lb_last", now);
-      lbAdd(name, score, now, "own|" + now);
-      lbSaveOwn(name, score);
-      lbNameHint();
-      lbRender();
-      /* показываем таблицу сразу, чтобы результат было видно */
-      lbToggle(true);
-      var panel = document.getElementById("boardPanel");
-      if (panel && panel.scrollIntoView) {
-        try { panel.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
-      }
-      if (note) note.textContent = "Готово! Твой результат в общем рейтинге.";
-      if (btn && !auto) {
-        btn.textContent = "Отправлено ✓";
-        btn.disabled = true;
-      }
-      LB.sending = false;
-      /* сразу дописываем результат в общий архив, чтобы его увидели все */
-      lbFetchStore(true).then(function () { lbPushStore(true); });
-      lbFetchArchive();
-    })
-    .catch(function () {
-      LB.sending = false;
-      if (auto) {
-        lbShowSend(false);
-        var n2 = document.getElementById("gameSendNote");
-        if (n2) n2.textContent = "Не получилось отправить автоматически. Попробуй ещё раз.";
-      } else if (note) {
-        note.textContent = "Не получилось отправить. Проверь интернет и попробуй ещё раз.";
-        if (btn) btn.disabled = false;
-      }
-    });
+  /* 1. Сохраняем результат сразу и локально: сеть для этого не нужна */
+  LB.lastSent = now;
+  write("prz_lb_last", now);
+  lbAdd(name, score, now, "own|" + now);
+  lbSaveOwn(name, score);
+  lbNameHint();
+  lbRender();
+  lbToggle(true);
+
+  var panel = document.getElementById("boardPanel");
+  if (panel && panel.scrollIntoView) {
+    try { panel.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
+  }
+
+  if (note) note.textContent = "Отправлено! Синхронизируем с общим рейтингом…";
+  if (btn && !auto) {
+    btn.textContent = "Отправлено ✓";
+    btn.disabled = true;
+  }
+
+  /* 2. Отправляем во все зеркала ленты параллельно; интерфейс уже свободен */
+  lbPublishLive(name, score, now).then(function (ok) {
+    LB.sending = false;
+    if (!note) return;
+    note.textContent = ok
+      ? "Готово! Твой результат в общем рейтинге."
+      : "Результат сохранён на этом устройстве. Общий рейтинг обновится, когда появится связь.";
+  });
 }
 
 function lbSubmit() {
@@ -5147,8 +5218,7 @@ function initLeaderboard() {
   setInterval(function () {
     if (document.hidden) return;
     lbFetchArchive();
-    /* новые результаты приходят из живой ленты; архив трогаем только при изменениях */
-    lbFetchLive().then(function () { lbPushStore(false); });
+    lbFetchLive();
   }, 60000);
 }
 
