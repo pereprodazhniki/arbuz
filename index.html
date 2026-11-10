@@ -1113,6 +1113,9 @@ body.light .jobform__cooldown { background: #f2fff7; border-color: #12803c; colo
 .game__name { display: flex; flex-direction: column; gap: 6px; align-items: center; width: min(320px, 92%); }
 .game__namelabel { font-size: 13px; font-weight: 700; color: var(--muted); }
 .game__name .input { text-align: center; }
+.game__namehint { margin: 0; min-height: 14px; font-size: 12px; line-height: 1.2; }
+.game__namehint.is-bad { color: #ff9b9b; }
+.game__namehint.is-ok { color: var(--lime); }
 .game__send { display: flex; flex-direction: column; gap: 8px; align-items: center; width: min(320px, 92%); margin-bottom: 8px; }
 .game__send[hidden] { display: none; }
 .game__send [hidden] { display: none !important; }
@@ -1417,6 +1420,7 @@ body.light .board__item--top { background: #f0ffe0; border-color: #12803c; }
           <div class="game__name">
             <label class="game__namelabel" for="gameName">Имя для рейтинга</label>
             <input class="input" id="gameName" type="text" maxlength="30" placeholder="Только имя, буквами">
+            <p class="game__namehint" id="gameNameHint"></p>
           </div>
           <div class="game__send" id="gameSendBox" hidden>
             <p class="game__sendwho" id="gameSendWho" hidden></p>
@@ -3433,7 +3437,12 @@ function audioCtx() {
   if (!MUSIC.ctx) {
     var AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return null;
-    MUSIC.ctx = new AC();
+    try {
+      MUSIC.ctx = new AC();
+    } catch (e) {
+      /* звук запрещён браузером — игра должна работать без него */
+      return null;
+    }
 
     MUSIC.master = MUSIC.ctx.createGain();
     MUSIC.master.gain.value = 0.9;
@@ -4204,7 +4213,8 @@ function gameFrame(ts) {
 }
 
 function gameStart() {
-  audioCtx();
+  /* звук не должен мешать запуску игры */
+  try { audioCtx(); } catch (e) {}
 
   GAME.running = true;
   GAME.over = false;
@@ -4865,11 +4875,13 @@ function lbSubmit() {
   var err = nameProblem(name);
   if (err) {
     if (note) note.textContent = err;
+    lbNameHint();
     return;
   }
 
   LB.name = name;
   write("prz_lb_name", name);
+  lbNameHint();
   lbSendScore(GAME.score, false);
 }
 
@@ -4904,6 +4916,27 @@ function lbShare() {
   copyText(text, "Результат скопирован — кидай друзьям");
 }
 
+/* подсказка под полем имени: сразу видно, почему имя не принимается */
+function lbNameHint() {
+  var input = document.getElementById("gameName");
+  var hint = document.getElementById("gameNameHint");
+  if (!input || !hint) return;
+
+  var value = input.value.trim();
+  var problem = value ? nameProblem(value) : "";
+
+  if (problem) {
+    hint.textContent = problem;
+    hint.className = "game__namehint is-bad";
+  } else if (value) {
+    hint.textContent = "Имя сохранено: «" + value + "»";
+    hint.className = "game__namehint is-ok";
+  } else {
+    hint.textContent = "";
+    hint.className = "game__namehint";
+  }
+}
+
 function initLeaderboard() {
   var send = document.getElementById("gameSend");
   var input = document.getElementById("gameName");
@@ -4918,12 +4951,14 @@ function initLeaderboard() {
   if (input) {
     /* показываем сохранённое имя и запоминаем новое сразу при вводе */
     if (LB.name && !nameProblem(LB.name)) input.value = LB.name;
+    lbNameHint();
     input.addEventListener("input", function () {
       var name = input.value.trim();
       if (name && !nameProblem(name)) {
         LB.name = name;
         write("prz_lb_name", name);
       }
+      lbNameHint();
     });
     input.addEventListener("keydown", function (e) {
       if (e.key === "Enter") { e.preventDefault(); lbSubmit(); }
