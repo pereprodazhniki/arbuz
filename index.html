@@ -4605,7 +4605,13 @@ var LB = {
     "https://ntfy.envs.net/prz-liga-2f8d61/json?poll=1&since=12h",
     "https://ntfy.adminforge.de/prz-liga-2f8d61/json?poll=1&since=12h"
   ],
-  archiveUrl: "https://raw.githubusercontent.com/pereprodazhniki/arbuz/main/leaderboard.json",
+  archiveUrl: "https://pereprodazhniki.github.io/arbuz/leaderboard.json",
+  /* тот же домен, что и игра — работает даже там, где GitHub-домены режут */
+  archiveUrls: [
+    "https://pereprodazhniki.github.io/arbuz/leaderboard.json",
+    "https://cdn.jsdelivr.net/gh/pereprodazhniki/arbuz@main/leaderboard.json",
+    "https://raw.githubusercontent.com/pereprodazhniki/arbuz/main/leaderboard.json"
+  ],
   /* общий архив рейтинга: пишется из браузера игрока, доступен всем */
   storeUrl: "https://api.restful-api.dev/objects/ff808181a09d98f701a1c3fb7d577947",
   storeReady: false,
@@ -4863,25 +4869,38 @@ function lbFetchLive() {
   });
 }
 
+/* архив читаем с нескольких адресов: свой домен, CDN и raw.githubusercontent */
 function lbFetchArchive() {
-  var url = LB.archiveUrl + (LB.archiveUrl.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now();
-  return fetchT(url, { cache: "no-store" }, 8000)
-    .then(function (r) { return r.ok ? r.json() : null; })
-    .then(function (data) {
-      if (!data) return false;
-      var arr = data.scores || data;
-      if (!Array.isArray(arr)) return false;
+  var urls = LB.archiveUrls && LB.archiveUrls.length ? LB.archiveUrls : [LB.archiveUrl];
+  var stamp = "t=" + Date.now();
+  var jobs = urls.map(function (u) {
+    var url = u + (u.indexOf("?") >= 0 ? "&" : "?") + stamp;
+    return fetchT(url, { cache: "no-store" }, 8000)
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; });
+  });
 
-      var changed = false;
+  return Promise.all(jobs).then(function (list) {
+    var changed = false;
+    var any = false;
+
+    for (var j = 0; j < list.length; j++) {
+      var data = list[j];
+      if (!data) continue;
+      var arr = data.scores || data;
+      if (!Array.isArray(arr)) continue;
+      any = true;
+
       for (var i = 0; i < arr.length; i++) {
         var s = arr[i];
         if (!s) continue;
         if (lbAdd(s.name, s.score, s.ts || 0, "a|" + (s.name || "") + "|" + s.score + "|" + (s.ts || 0))) changed = true;
       }
-      if (changed) lbRender();
-      return true;
-    })
-    .catch(function () { return false; });
+    }
+
+    if (changed) lbRender();
+    return any;
+  });
 }
 
 function lbLoad() {
