@@ -1238,11 +1238,11 @@ body.light .board__item--top { background: #f0ffe0; border-color: #12803c; }
   </a>
   <nav class="nav">
     <a href="#catalog">Каталог</a>
-    <a href="#game">Игра</a>
     <a href="#memes">Мемы</a>
     <a href="#how">Доставка</a>
     <a href="#team">Команда</a>
     <a href="#reviews">Отзывы</a>
+    <a href="#game">Игра</a>
   </nav>
   <div class="music" id="musicBox">
     <button class="music__btn" id="musicBtn" type="button" title="Музыка" aria-expanded="false" aria-controls="musicPanel">🎵</button>
@@ -1394,55 +1394,6 @@ body.light .board__item--top { background: #f0ffe0; border-color: #12803c; }
       <div class="quiz__options" id="quizOptions"></div>
       <p class="quiz__score" id="quizScore"></p>
       <button class="btn btn--big" id="quizBtn" type="button">Начать</button>
-    </div>
-  </section>
-
-  <section class="section" id="game">
-    <h2 class="section__title">Арбузный слайсер</h2>
-    <p class="section__sub">Проведи мышкой (или пальцем) по арбузу — разрежешь. Свиной арбуз не трогай: он взрывается. Золотой даёт втрое больше очков.</p>
-
-    <div class="game">
-      <div class="game__hud">
-        <span>Счёт: <b id="gameScore">0</b></span>
-        <span>Рекорд: <b id="gameBest">0</b></span>
-        <span>Жизни: <b id="gameLives">❤️❤️❤️</b></span>
-        <span>Комбо: <b id="gameCombo">x1</b></span>
-        <button class="game__sound" id="gameSound" type="button" title="Звук игры">🔊</button>
-        <button class="game__sound" id="gamePause" type="button" title="Пауза">⏸</button>
-      </div>
-      <div class="game__combo"><i id="gameComboFill"></i></div>
-
-      <div class="game__stage">
-        <canvas id="gameCanvas" width="900" height="460" aria-label="Игра: режь арбузы"></canvas>
-        <div class="game__overlay" id="gameOverlay">
-          <p class="game__big" id="gameOverTitle">Готов резать?</p>
-          <p class="game__hint" id="gameOverHint">Тащи мышкой по арбузам. Свиной 🐷 — не трогай, будет взрыв. Имя выбирается один раз — потом результат обновляется, только если побьёшь свой рекорд.</p>
-          <div class="game__name">
-            <label class="game__namelabel" for="gameName">Имя для рейтинга (один раз)</label>
-            <input class="input" id="gameName" type="text" maxlength="30" placeholder="Настоящее имя, например: Иван">
-            <p class="game__namehint" id="gameNameHint"></p>
-          </div>
-          <div class="game__send" id="gameSendBox" hidden>
-            <p class="game__sendwho" id="gameSendWho" hidden></p>
-            <button class="btn btn--big" id="gameSend" type="button">Отправить в рейтинг</button>
-            <p class="game__sendnote" id="gameSendNote"></p>
-          </div>
-          <button class="btn btn--big" id="gameStart" type="button">Играть</button>
-          <button class="btn btn--ghost game__share" id="gameShare" type="button" hidden>Поделиться результатом</button>
-        </div>
-      </div>
-    </div>
-
-    <button class="board__toggle" id="boardToggle" type="button" aria-expanded="false" aria-controls="boardPanel">
-      <span>🏆 Рейтинг игроков</span>
-      <span class="board__toggle-note" id="boardToggleNote">показать</span>
-    </button>
-    <div class="board" id="boardPanel" hidden>
-      <div class="board__head">
-        <b>Топ-10</b>
-        <span id="boardNote">общий для всех</span>
-      </div>
-      <ol class="board__list" id="boardList"><li class="board__empty">Пока пусто. Стань первым!</li></ol>
     </div>
   </section>
 
@@ -1700,6 +1651,55 @@ body.light .board__item--top { background: #f0ffe0; border-color: #12803c; }
     <h2 class="section__title">Остался последний арбуз сезона</h2>
     <p>Один. Реально один. Потом закрываемся до весны.</p>
     <button class="btn btn--big" id="lastMelon" type="button">Забрать последний</button>
+  </section>
+
+  <section class="section" id="game">
+    <h2 class="section__title">Арбузный слайсер</h2>
+    <p class="section__sub">Проведи мышкой (или пальцем) по арбузу — разрежешь. Свиной арбуз не трогай: он взрывается. Золотой даёт втрое больше очков.</p>
+
+    <div class="game">
+      <div class="game__hud">
+        <span>Счёт: <b id="gameScore">0</b></span>
+        <span>Рекорд: <b id="gameBest">0</b></span>
+        <span>Жизни: <b id="gameLives">❤️❤️❤️</b></span>
+        <span>Комбо: <b id="gameCombo">x1</b></span>
+        <button class="game__sound" id="gameSound" type="button" title="Звук игры">🔊</button>
+        <button class="game__sound" id="gamePause" type="button" title="Пауза">⏸</button>
+      </div>
+      <div class="game__combo"><i id="gameComboFill"></i></div>
+
+      <div class="game__stage">
+        <canvas id="gameCanvas" width="900" height="460" aria-label="Игра: режь арбузы"></canvas>
+        <div class="game__overlay" id="gameOverlay">
+          <p class="game__big" id="gameOverTitle">Готов резать?</p>
+          <p class="game__hint" id="gameOverHint">Тащи мышкой по арбузам. Свиной 🐷 — не трогай, будет взрыв. Имя выбирается один раз — потом результат обновляется, только если побьёшь свой рекорд.</p>
+          <div class="game__name">
+            <label class="game__namelabel" for="gameName">Имя для рейтинга (один раз)</label>
+            <input class="input" id="gameName" type="text" maxlength="30" placeholder="Настоящее имя, например: Иван">
+            <p class="game__namehint" id="gameNameHint"></p>
+          </div>
+          <div class="game__send" id="gameSendBox" hidden>
+            <p class="game__sendwho" id="gameSendWho" hidden></p>
+            <button class="btn btn--big" id="gameSend" type="button">Отправить в рейтинг</button>
+            <p class="game__sendnote" id="gameSendNote"></p>
+          </div>
+          <button class="btn btn--big" id="gameStart" type="button">Играть</button>
+          <button class="btn btn--ghost game__share" id="gameShare" type="button" hidden>Поделиться результатом</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="board__toggle" id="boardToggle" type="button" aria-expanded="false" aria-controls="boardPanel">
+      <span>🏆 Рейтинг игроков</span>
+      <span class="board__toggle-note" id="boardToggleNote">показать</span>
+    </button>
+    <div class="board" id="boardPanel" hidden>
+      <div class="board__head">
+        <b>Топ-10</b>
+        <span id="boardNote">общий для всех</span>
+      </div>
+      <ol class="board__list" id="boardList"><li class="board__empty">Пока пусто. Стань первым!</li></ol>
+    </div>
   </section>
 
 </main>
