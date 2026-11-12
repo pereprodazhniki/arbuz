@@ -4590,6 +4590,17 @@ function initGame() {
 }
 
 /* ---------- общий рейтинг игры ---------- */
+/* после глобального сброса рейтинга старые привязки устройств больше не нужны */
+var LB_GEN = "2026-11-12-reset";
+if (read("prz_lb_gen", "") !== LB_GEN) {
+  try {
+    localStorage.removeItem("prz_lb_own");
+    localStorage.removeItem("prz_lb_name");
+    localStorage.removeItem("prz_lb_last");
+  } catch (e) {}
+  write("prz_lb_gen", LB_GEN);
+}
+
 var LB = {
   topic: "prz-liga-85e536",
   postUrl: "https://ntfy.sh/prz-liga-85e536",
