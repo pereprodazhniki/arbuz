@@ -4883,7 +4883,11 @@ function lbFetchArchive() {
   return Promise.all(jobs).then(function (list) {
     var changed = false;
     var any = false;
+    var best = null;
+    var bestTime = -1;
 
+    /* CDN (jsDelivr) может отдавать старый кэш, поэтому берём только самый
+       свежий архив по полю updated — иначе удалённые записи возвращаются */
     for (var j = 0; j < list.length; j++) {
       var data = list[j];
       if (!data) continue;
@@ -4891,11 +4895,19 @@ function lbFetchArchive() {
       if (!Array.isArray(arr)) continue;
       any = true;
 
-      for (var i = 0; i < arr.length; i++) {
-        var s = arr[i];
-        if (!s) continue;
-        if (lbAdd(s.name, s.score, s.ts || 0, "a|" + (s.name || "") + "|" + s.score + "|" + (s.ts || 0))) changed = true;
+      var stamp = Date.parse(data.updated || "") || 0;
+      if (stamp > bestTime) {
+        bestTime = stamp;
+        best = arr;
       }
+    }
+
+    if (!best) return any;
+
+    for (var i = 0; i < best.length; i++) {
+      var s = best[i];
+      if (!s) continue;
+      if (lbAdd(s.name, s.score, s.ts || 0, "a|" + (s.name || "") + "|" + s.score + "|" + (s.ts || 0))) changed = true;
     }
 
     if (changed) lbRender();
