@@ -2313,7 +2313,7 @@ body.light .upg-feed__who { color: #0d2b19; }
             <span>Общий рейтинг: кто собрал самый дорогой инвентарь в апгрейдере</span>
           </div>
           <div class="upg-top__actions">
-            <input class="upg-top__name" id="upgTopName" type="text" maxlength="30" placeholder="Твоё имя" aria-label="Имя для топа">
+            <input class="upg-top__name" id="upgTopName" type="text" maxlength="30" placeholder="Настоящее имя" aria-label="Настоящее имя для топа и ленты">
             <button class="upg-top__btn" id="upgTopRefresh" type="button">Обновить</button>
             <button class="upg-top__btn upg-top__btn--main" id="upgTopSend" type="button">Отправить в топ</button>
           </div>
@@ -2324,7 +2324,7 @@ body.light .upg-feed__who { color: #0d2b19; }
       </div>
 
       <div class="upg-feed">
-        <div class="upg-feed__head"><b>Живая лента</b><span>кто-то уже рискует</span></div>
+        <div class="upg-feed__head"><b>Живая лента</b><span>общая для всех · только настоящие имена</span></div>
         <div class="upg-feed__list" id="upgFeed"></div>
       </div>
     </div>
@@ -5993,7 +5993,6 @@ var UPG_ITEMS = [
 ];
 
 var UPG_START = ["classic", "pig", "seed"];
-var UPG_NAMES = ["БабуляЗина", "АрбузныйБарон", "ТимурБ", "Камиль", "Сафия", "Кира", "СвинАрбуз", "Косточка228", "hahal_melon", "ДядяГена", "МелонКинг", "АпгрейдБабуля", "АрбузныйИнвестор"];
 
 var UPG = {
   inv: [],
@@ -6009,7 +6008,6 @@ var UPG = {
   arrowDeg: 0
 };
 
-var UPG_FAKES = [];
 
 function upgItem(id) {
   for (var i = 0; i < UPG_ITEMS.length; i++) {
@@ -6297,10 +6295,15 @@ function upgFeedRow(h) {
 function upgRenderFeed() {
   var box = document.getElementById("upgFeed");
   if (!box) return;
-  var rows = UPG.hist.concat(UPG_FAKES).slice(0, 14);
-  var html = "";
-  for (var i = 0; i < rows.length; i++) html += upgFeedRow(rows[i]);
-  box.innerHTML = html || '<p class="upg-empty">Пока тихо. Начни — и бабушка всё запишет.</p>';
+  var rows = [];
+  if (typeof UPG_FEED !== "undefined" && UPG_FEED.rows && UPG_FEED.rows.length) {
+    rows = UPG_FEED.rows.slice(0, 20);
+  } else if (UPG.hist && UPG.hist.length) {
+    rows = UPG.hist.slice(0, 14);
+  }
+  var out = "";
+  for (var i = 0; i < rows.length; i++) out += upgFeedRow(rows[i]);
+  box.innerHTML = out || '<p class="upg-empty">Пока тихо. Укажи настоящее имя и сделай апгрейд — он появится в общей ленте.</p>';
 }
 
 function upgFillReel() { /* replaced by wheel */ }
@@ -6406,7 +6409,12 @@ function upgDo() {
       UPG.inv.push(to.id);
       UPG.selected = to.id;
     }
-    upgPushHist(win, from.id, to.id, "Ты");
+    var feedName = (typeof upgFeedMyName === "function") ? upgFeedMyName() : "";
+    var histWho = feedName || "Ты";
+    upgPushHist(win, from.id, to.id, histWho);
+    if (feedName && typeof upgFeedPublish === "function") {
+      upgFeedPublish({ win: win, from: from.id, to: to.id, who: feedName, ts: Date.now() });
+    }
     upgEnsure();
     upgSave();
     upgRender();
@@ -6509,33 +6517,120 @@ function upgResetAll() {
   toast("Апгрейдер сброшен");
 }
 
-function upgFakeRow() {
-  var from = UPG_ITEMS[Math.floor(Math.random() * UPG_ITEMS.length)];
-  var pool = [];
-  for (var i = 0; i < UPG_ITEMS.length; i++) {
-    var it = UPG_ITEMS[i];
-    if (it.price > from.price && it.price <= from.price * 12) pool.push(it);
+/* ---------- Живая лента апгрейдера (общая для всех, только настоящие имена) ---------- */
+var UPG_FEED = {
+  postUrls: [
+    "https://ntfy.sh/prz-upg-feed-k7m2p4",
+    "https://ntfy.envs.net/prz-upg-feed-k7m2p4",
+    "https://ntfy.adminforge.de/prz-upg-feed-k7m2p4"
+  ],
+  liveUrls: [
+    "https://ntfy.sh/prz-upg-feed-k7m2p4/json?poll=1&since=12h",
+    "https://ntfy.envs.net/prz-upg-feed-k7m2p4/json?poll=1&since=12h",
+    "https://ntfy.adminforge.de/prz-upg-feed-k7m2p4/json?poll=1&since=12h"
+  ],
+  rows: [],
+  seen: {},
+  loaded: false
+};
+
+function upgFeedMyName() {
+  var name = "";
+  try {
+    var inp = document.getElementById("upgTopName");
+    if (inp) name = normalizeName(inp.value);
+  } catch (e) {}
+  if (!name) name = normalizeName(read("prz_upg_top_name", "") || "");
+  if (!name && typeof LB !== "undefined") {
+    if (LB.own && LB.own.name && !nameProblem(LB.own.name)) name = normalizeName(LB.own.name);
+    else if (LB.name && !nameProblem(LB.name)) name = normalizeName(LB.name);
   }
-  if (!pool.length) return null;
-  var to = pool[Math.floor(Math.random() * pool.length)];
-  return {
-    win: Math.random() * 100 < upgPct(from, to),
-    from: from.id,
-    to: to.id,
-    who: UPG_NAMES[Math.floor(Math.random() * UPG_NAMES.length)]
-  };
+  if (name && !nameProblem(name)) return name;
+  return "";
 }
 
-function upgSeedFakes() {
-  for (var i = 0; i < 6; i++) {
-    var row = upgFakeRow();
-    if (row) {
-      row.win = i % 2 === 0;
-      UPG_FAKES.unshift(row);
-    }
-  }
-  if (UPG_FAKES.length > 10) UPG_FAKES.length = 10;
+function upgFeedParse(text) {
+  var parts = String(text || "").split("|");
+  if (parts.length < 6 || parts[0] !== "UPGF") return null;
+  var name = normalizeName(parts[1]);
+  if (nameProblem(name)) return null;
+  var win = parts[2] === "1" || parts[2] === "true";
+  var from = parts[3];
+  var to = parts[4];
+  var ts = parseInt(parts[5], 10) || 0;
+  if (!upgItem(from) || !upgItem(to)) return null;
+  if (!isFinite(ts) || ts < 0) ts = 0;
+  return { win: win, from: from, to: to, who: name, ts: ts };
 }
+
+function upgFeedAdd(row, key) {
+  if (!row || !upgItem(row.from) || !upgItem(row.to)) return false;
+  var who = normalizeName(row.who || "");
+  if (nameProblem(who)) return false;
+  row.who = who;
+  row.ts = parseInt(row.ts, 10) || Date.now();
+  row.win = !!row.win;
+  var k = key || (who.toLowerCase() + "|" + row.from + "|" + row.to + "|" + (row.win ? 1 : 0) + "|" + Math.floor(row.ts / 1000));
+  if (UPG_FEED.seen[k]) return false;
+  UPG_FEED.seen[k] = true;
+  UPG_FEED.rows.push({ win: row.win, from: row.from, to: row.to, who: who, ts: row.ts });
+  UPG_FEED.rows.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+  if (UPG_FEED.rows.length > 40) UPG_FEED.rows.length = 40;
+  return true;
+}
+
+function upgFeedPublish(row) {
+  var name = normalizeName(row && row.who || "");
+  if (nameProblem(name)) return Promise.resolve(false);
+  var ts = parseInt(row.ts, 10) || Date.now();
+  var body = "UPGF|" + name + "|" + (row.win ? "1" : "0") + "|" + row.from + "|" + row.to + "|" + ts;
+  upgFeedAdd({ win: row.win, from: row.from, to: row.to, who: name, ts: ts }, "own|" + name.toLowerCase() + "|" + row.from + "|" + row.to + "|" + (row.win ? 1 : 0) + "|" + Math.floor(ts / 1000));
+  upgRenderFeed();
+  var jobs = UPG_FEED.postUrls.map(function (url) {
+    return fetchT(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=UTF-8" },
+      body: body
+    }, 6000).then(function (r) { return !!r.ok; }).catch(function () { return false; });
+  });
+  return Promise.all(jobs).then(function (res) {
+    for (var i = 0; i < res.length; i++) if (res[i]) return true;
+    return false;
+  });
+}
+
+function upgFeedFetchLive() {
+  var urls = UPG_FEED.liveUrls;
+  var jobs = urls.map(function (url) {
+    return fetchT(url, { cache: "no-store" }, 8000)
+      .then(function (r) { return r.ok ? r.text() : ""; })
+      .then(function (text) { return { ok: !!text, text: text }; })
+      .catch(function () { return { ok: false, text: "" }; });
+  });
+  return Promise.all(jobs).then(function (res) {
+    var changed = false;
+    for (var j = 0; j < res.length; j++) {
+      if (!res[j].ok) continue;
+      var lines = res[j].text.split("
+");
+      for (var i = 0; i < lines.length; i++) {
+        if (!lines[i]) continue;
+        var ev; try { ev = JSON.parse(lines[i]); } catch (e) { continue; }
+        if (!ev || ev.event !== "message" || !ev.message) continue;
+        var p = upgFeedParse(ev.message);
+        if (p && upgFeedAdd(p, "live|" + j + "|" + ev.id)) changed = true;
+      }
+    }
+    if (changed) upgRenderFeed();
+    return changed;
+  });
+}
+
+function upgFeedInit() {
+  upgRenderFeed();
+  upgFeedFetchLive().then(function () { upgRenderFeed(); });
+}
+
 
 /* ---------- Топ апгрейдера (общий, как в мини-игре) ---------- */
 var UPG_TOP = {
@@ -6816,7 +6911,6 @@ function initUpgrader() {
 
   upgLoad();
   upgEnsure();
-  upgSeedFakes();
   upgRender();
   upgSave();
 
@@ -6900,28 +6994,36 @@ function initUpgrader() {
   var upgTopNameIn = document.getElementById("upgTopName");
   if (upgTopNameIn) {
     if (typeof LB !== "undefined" && LB.name && !nameProblem(LB.name)) upgTopNameIn.value = LB.name;
-    upgTopNameIn.addEventListener("input", function () {
+    var upgNameHint = function () {
+      var hint = document.getElementById("upgTopHint");
+      if (!hint) return;
+      var raw = upgTopNameIn.value || "";
+      var n = normalizeName(raw);
+      if (!raw.trim()) { hint.textContent = ""; return; }
+      var err = nameProblem(n);
+      if (err) hint.textContent = " " + err;
+      else if (n) { hint.textContent = ""; write("prz_upg_top_name", n); }
+    };
+    upgTopNameIn.addEventListener("input", upgNameHint);
+    upgTopNameIn.addEventListener("blur", function () {
       var n = normalizeName(upgTopNameIn.value);
-      if (n && !nameProblem(n)) { write("prz_upg_top_name", n); }
+      if (n && !nameProblem(n)) upgTopNameIn.value = n;
+      upgNameHint();
     });
     var savedN = read("prz_upg_top_name", "");
     if (savedN && !upgTopNameIn.value) upgTopNameIn.value = savedN;
+    if (upgTopNameIn.value) upgNameHint();
   }
   if (typeof upgTopInit === "function") upgTopInit();
 
   setInterval(upgTickCase, 500);
   setInterval(function () {
-    var row = upgFakeRow();
-    if (!row) return;
-    UPG_FAKES.unshift(row);
-    if (UPG_FAKES.length > 10) UPG_FAKES.length = 10;
-    upgRenderFeed();
-  }, 8000);
-  setInterval(function () {
     if (document.hidden) return;
     if (typeof upgTopFetchStore === "function") upgTopFetchStore(false);
     if (typeof upgTopFetchLive === "function") upgTopFetchLive();
+    if (typeof upgFeedFetchLive === "function") upgFeedFetchLive();
   }, 60000);
+  if (typeof upgFeedInit === "function") upgFeedInit();
 }
 
 function init() {
