@@ -2500,65 +2500,65 @@ body.light .upg-feed__who { color: #0d2b19; }
 /* Pereprodazhniki — вся логика: каталог, корзина, заказ, отзывы, шутки */
 
 var PRODUCTS = [
-  { id: "solnyi", name: "Солёный арбуз", icon: "🧂", price: 199, weight: "3 кг", tags: ["соль", "странный"],
+  { id: "solnyi", name: "Солёный арбуз", icon: "🌊", price: 199, weight: "3 кг", tags: ["соль", "странный"],
     desc: "Солёный, как те, кто не перепродавал. Вкус на любителя, отношение — да." },
-  { id: "kislyi", name: "Кислый арбуз", icon: "🍋", price: 229, weight: "4 кг", tags: ["кислый", "хит"],
+  { id: "kislyi", name: "Кислый арбуз", icon: "😝", price: 229, weight: "4 кг", tags: ["кислый", "хит"],
     desc: "Лицо скривится, но вы вернётесь за вторым. Проверено бабушкой." },
-  { id: "medovyi", name: "Медовый арбузик", icon: "🍯", price: 349, weight: "5 кг", tags: ["сладкий", "хит"],
+  { id: "medovyi", name: "Медовый арбузик", icon: "🐝", price: 349, weight: "5 кг", tags: ["сладкий", "хит"],
     desc: "Купили у соседа за 200, продаём за 349. Перепродажа не гарантируем." },
-  { id: "mini", name: "Мини-арбуз", icon: "🫒", price: 149, weight: "1 кг", tags: ["мини", "сладкий"],
+  { id: "mini", name: "Мини-арбуз", icon: "🐣", price: 149, weight: "1 кг", tags: ["мини", "сладкий"],
     desc: "Маленький, но гордый. Уместится в карман, если карман арбузный." },
-  { id: "gigant", name: "Арбуз-гигант", icon: "🏋️", price: 899, weight: "15 кг", tags: ["гигант", "хит"],
+  { id: "gigant", name: "Арбуз-гигант", icon: "🦍", price: 899, weight: "15 кг", tags: ["гигант", "хит"],
     desc: "Поднимать вдвоём. Есть вчетвером. Жалеть всем." },
-  { id: "kvadratnyi", name: "Квадратный арбуз", icon: "🟩", price: 499, weight: "7 кг", tags: ["квадратный"],
+  { id: "kvadratnyi", name: "Квадратный арбуз", icon: "📦", price: 499, weight: "7 кг", tags: ["квадратный"],
     desc: "Не перевернётся в холодильнике. Не гарантируем. Не советуем проверять." },
-  { id: "zheltyi", name: "Жёлтый арбуз", icon: "🌕", price: 429, weight: "6 кг", tags: ["экзотика", "сладкий"],
+  { id: "zheltyi", name: "Жёлтый арбуз", icon: "💛", price: 429, weight: "6 кг", tags: ["экзотика", "сладкий"],
     desc: "Внутри жёлтый, снаружи зелёный. Идентичность сложная, вкус простой." },
-  { id: "bezkost", name: "Без косточек (почти)", icon: "✨", price: 459, weight: "6 кг", tags: ["удобный", "хит"],
+  { id: "bezkost", name: "Без косточек (почти)", icon: "🪄", price: 459, weight: "6 кг", tags: ["удобный", "хит"],
     desc: "Косточек почти нет. Те, что есть, — подарок от природы." },
-  { id: "sahar", name: "Сахарная бомба", icon: "🍬", price: 389, weight: "5 кг", tags: ["сладкий", "хит"],
+  { id: "sahar", name: "Сахарная бомба", icon: "🧁", price: 389, weight: "5 кг", tags: ["сладкий", "хит"],
     desc: "Слаще, чем обещания перепродажника. И это кое-что значит." },
-  { id: "nochnoy", name: "Ночной арбуз", icon: "🌙", price: 599, weight: "9 кг", tags: ["редкий", "тёмный"],
+  { id: "nochnoy", name: "Ночной арбуз", icon: "🦇", price: 599, weight: "9 кг", tags: ["редкий", "тёмный"],
     desc: "Привезли ночью, купил по цене. Аромат уже у холодильника." },
-  { id: "ledyanoi", name: "Ледяной арбуз", icon: "❄️", price: 549, weight: "6 кг", tags: ["редкий", "холодный"],
+  { id: "ledyanoi", name: "Ледяной арбуз", icon: "🥶", price: 549, weight: "6 кг", tags: ["редкий", "холодный"],
     desc: "Из самого дна холодильника бабушки Зины. Мозг замерзает первым." },
-  { id: "ognenyi", name: "Огненный арбуз", icon: "🔥", price: 579, weight: "6 кг", tags: ["острый", "редкий"],
+  { id: "ognenyi", name: "Огненный арбуз", icon: "🌋", price: 579, weight: "6 кг", tags: ["острый", "редкий"],
     desc: "Не острый, просто очень красный. Но предупреждаем на всякий случай." },
-  { id: "kosmos", name: "Космический арбуз", icon: "🌌", price: 799, weight: "8 кг", tags: ["редкий", "хит"],
+  { id: "kosmos", name: "Космический арбуз", icon: "🛸", price: 799, weight: "8 кг", tags: ["редкий", "хит"],
     desc: "На вкус как обычный, но цена космическая. Поэтому и космический." },
-  { id: "zolotoi", name: "Золотой арбуз", icon: "🏆", price: 999, weight: "7 кг", tags: ["премиум", "редкий"],
+  { id: "zolotoi", name: "Золотой арбуз", icon: "🥇", price: 999, weight: "7 кг", tags: ["премиум", "редкий"],
     desc: "Не из золота. Но блестит уверенностью в цене." },
-  { id: "disco", name: "Диско-арбуз", icon: "🪩", price: 649, weight: "6 кг", tags: ["вечеринка", "хит"],
+  { id: "disco", name: "Диско-арбуз", icon: "💃", price: 649, weight: "6 кг", tags: ["вечеринка", "хит"],
     desc: "Включает музыку, если очень захотеть. Музыку включаете вы." },
-  { id: "ninja", name: "Арбуз-ниндзя", icon: "🥷", price: 729, weight: "5 кг", tags: ["редкий", "быстрый"],
+  { id: "ninja", name: "Арбуз-ниндзя", icon: "🗡️", price: 729, weight: "5 кг", tags: ["редкий", "быстрый"],
     desc: "Исчезает из холодильника быстрее, чем вы успели моргнуть." },
-  { id: "korol", name: "Королевский арбуз", icon: "👑", price: 1199, weight: "10 кг", tags: ["премиум", "хит"],
+  { id: "korol", name: "Королевский арбуз", icon: "🏰", price: 1199, weight: "10 кг", tags: ["премиум", "хит"],
     desc: "Для тех, кто перепродаёт с достоинством. Корона в комплект не входит." },
-  { id: "piksel", name: "Пиксельный арбуз", icon: "🟪", price: 399, weight: "4 кг", tags: ["квадратный", "редкий"],
+  { id: "piksel", name: "Пиксельный арбуз", icon: "👾", price: 399, weight: "4 кг", tags: ["квадратный", "редкий"],
     desc: "Состоит из сочных квадратов. Почти как майнкрафт, но съедобный." },
-  { id: "raduga", name: "Радужный арбуз", icon: "🌈", price: 699, weight: "6 кг", tags: ["экзотика", "хит"],
+  { id: "raduga", name: "Радужный арбуз", icon: "🦄", price: 699, weight: "6 кг", tags: ["экзотика", "хит"],
     desc: "Мякоть обычная, но настроение радужное. Гарантия на настроение — 5 минут." },
-  { id: "babushkin", name: "Бабушкин арбуз", icon: "👵", price: 299, weight: "5 кг", tags: ["классика", "сладкий"],
+  { id: "babushkin", name: "Бабушкин арбуз", icon: "🧶", price: 299, weight: "5 кг", tags: ["классика", "сладкий"],
     desc: "Выращен на даче, перепродан с любовью. Бабушка не в курсе." },
-  { id: "turbo", name: "Турбо-арбуз", icon: "🚀", price: 849, weight: "7 кг", tags: ["быстрый", "премиум"],
+  { id: "turbo", name: "Турбо-арбуз", icon: "🏎️", price: 849, weight: "7 кг", tags: ["быстрый", "премиум"],
     desc: "Доставляется быстрее, чем вы передумаете. Это фича." },
-  { id: "mramor", name: "Мраморный арбуз", icon: "🪨", price: 529, weight: "6 кг", tags: ["премиум"],
+  { id: "mramor", name: "Мраморный арбуз", icon: "🗿", price: 529, weight: "6 кг", tags: ["премиум"],
     desc: "Полоски идеальные, как у дизайнера. Съедобность тоже дизайнерская." },
-  { id: "elektro", name: "Электро-арбуз", icon: "⚡", price: 777, weight: "7 кг", tags: ["редкий", "хит"],
+  { id: "elektro", name: "Электро-арбуз", icon: "🔌", price: 777, weight: "7 кг", tags: ["редкий", "хит"],
     desc: "Бьёт током свежести. Реальным током — нет, мы проверяли." },
-  { id: "kotopes", name: "Арбуз-котопёс", icon: "🐾", price: 559, weight: "5 кг", tags: ["странный", "хит"],
+  { id: "kotopes", name: "Арбуз-котопёс", icon: "🐶", price: 559, weight: "5 кг", tags: ["странный", "хит"],
     desc: "Не кот и не пёс. И не совсем арбуз. Но очень милый." },
-  { id: "smailik", name: "Арбуз-смайлик", icon: "😄", price: 339, weight: "4 кг", tags: ["весёлый", "сладкий"],
+  { id: "smailik", name: "Арбуз-смайлик", icon: "😸", price: 339, weight: "4 кг", tags: ["весёлый", "сладкий"],
     desc: "Улыбается, пока его не режут. Потом улыбается тот, кто режет." },
-  { id: "svinoy", name: "Свиной арбуз", icon: "🐷", price: 1499, weight: "13 кг", tags: ["не халяль", "хит", "редкий"],
+  { id: "svinoy", name: "Свиной арбуз", icon: "🐽", price: 1499, weight: "13 кг", tags: ["не халяль", "хит", "редкий"],
     desc: "Не халяль, но мы же честно написали. Корочка сладкая, репутация нет." },
-  { id: "bezkostochek", name: "Без одной косточки", icon: "💎", price: 99990, weight: "9 кг", tags: ["халяль", "редкий", "премиум"],
+  { id: "bezkostochek", name: "Без одной косточки", icon: "💠", price: 99990, weight: "9 кг", tags: ["халяль", "редкий", "премиум"],
     desc: "Косточек нет вообще. Мы вытащили их все сами и сложили в коробку — и потеряли." },
-  { id: "legendarnyi", name: "Легендарный арбуз", icon: "🌟", price: 2499, weight: "12 кг", tags: ["премиум", "редкий", "хит"],
+  { id: "legendarnyi", name: "Легендарный арбуз", icon: "🏅", price: 2499, weight: "12 кг", tags: ["премиум", "редкий", "хит"],
     desc: "О нём ходят слухи в трёх чатах. Мы подтвердить не можем, но продаём." },
-  { id: "chernyi", name: "Чёрный арбуз", icon: "🖤", price: 1599, weight: "8 кг", tags: ["экзотика", "премиум"],
+  { id: "chernyi", name: "Чёрный арбуз", icon: "🎱", price: 1599, weight: "8 кг", tags: ["экзотика", "премиум"],
     desc: "Редкий сорт Дэнсуке. Тёмный, дорогой и очень перепродажный." },
-  { id: "portal", name: "Портальный арбуз", icon: "🌀", price: 1999, weight: "9 кг", tags: ["редкий", "странный"],
+  { id: "portal", name: "Портальный арбуз", icon: "🚪", price: 1999, weight: "9 кг", tags: ["редкий", "странный"],
     desc: "Говорят, через него можно попасть на дачу. Мы не проверяли, но верим." }
 ];
 
@@ -2716,13 +2716,15 @@ function wmHash(s) {
 }
 var WM_FACES = ["😋","😎","🤠","🥳","😜","🤩","😇","🧐","🤓","😏","😊","😁","😄","🤗","😌","🫡","😼","😺","🤖","👻","🦊","🐼","🐸","🐵","🦁","🐯","🐨","🐲","🌟","💫","🔥","❄️","⚡","🎩","👑","🎀","💎","🌈","🎵","🍀","🌺","🍭","🧁","🎈","🕶️","🥷","🧙","🧚","🎸","🚀"];
 var WM_BGS = [["#ff5f6d","#2fd35f"],["#ff9966","#ff5e62"],["#56ab2f","#a8e063"],["#36d1dc","#5b86e5"],["#f7971e","#ffd200"],["#c33764","#1d2671"],["#11998e","#38ef7d"],["#fc4a1a","#f7b733"],["#ee0979","#ff6a00"],["#00b09b","#96c93d"],["#834d9b","#d04ed6"],["#4776e6","#8e54e9"],["#ff512f","#dd2476"],["#1fa2ff","#12d8fa"],["#a80077","#66ff00"],["#f953c6","#b91d73"],["#396afc","#2948ff"],["#11998e","#2fd35f"]];
-function wmAvatar(key, cls) {
+function wmAvatar(key, icon, cls) {
+  if (cls == null && typeof icon === "string" && /^wm-/.test(icon)) { cls = icon; icon = ""; }
   var k = String(key == null ? "" : key);
   var h = wmHash(k);
   var face = WM_FACES[h % WM_FACES.length];
   var bg = WM_BGS[(h >>> 4) % WM_BGS.length];
   var rot = (h % 21) - 10;
-  return '<span class="wm-ava' + (cls ? " " + cls : "") + '" style="--w1:' + bg[0] + ';--w2:' + bg[1] + ';--wr:' + rot + 'deg" aria-hidden="true"><span class="wm-ava__melon">🍉</span><span class="wm-ava__face">' + face + '</span></span>';
+  var main = icon || "🍉";
+  return '<span class="wm-ava' + (cls ? " " + cls : "") + '" style="--w1:' + bg[0] + ';--w2:' + bg[1] + ';--wr:' + rot + 'deg" aria-hidden="true"><span class="wm-ava__melon">' + main + '</span><span class="wm-ava__face">' + face + '</span></span>';
 }
 
 function money(n) { return n.toLocaleString("ru-RU") + " ₽"; }
@@ -2805,7 +2807,7 @@ function renderCatalog() {
     for (var pk = 0; pk < peekList.length; pk++) {
       var pp = peekList[pk];
       ph += '<button class="catalog-peek" type="button" data-open-catalog="1">' +
-        '<span class="catalog-peek__icon">' + wmAvatar(pp.id) + '</span>' +
+        '<span class="catalog-peek__icon">' + wmAvatar(pp.id, pp.icon) + '</span>' +
         '<span class="catalog-peek__name">' + pp.name + '</span>' +
         '<span class="catalog-peek__price">' + money(pp.price) + '</span>' +
         '</button>';
@@ -2839,7 +2841,7 @@ function renderCatalog() {
       '<button class="btn btn--big" type="button">В корзину</button></div>' +
       (p.tags.indexOf("хит") !== -1 ? '<span class="hit">ХИТ</span>' : "");
 
-    card.querySelector(".card__icon").innerHTML = wmAvatar(p.id);
+    card.querySelector(".card__icon").innerHTML = wmAvatar(p.id, p.icon);
     card.querySelector(".card__name").textContent = p.name;
     card.querySelector(".card__desc").textContent = p.desc;
     card.querySelector(".card__meta .weight").textContent = p.weight;
@@ -3032,7 +3034,7 @@ function renderVotes() {
 
     var name = document.createElement("span");
     name.className = "vote__name";
-    name.innerHTML = wmAvatar(p.id) + ' <span style="vertical-align:middle">' + p.name + '</span>';
+    name.innerHTML = wmAvatar(p.id, p.icon) + ' <span style="vertical-align:middle">' + p.name + '</span>';
 
     var pctEl = document.createElement("span");
     pctEl.className = "vote__pct";
@@ -3575,7 +3577,7 @@ function renderCart() {
 
     var info = document.createElement("div");
     var name = document.createElement("b");
-    name.innerHTML = wmAvatar(prod.id) + ' <span style="vertical-align:middle">' + prod.name + '</span>';
+    name.innerHTML = wmAvatar(prod.id, prod.icon) + ' <span style="vertical-align:middle">' + prod.name + '</span>';
     var one = document.createElement("small");
     one.textContent = money(prod.price) + " за штуку";
     info.appendChild(name);
@@ -6089,40 +6091,40 @@ var UPG_RARITY = {
 };
 
 var UPG_ITEMS = [
-  { id: "seed", name: "Арбузная косточка", icon: "🌱", price: 60, rarity: "common", pop: 1 },
+  { id: "seed", name: "Арбузная косточка", icon: "🫘", price: 60, rarity: "common", pop: 1 },
   { id: "slice", name: "Долька арбуза", icon: "🍉", price: 90, rarity: "common", pop: 1 },
-  { id: "mini", name: "Мини-арбузик", icon: "🫒", price: 100, rarity: "common" },
-  { id: "classic", name: "Обычный арбуз", icon: "🍉", price: 120, rarity: "common", pop: 1 },
-  { id: "salt", name: "Солёный арбуз", icon: "🧂", price: 140, rarity: "common" },
-  { id: "smile", name: "Арбуз-смайлик", icon: "😄", price: 160, rarity: "common" },
-  { id: "pig", name: "Свиной арбуз", icon: "🐷", price: 180, rarity: "common", pop: 1 },
-  { id: "cube", name: "Кубик арбуза", icon: "🧊", price: 220, rarity: "common" },
-  { id: "grandma", name: "Бабушкин арбуз", icon: "👵", price: 260, rarity: "common" },
-  { id: "cap", name: "Арбуз в шапке", icon: "🧢", price: 320, rarity: "rare", pop: 1 },
-  { id: "striped", name: "Полосатый боец", icon: "🦓", price: 360, rarity: "rare" },
-  { id: "cool", name: "Арбуз в очках", icon: "😎", price: 420, rarity: "rare" },
-  { id: "cat", name: "Арбуз-кот", icon: "🐱", price: 480, rarity: "rare", pop: 1 },
-  { id: "heart", name: "Арбуз-сердце", icon: "💚", price: 560, rarity: "rare" },
-  { id: "disco", name: "Диско-арбуз", icon: "🪩", price: 640, rarity: "rare" },
-  { id: "diamond", name: "Семечко-алмаз", icon: "💎", price: 720, rarity: "rare" },
-  { id: "ninja", name: "Арбуз-ниндзя", icon: "🥷", price: 860, rarity: "rare" },
+  { id: "mini", name: "Мини-арбузик", icon: "🐣", price: 100, rarity: "common" },
+  { id: "classic", name: "Обычный арбуз", icon: "🍈", price: 120, rarity: "common", pop: 1 },
+  { id: "salt", name: "Солёный арбуз", icon: "🥨", price: 140, rarity: "common" },
+  { id: "smile", name: "Арбуз-смайлик", icon: "😃", price: 160, rarity: "common" },
+  { id: "pig", name: "Свиной арбуз", icon: "🐖", price: 180, rarity: "common", pop: 1 },
+  { id: "cube", name: "Кубик арбуза", icon: "🎲", price: 220, rarity: "common" },
+  { id: "grandma", name: "Бабушкин арбуз", icon: "👒", price: 260, rarity: "common" },
+  { id: "cap", name: "Арбуз в шапке", icon: "🎓", price: 320, rarity: "rare", pop: 1 },
+  { id: "striped", name: "Полосатый боец", icon: "🏁", price: 360, rarity: "rare" },
+  { id: "cool", name: "Арбуз в очках", icon: "🕶️", price: 420, rarity: "rare" },
+  { id: "cat", name: "Арбуз-кот", icon: "🐈", price: 480, rarity: "rare", pop: 1 },
+  { id: "heart", name: "Арбуз-сердце", icon: "💖", price: 560, rarity: "rare" },
+  { id: "disco", name: "Диско-арбуз", icon: "💃", price: 640, rarity: "rare" },
+  { id: "diamond", name: "Семечко-алмаз", icon: "🔷", price: 720, rarity: "rare" },
+  { id: "ninja", name: "Арбуз-ниндзя", icon: "🗡️", price: 860, rarity: "rare" },
   { id: "fire", name: "Огненный арбуз", icon: "🔥", price: 1000, rarity: "rare" },
-  { id: "gold", name: "Золотой арбуз", icon: "🏆", price: 1400, rarity: "epic", pop: 1 },
-  { id: "chest", name: "Сундук-арбуз", icon: "🧰", price: 1800, rarity: "epic" },
-  { id: "rocket", name: "Арбуз-ракета", icon: "🚀", price: 2400, rarity: "epic" },
-  { id: "mech", name: "Меха-арбуз", icon: "🛡️", price: 3000, rarity: "epic" },
-  { id: "dino", name: "Арбуз-динозавр", icon: "🦖", price: 3800, rarity: "epic" },
-  { id: "robot", name: "Арбуз-робот", icon: "🤖", price: 5200, rarity: "epic" },
-  { id: "dragon", name: "Арбуз-дракон", icon: "🐲", price: 7000, rarity: "epic" },
+  { id: "gold", name: "Золотой арбуз", icon: "🪙", price: 1400, rarity: "epic", pop: 1 },
+  { id: "chest", name: "Сундук-арбуз", icon: "🎁", price: 1800, rarity: "epic" },
+  { id: "rocket", name: "Арбуз-ракета", icon: "🛰️", price: 2400, rarity: "epic" },
+  { id: "mech", name: "Меха-арбуз", icon: "⚙️", price: 3000, rarity: "epic" },
+  { id: "dino", name: "Арбуз-динозавр", icon: "🦕", price: 3800, rarity: "epic" },
+  { id: "robot", name: "Арбуз-робот", icon: "🦾", price: 5200, rarity: "epic" },
+  { id: "dragon", name: "Арбуз-дракон", icon: "🐉", price: 7000, rarity: "epic" },
   { id: "crown", name: "Арбуз-Дуров", icon: "👑", price: 9500, rarity: "legendary", pop: 1 },
-  { id: "ice", name: "Ледяной арбуз", icon: "❄️", price: 15000, rarity: "legendary" },
-  { id: "ghost", name: "Призрачный арбуз", icon: "👻", price: 19000, rarity: "legendary" },
-  { id: "black", name: "Чёрный арбуз", icon: "🖤", price: 23000, rarity: "legendary" },
-  { id: "space", name: "Космический арбуз", icon: "🌌", price: 28000, rarity: "legendary" },
-  { id: "portal", name: "Портальный арбуз", icon: "🌀", price: 38000, rarity: "legendary" },
-  { id: "saint", name: "Святой арбуз", icon: "😇", price: 55000, rarity: "mythic" },
-  { id: "galaxy", name: "Галактический арбуз", icon: "🌠", price: 80000, rarity: "mythic" },
-  { id: "planet", name: "Арбуз вселенной", icon: "🪐", price: 120000, rarity: "mythic" },
+  { id: "ice", name: "Ледяной арбуз", icon: "🧊", price: 15000, rarity: "legendary" },
+  { id: "ghost", name: "Призрачный арбуз", icon: "💀", price: 19000, rarity: "legendary" },
+  { id: "black", name: "Чёрный арбуз", icon: "🌚", price: 23000, rarity: "legendary" },
+  { id: "space", name: "Космический арбуз", icon: "☄️", price: 28000, rarity: "legendary" },
+  { id: "portal", name: "Портальный арбуз", icon: "🚪", price: 38000, rarity: "legendary" },
+  { id: "saint", name: "Святой арбуз", icon: "🙏", price: 55000, rarity: "mythic" },
+  { id: "galaxy", name: "Галактический арбуз", icon: "🌌", price: 80000, rarity: "mythic" },
+  { id: "planet", name: "Арбуз вселенной", icon: "🌍", price: 120000, rarity: "mythic" },
   { id: "god", name: "Бог арбузов", icon: "🔱", price: 250000, rarity: "mythic" }
 ];
 
@@ -6273,7 +6275,7 @@ function upgRenderInv() {
     var n = groups[ids[k]];
     var sel = ids[k] === UPG.selected;
     html += '<button class="upg-item upg-item--' + it.rarity + (sel ? " is-sel" : "") + '" type="button" data-id="' + it.id + '">' +
-      '<span class="upg-item__icon">' + wmAvatar(it.id) + '</span>' +
+      '<span class="upg-item__icon">' + wmAvatar(it.id, it.icon) + '</span>' +
       '<span class="upg-item__body"><b>' + it.name + '</b><small class="upg-r">' + UPG_RARITY[it.rarity].name + '</small></span>' +
       '<span class="upg-item__side"><b>' + upgMoney(it.price) + '</b></span>' +
       (n > 1 ? '<span class="upg-item__count">x' + n + '</span>' : '') +
@@ -6312,7 +6314,7 @@ function upgRenderTargets() {
     var p = upgEffPct(from, it);
     var cls = p < 25 ? "upg-chance--low" : p < 55 ? "upg-chance--mid" : "upg-chance--high";
     html += '<button class="upg-t-item upg-item--' + it.rarity + (it.id === UPG.target ? " is-tgt" : "") + '" type="button" data-target="' + it.id + '" style="--rc:' + UPG_RARITY[it.rarity].color + '">' +
-      '<span class="upg-t-item__ic">' + wmAvatar(it.id) + '</span>' +
+      '<span class="upg-t-item__ic">' + wmAvatar(it.id, it.icon) + '</span>' +
       '<span class="upg-t-item__b"><b>' + it.name + '</b><small>' + upgMoney(it.price) + ' · <i class="upg-chance ' + cls + '">' + upgChanceText(p) + '%</i></small></span>' +
       '</button>';
   }
@@ -6338,7 +6340,7 @@ function upgRenderTargets() {
     if (pops.length > 8) pops = pops.slice(0, 8);
     var ph = '';
     for (var m = 0; m < pops.length; m++) {
-      ph += '<button class="upg-peek" type="button" data-target="' + pops[m].id + '"><i>' + wmAvatar(pops[m].id) + '</i>' + pops[m].name + '</button>';
+      ph += '<button class="upg-peek" type="button" data-target="' + pops[m].id + '"><i>' + wmAvatar(pops[m].id, pops[m].icon) + '</i>' + pops[m].name + '</button>';
     }
     peek.innerHTML = ph || '<span style="font-size:12px;color:var(--muted)">Нет доступных целей</span>';
   }
@@ -6348,7 +6350,7 @@ function upgTile(item, emptyText) {
   if (!item) return { cls: "upg-tile", html: '<span class="upg-tile__empty">' + emptyText + '</span>' };
   return {
     cls: "upg-tile upg-tile--" + item.rarity + " upg-tile--filled",
-    html: '<span class="upg-tile__icon">' + wmAvatar(item.id) + '</span>' +
+    html: '<span class="upg-tile__icon">' + wmAvatar(item.id, item.icon) + '</span>' +
       '<span class="upg-tile__name">' + item.name + '</span>' +
       '<span class="upg-tile__price">' + upgMoney(item.price) + '</span>'
   };
@@ -6426,8 +6428,8 @@ function upgFeedRow(h) {
   var b = upgItem(h.to);
   if (!a || !b) return "";
   return '<div class="upg-feed__row ' + (h.win ? "is-win" : "is-lose") + '">' +
-    '<span class="upg-feed__who">' + wmAvatar(h.who, "wm-ava--sm") + h.who + '</span>' +
-    '<span class="upg-feed__move">' + wmAvatar(a.id) + ' <i>→</i> ' + wmAvatar(b.id) + '</span>' +
+    '<span class="upg-feed__who">' + wmAvatar(h.who, "🍉", "wm-ava--sm") + h.who + '</span>' +
+    '<span class="upg-feed__move">' + wmAvatar(a.id, a.icon) + ' <i>→</i> ' + wmAvatar(b.id, b.icon) + '</span>' +
     '<span class="upg-feed__what">' + (h.win ? "забрал «" + b.name + "»" : "потерял «" + a.name + "»") + '</span>' +
     '<span class="upg-feed__sum">' + (h.win ? "+" : "−") + upgMoney(h.win ? b.price : a.price) + '</span>' +
     '</div>';
@@ -6939,7 +6941,7 @@ function upgTopRender() {
       place.textContent = medals[i] || (i + 1);
       var who = document.createElement("span");
       who.className = "upg-top__name-t";
-      who.innerHTML = wmAvatar(s.name, "wm-ava--sm") + s.name;
+      who.innerHTML = wmAvatar(s.name, "🍉", "wm-ava--sm") + s.name;
       var val = document.createElement("span");
       val.className = "upg-top__val";
       val.textContent = upgMoney(s.score);
