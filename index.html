@@ -6687,8 +6687,10 @@ function upgFeedStreamStart() {
 
 function upgFeedInit() {
   upgRenderFeed();
-  upgFeedFetchLive().then(function () { upgRenderFeed(); });
-  upgFeedStreamStart();
+  try {
+    upgFeedFetchLive().then(function () { upgRenderFeed(); }).catch(function () { upgRenderFeed(); });
+  } catch (e) { upgRenderFeed(); }
+  try { upgFeedStreamStart(); } catch (e) {}
 }
 
 
@@ -6952,7 +6954,7 @@ function upgTopLoad(force) {
   upgTopSyncMe();
   if (UPG_TOP.loaded && !force) { upgTopRender(); return; }
   UPG_TOP.loaded = true;
-  Promise.all([upgTopFetchStore(true), upgTopFetchLive()]).then(function () { upgTopRender(); });
+  Promise.all([upgTopFetchStore(true), upgTopFetchLive()]).then(function () { upgTopRender(); }).catch(function () { upgTopRender(); });
 }
 
 function upgTopInit() {
@@ -6961,8 +6963,8 @@ function upgTopInit() {
   var inp = document.getElementById("upgTopName");
   if (inp && n && !inp.value && !nameProblem(n)) inp.value = n;
   upgTopRender();
-  upgTopFetchStore(true).then(function(){ upgTopRender(); });
-  upgTopFetchLive().then(function(){ upgTopRender(); });
+  try { upgTopFetchStore(true).then(function(){ upgTopRender(); }).catch(function(){ upgTopRender(); }); } catch (e) {}
+  try { upgTopFetchLive().then(function(){ upgTopRender(); }).catch(function(){ upgTopRender(); }); } catch (e) {}
 }
 
 
