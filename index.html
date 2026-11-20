@@ -2972,7 +2972,7 @@ function renderQuiz() {
   });
 }
 
-/* ---------- голосование (общий счётчик для всех) ---------- */
+/* ---------- голосование (общий счётчик для всех, только старые арбузы) ---------- */
 var votes = read(STORE.votes, {});
 var voted = read(STORE.voted, false);
 
@@ -2980,6 +2980,15 @@ var VOTE_API = "https://abacus.jasoncameron.dev";
 var VOTE_NS = "pereprodazhniki-8c41f2";
 var serverVotes = {};
 var votesLoaded = false;
+var VOTE_IDS = ["solnyi", "medovyi", "kvadratnyi", "nochnoy", "svinoy", "bezkostochek"];
+function voteProducts() {
+  var list = [];
+  for (var i = 0; i < VOTE_IDS.length; i++) {
+    var p = productById(VOTE_IDS[i]);
+    if (p) list.push(p);
+  }
+  return list;
+}
 
 function voteCount(id) {
   if (votesLoaded && typeof serverVotes[id] === "number") return serverVotes[id];
@@ -2988,12 +2997,13 @@ function voteCount(id) {
 
 function voteTotal() {
   var n = 0;
-  PRODUCTS.forEach(function (p) { n += voteCount(p.id); });
+  var list = voteProducts();
+  for (var i = 0; i < list.length; i++) n += voteCount(list[i].id);
   return n;
 }
 
 function loadVotes() {
-  var ids = PRODUCTS.map(function (p) { return p.id; });
+  var ids = VOTE_IDS.slice();
   return Promise.all(ids.map(function (id) {
     return fetch(VOTE_API + "/get/" + VOTE_NS + "/" + id)
       .then(function (r) { return r.json(); })
@@ -3019,10 +3029,12 @@ function sendVote(id) {
 
 function renderVotes() {
   var box = document.getElementById("voteList");
+  if (!box) return;
   box.innerHTML = "";
+  var list = voteProducts();
   var total = voteTotal();
 
-  PRODUCTS.forEach(function (p) {
+  list.forEach(function (p) {
     var count = voteCount(p.id);
     var pct = total > 0 ? Math.round(count / total * 100) : 0;
 
