@@ -1475,6 +1475,216 @@ body.light .jobform__cooldown { background: #f2fff7; border-color: #12803c; colo
 .upg-feed__row.is-win .upg-feed__sum { color: var(--lime); }
 .upg-feed__row.is-lose .upg-feed__sum { color: #ff8f8f; }
 
+/* ---------- Колесо апгрейда ---------- */
+.upg-wheel-wrap {
+  position: relative;
+  width: 148px;
+  height: 148px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+}
+.upg-wheel {
+  width: 136px;
+  height: 136px;
+  border-radius: 50%;
+  position: relative;
+  background: conic-gradient(#2fd35f 0 calc(var(--p, 0) * 1%), #ff4d5a calc(var(--p, 0) * 1%) 100%);
+  box-shadow: 0 0 0 7px rgba(0,0,0,.25), 0 0 0 1px var(--line), 0 0 30px rgba(47,211,95,.15);
+}
+.upg-wheel::after {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: inset 0 2px 10px rgba(0,0,0,.25);
+}
+.upg-wheel__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  pointer-events: none;
+}
+.upg-wheel__center b { font-size: 24px; line-height: 1; color: #fff; }
+.upg-wheel__center span { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+.upg-arrow {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  transform: rotate(0deg);
+  will-change: transform;
+}
+.upg-arrow::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-top: 22px solid #fff48a;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,.7));
+}
+.upg-arrow::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff, #ffcc4d 60%, #c97a00);
+  box-shadow: 0 1px 4px rgba(0,0,0,.5);
+}
+
+/* ---------- Ассортимент апгрейдера (сворачиваемый) ---------- */
+.upg-assort {
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(0,0,0,.14);
+  overflow: hidden;
+}
+.upg-assort__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+.upg-assort__head b { font-size: 13.5px; }
+.upg-assort__head span { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+.upg-assort__chev { font-size: 13px; color: var(--lime); transition: transform .2s; flex: 0 0 auto; }
+.upg-assort.is-open .upg-assort__chev { transform: rotate(180deg); }
+.upg-assort__peek {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  padding: 0 12px 10px;
+}
+.upg-assort.is-open .upg-assort__peek { display: none; }
+.upg-peek {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.04);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+}
+.upg-peek i { font-style: normal; font-size: 15px; }
+.upg-peek:hover { border-color: var(--lime); }
+.upg-assort__body { display: none; padding: 0 10px 10px; }
+.upg-assort.is-open .upg-assort__body { display: block; }
+.upg-targets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 7px;
+  max-height: 340px;
+  overflow: auto;
+  padding-right: 2px;
+}
+.upg-t-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.03);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+.upg-t-item:hover { border-color: var(--rc, var(--green)); }
+.upg-t-item.is-tgt { border-color: var(--rc); box-shadow: inset 0 0 0 1px var(--rc); background: rgba(47,211,95,.08); }
+.upg-t-item__ic { font-size: 22px; flex: 0 0 auto; line-height: 1; }
+.upg-t-item__b { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.upg-t-item__b b { font-size: 12px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.upg-t-item__b small { font-size: 11px; color: var(--lime); font-weight: 700; }
+
+/* ---------- Топ апгрейдера ---------- */
+.upg-top {
+  margin-top: 14px;
+  border: 1px solid rgba(255,176,32,.35);
+  border-radius: 18px;
+  background: linear-gradient(165deg, rgba(255,176,32,.12), rgba(47,211,95,.06) 55%, rgba(0,0,0,.14));
+  padding: 15px;
+  position: relative;
+  overflow: hidden;
+}
+.upg-top::before {
+  content: "🏆";
+  position: absolute;
+  right: 12px; top: 6px;
+  font-size: 54px;
+  opacity: .12;
+  pointer-events: none;
+}
+.upg-top__head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.upg-top__title b { font-size: 18px; color: #fff; }
+.upg-top__title span { display: block; font-size: 12px; color: var(--muted); margin-top: 3px; }
+.upg-top__actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.upg-top__name {
+  border: 1px solid var(--line); background: rgba(0,0,0,.18); color: var(--text);
+  border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 13px; width: 150px; max-width: 100%;
+}
+.upg-top__btn {
+  border: 1px solid var(--line); background: rgba(255,255,255,.05); color: var(--text);
+  border-radius: 10px; padding: 8px 12px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.upg-top__btn--main { background: linear-gradient(180deg, #ffd35a, #ff9f1a); color: #2b1600; border: 0; box-shadow: 0 4px 0 #7a4b00; }
+.upg-top__btn:active { transform: translateY(2px); box-shadow: none; }
+.upg-top__me { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+.upg-top__me b { color: var(--lime); }
+.upg-top__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.upg-top__row {
+  display: grid; grid-template-columns: 36px minmax(0,1fr) auto auto; gap: 8px 10px; align-items: center;
+  padding: 9px 11px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.03);
+}
+.upg-top__row.is-me { box-shadow: inset 0 0 0 1px rgba(47,211,95,.45); }
+.upg-top__row--1 { border-color: rgba(255,176,32,.65); background: linear-gradient(90deg, rgba(255,176,32,.16), rgba(255,255,255,.03)); }
+.upg-top__row--2 { border-color: rgba(200,210,220,.45); background: linear-gradient(90deg, rgba(200,210,220,.10), rgba(255,255,255,.03)); }
+.upg-top__row--3 { border-color: rgba(205,127,50,.55); background: linear-gradient(90deg, rgba(205,127,50,.12), rgba(255,255,255,.03)); }
+.upg-top__place { font-weight: 900; color: #fff; font-size: 15px; }
+.upg-top__name-t { font-weight: 800; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upg-top__val { font-weight: 900; color: var(--lime); white-space: nowrap; }
+.upg-top__cnt { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.upg-top__empty { margin: 0; padding: 14px 6px; text-align: center; color: var(--muted); font-size: 13px; list-style: none; }
+.upg-top__note { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+
+body.light .upg-wheel::after { background: #fff; }
+body.light .upg-wheel__center b { color: #0d2b19; }
+body.light .upg-assort { background: #fff; border-color: #bfe4cc; }
+body.light .upg-peek { background: #f4fff8; border-color: #bfe4cc; color: #0d2b19; }
+body.light .upg-t-item { background: #f4fff8; border-color: #bfe4cc; }
+body.light .upg-t-item__b b { color: #0d2b19; }
+body.light .upg-top { background: linear-gradient(165deg, #fff8e8, #f4fff8); border-color: #e6d3a3; }
+body.light .upg-top__row { background: #fff; border-color: #bfe4cc; }
+body.light .upg-top__name-t, body.light .upg-top__place, body.light .upg-top__title b { color: #0d2b19; }
+body.light .upg-top__name { background: #fff; border-color: #bfe4cc; color: #0d2b19; }
+
 /* ---------- Телефон ---------- */
 @media (min-width: 1101px) {
   .upg-core { position: sticky; top: 84px; }
@@ -2057,13 +2267,13 @@ body.light .upg-feed__who { color: #0d2b19; }
         <div class="upg-core">
           <div class="upg-core__top">
             <div class="upg-tile" id="upgFromTile"></div>
-            <div class="upg-ring" id="upgRing"><div class="upg-ring__in"><b id="upgChance">—</b><span>шанс</span></div></div>
+            <div class="upg-wheel-wrap" id="upgWheelWrap">
+              <div class="upg-arrow" id="upgArrow"></div>
+              <div class="upg-wheel" id="upgWheel" style="--p:0">
+                <div class="upg-wheel__center"><b id="upgChance">—</b><span>шанс</span></div>
+              </div>
+            </div>
             <div class="upg-tile" id="upgToTile"></div>
-          </div>
-
-          <div class="upg-reel" id="upgReel" aria-hidden="true">
-            <div class="upg-reel__track" id="upgTrack"></div>
-            <div class="upg-reel__marker"></div>
           </div>
 
           <div class="upg-mults" id="upgMults">
@@ -2082,9 +2292,35 @@ body.light .upg-feed__who { color: #0d2b19; }
         </div>
 
         <aside class="upg-panel">
-          <div class="upg-panel__head"><b>Во что апгрейдим</b><span>цель</span></div>
-          <div class="upg-list" id="upgTargets"></div>
+          <div class="upg-panel__head"><b>Во что апгрейдим</b><span id="upgTargetHint">цель</span></div>
+          <div class="upg-assort" id="upgAssort">
+            <button class="upg-assort__head" id="upgAssortToggle" type="button" aria-expanded="false">
+              <span><b>Ассортимент арбузов</b> <span id="upgAssortCount"></span></span>
+              <span class="upg-assort__chev">▼</span>
+            </button>
+            <div class="upg-assort__peek" id="upgAssortPeek"></div>
+            <div class="upg-assort__body" id="upgAssortBody">
+              <div class="upg-targets-grid" id="upgTargets"></div>
+            </div>
+          </div>
         </aside>
+      </div>
+
+      <div class="upg-top" id="upgTop">
+        <div class="upg-top__head">
+          <div class="upg-top__title">
+            <b>🏆 Топ арбузного инвентаря</b>
+            <span>Общий рейтинг: кто собрал самый дорогой инвентарь в апгрейдере</span>
+          </div>
+          <div class="upg-top__actions">
+            <input class="upg-top__name" id="upgTopName" type="text" maxlength="30" placeholder="Твоё имя" aria-label="Имя для топа">
+            <button class="upg-top__btn" id="upgTopRefresh" type="button">Обновить</button>
+            <button class="upg-top__btn upg-top__btn--main" id="upgTopSend" type="button">Отправить в топ</button>
+          </div>
+        </div>
+        <div class="upg-top__me" id="upgTopMe">Твой инвентарь: <b id="upgTopMyVal">0 ₽</b> · <b id="upgTopMyCnt">0</b> шт. <span id="upgTopHint"></span></div>
+        <ol class="upg-top__list" id="upgTopList"><li class="upg-top__empty">Пока пусто. Отправь свой инвентарь первым!</li></ol>
+        <p class="upg-top__note" id="upgTopNote">Рейтинг общий для всех. Считается суммарная стоимость твоего инвентаря в апгрейдере.</p>
       </div>
 
       <div class="upg-feed">
@@ -2174,18 +2410,66 @@ body.light .upg-feed__who { color: #0d2b19; }
 /* Pereprodazhniki — вся логика: каталог, корзина, заказ, отзывы, шутки */
 
 var PRODUCTS = [
-  { id: "solnyi", name: "Солёный (нет)", icon: "🧂", price: 199, weight: "3 кг", tags: ["сок", "харизма"],
-    desc: "Обычный арбуз, но мы его перепродали. Вкус не изменился, отношение — да." },
-  { id: "medovyi", name: "Медовый перекуп", icon: "🍯", price: 349, weight: "5 кг", tags: ["сладкий", "хит"],
-    desc: "Купили у соседа за 200, вам отдаём за 349. Беременным не рекомендуем." },
-  { id: "kvadratnyi", name: "Квадратный", icon: "🟩", price: 499, weight: "7 кг", tags: ["необычный"],
-    desc: "Не помещается в холодильник. Мы предупреждали. Вы продолжали настаивать." },
-  { id: "nochnoy", name: "Ночной перекуп", icon: "🌙", price: 599, weight: "9 кг", tags: ["премиум", "ночь"],
-    desc: "Привозим ночью, пока вы спите. Утром арбуз уже в холодильнике." },
-  { id: "svinoy", name: "Свиной арбуз", icon: "🐷", price: 1499, weight: "13 кг", tags: ["не халяль", "мем", "премиум"],
-    desc: "Не халяль, и мы это честно написали. Пятачок сладкий, но сертификата нет." },
-  { id: "bezkostochek", name: "Арбуз без косточек", icon: "🫧", price: 99990, weight: "9 кг", tags: ["халяль", "премиум", "редкий"],
-    desc: "Косточек нет вообще. Мы вытащили их все сами и сложили в отдельный пакет — в подарок." }
+  { id: "solnyi", name: "Солёный арбуз", icon: "🧂", price: 199, weight: "3 кг", tags: ["соль", "странный"],
+    desc: "Солёный, как те, кто не перепродавал. Вкус на любителя, отношение — да." },
+  { id: "kislyi", name: "Кислый арбуз", icon: "🍋", price: 229, weight: "4 кг", tags: ["кислый", "хит"],
+    desc: "Лицо скривится, но вы вернётесь за вторым. Проверено бабушкой." },
+  { id: "medovyi", name: "Медовый арбузик", icon: "🍯", price: 349, weight: "5 кг", tags: ["сладкий", "хит"],
+    desc: "Купили у соседа за 200, продаём за 349. Перепродажа не гарантируем." },
+  { id: "mini", name: "Мини-арбуз", icon: "🫒", price: 149, weight: "1 кг", tags: ["мини", "сладкий"],
+    desc: "Маленький, но гордый. Уместится в карман, если карман арбузный." },
+  { id: "gigant", name: "Арбуз-гигант", icon: "🏋️", price: 899, weight: "15 кг", tags: ["гигант", "хит"],
+    desc: "Поднимать вдвоём. Есть вчетвером. Жалеть всем." },
+  { id: "kvadratnyi", name: "Квадратный арбуз", icon: "🟩", price: 499, weight: "7 кг", tags: ["квадратный"],
+    desc: "Не перевернётся в холодильнике. Не гарантируем. Не советуем проверять." },
+  { id: "zheltyi", name: "Жёлтый арбуз", icon: "🌕", price: 429, weight: "6 кг", tags: ["экзотика", "сладкий"],
+    desc: "Внутри жёлтый, снаружи зелёный. Идентичность сложная, вкус простой." },
+  { id: "bezkost", name: "Без косточек (почти)", icon: "✨", price: 459, weight: "6 кг", tags: ["удобный", "хит"],
+    desc: "Косточек почти нет. Те, что есть, — подарок от природы." },
+  { id: "sahar", name: "Сахарная бомба", icon: "🍬", price: 389, weight: "5 кг", tags: ["сладкий", "хит"],
+    desc: "Слаще, чем обещания перепродажника. И это кое-что значит." },
+  { id: "nochnoy", name: "Ночной арбуз", icon: "🌙", price: 599, weight: "9 кг", tags: ["редкий", "тёмный"],
+    desc: "Привезли ночью, купил по цене. Аромат уже у холодильника." },
+  { id: "ledyanoi", name: "Ледяной арбуз", icon: "❄️", price: 549, weight: "6 кг", tags: ["редкий", "холодный"],
+    desc: "Из самого дна холодильника бабушки Зины. Мозг замерзает первым." },
+  { id: "ognenyi", name: "Огненный арбуз", icon: "🔥", price: 579, weight: "6 кг", tags: ["острый", "редкий"],
+    desc: "Не острый, просто очень красный. Но предупреждаем на всякий случай." },
+  { id: "kosmos", name: "Космический арбуз", icon: "🌌", price: 799, weight: "8 кг", tags: ["редкий", "хит"],
+    desc: "На вкус как обычный, но цена космическая. Поэтому и космический." },
+  { id: "zolotoi", name: "Золотой арбуз", icon: "🏆", price: 999, weight: "7 кг", tags: ["премиум", "редкий"],
+    desc: "Не из золота. Но блестит уверенностью в цене." },
+  { id: "disco", name: "Диско-арбуз", icon: "🪩", price: 649, weight: "6 кг", tags: ["вечеринка", "хит"],
+    desc: "Включает музыку, если очень захотеть. Музыку включаете вы." },
+  { id: "ninja", name: "Арбуз-ниндзя", icon: "🥷", price: 729, weight: "5 кг", tags: ["редкий", "быстрый"],
+    desc: "Исчезает из холодильника быстрее, чем вы успели моргнуть." },
+  { id: "korol", name: "Королевский арбуз", icon: "👑", price: 1199, weight: "10 кг", tags: ["премиум", "хит"],
+    desc: "Для тех, кто перепродаёт с достоинством. Корона в комплект не входит." },
+  { id: "piksel", name: "Пиксельный арбуз", icon: "🟪", price: 399, weight: "4 кг", tags: ["квадратный", "редкий"],
+    desc: "Состоит из сочных квадратов. Почти как майнкрафт, но съедобный." },
+  { id: "raduga", name: "Радужный арбуз", icon: "🌈", price: 699, weight: "6 кг", tags: ["экзотика", "хит"],
+    desc: "Мякоть обычная, но настроение радужное. Гарантия на настроение — 5 минут." },
+  { id: "babushkin", name: "Бабушкин арбуз", icon: "👵", price: 299, weight: "5 кг", tags: ["классика", "сладкий"],
+    desc: "Выращен на даче, перепродан с любовью. Бабушка не в курсе." },
+  { id: "turbo", name: "Турбо-арбуз", icon: "🚀", price: 849, weight: "7 кг", tags: ["быстрый", "премиум"],
+    desc: "Доставляется быстрее, чем вы передумаете. Это фича." },
+  { id: "mramor", name: "Мраморный арбуз", icon: "🪨", price: 529, weight: "6 кг", tags: ["премиум"],
+    desc: "Полоски идеальные, как у дизайнера. Съедобность тоже дизайнерская." },
+  { id: "elektro", name: "Электро-арбуз", icon: "⚡", price: 777, weight: "7 кг", tags: ["редкий", "хит"],
+    desc: "Бьёт током свежести. Реальным током — нет, мы проверяли." },
+  { id: "kotopes", name: "Арбуз-котопёс", icon: "🐾", price: 559, weight: "5 кг", tags: ["странный", "хит"],
+    desc: "Не кот и не пёс. И не совсем арбуз. Но очень милый." },
+  { id: "smailik", name: "Арбуз-смайлик", icon: "😄", price: 339, weight: "4 кг", tags: ["весёлый", "сладкий"],
+    desc: "Улыбается, пока его не режут. Потом улыбается тот, кто режет." },
+  { id: "svinoy", name: "Свиной арбуз", icon: "🐷", price: 1499, weight: "13 кг", tags: ["не халяль", "хит", "редкий"],
+    desc: "Не халяль, но мы же честно написали. Корочка сладкая, репутация нет." },
+  { id: "bezkostochek", name: "Без одной косточки", icon: "💎", price: 99990, weight: "9 кг", tags: ["халяль", "редкий", "премиум"],
+    desc: "Косточек нет вообще. Мы вытащили их все сами и сложили в коробку — и потеряли." },
+  { id: "legendarnyi", name: "Легендарный арбуз", icon: "🌟", price: 2499, weight: "12 кг", tags: ["премиум", "редкий", "хит"],
+    desc: "О нём ходят слухи в трёх чатах. Мы подтвердить не можем, но продаём." },
+  { id: "chernyi", name: "Чёрный арбуз", icon: "🖤", price: 1599, weight: "8 кг", tags: ["экзотика", "премиум"],
+    desc: "Редкий сорт Дэнсуке. Тёмный, дорогой и очень перепродажный." },
+  { id: "portal", name: "Портальный арбуз", icon: "🌀", price: 1999, weight: "9 кг", tags: ["редкий", "странный"],
+    desc: "Говорят, через него можно попасть на дачу. Мы не проверяли, но верим." }
 ];
 
 var BASE_REVIEWS = [
@@ -5671,20 +5955,41 @@ var UPG_RARITY = {
 };
 
 var UPG_ITEMS = [
-  { id: "seed", name: "Арбузная косточка", icon: "🌱", price: 60, rarity: "common" },
-  { id: "classic", name: "Обычный арбуз", icon: "🍉", price: 120, rarity: "common" },
-  { id: "pig", name: "Свиной арбуз", icon: "🐷", price: 180, rarity: "common" },
-  { id: "cap", name: "Арбуз в шапке", icon: "🧢", price: 320, rarity: "rare" },
-  { id: "cat", name: "Арбуз-кот", icon: "🐱", price: 480, rarity: "rare" },
+  { id: "seed", name: "Арбузная косточка", icon: "🌱", price: 60, rarity: "common", pop: 1 },
+  { id: "slice", name: "Долька арбуза", icon: "🍉", price: 90, rarity: "common", pop: 1 },
+  { id: "mini", name: "Мини-арбузик", icon: "🫒", price: 100, rarity: "common" },
+  { id: "classic", name: "Обычный арбуз", icon: "🍉", price: 120, rarity: "common", pop: 1 },
+  { id: "salt", name: "Солёный арбуз", icon: "🧂", price: 140, rarity: "common" },
+  { id: "smile", name: "Арбуз-смайлик", icon: "😄", price: 160, rarity: "common" },
+  { id: "pig", name: "Свиной арбуз", icon: "🐷", price: 180, rarity: "common", pop: 1 },
+  { id: "cube", name: "Кубик арбуза", icon: "🧊", price: 220, rarity: "common" },
+  { id: "grandma", name: "Бабушкин арбуз", icon: "👵", price: 260, rarity: "common" },
+  { id: "cap", name: "Арбуз в шапке", icon: "🧢", price: 320, rarity: "rare", pop: 1 },
+  { id: "striped", name: "Полосатый боец", icon: "🦓", price: 360, rarity: "rare" },
+  { id: "cool", name: "Арбуз в очках", icon: "😎", price: 420, rarity: "rare" },
+  { id: "cat", name: "Арбуз-кот", icon: "🐱", price: 480, rarity: "rare", pop: 1 },
+  { id: "heart", name: "Арбуз-сердце", icon: "💚", price: 560, rarity: "rare" },
+  { id: "disco", name: "Диско-арбуз", icon: "🪩", price: 640, rarity: "rare" },
   { id: "diamond", name: "Семечко-алмаз", icon: "💎", price: 720, rarity: "rare" },
-  { id: "gold", name: "Золотой арбуз", icon: "🏆", price: 1400, rarity: "epic" },
+  { id: "ninja", name: "Арбуз-ниндзя", icon: "🥷", price: 860, rarity: "rare" },
+  { id: "fire", name: "Огненный арбуз", icon: "🔥", price: 1000, rarity: "rare" },
+  { id: "gold", name: "Золотой арбуз", icon: "🏆", price: 1400, rarity: "epic", pop: 1 },
+  { id: "chest", name: "Сундук-арбуз", icon: "🧰", price: 1800, rarity: "epic" },
   { id: "rocket", name: "Арбуз-ракета", icon: "🚀", price: 2400, rarity: "epic" },
+  { id: "mech", name: "Меха-арбуз", icon: "🛡️", price: 3000, rarity: "epic" },
   { id: "dino", name: "Арбуз-динозавр", icon: "🦖", price: 3800, rarity: "epic" },
-  { id: "crown", name: "Арбуз-Дуров", icon: "👑", price: 9500, rarity: "legendary" },
+  { id: "robot", name: "Арбуз-робот", icon: "🤖", price: 5200, rarity: "epic" },
+  { id: "dragon", name: "Арбуз-дракон", icon: "🐲", price: 7000, rarity: "epic" },
+  { id: "crown", name: "Арбуз-Дуров", icon: "👑", price: 9500, rarity: "legendary", pop: 1 },
   { id: "ice", name: "Ледяной арбуз", icon: "❄️", price: 15000, rarity: "legendary" },
+  { id: "ghost", name: "Призрачный арбуз", icon: "👻", price: 19000, rarity: "legendary" },
+  { id: "black", name: "Чёрный арбуз", icon: "🖤", price: 23000, rarity: "legendary" },
   { id: "space", name: "Космический арбуз", icon: "🌌", price: 28000, rarity: "legendary" },
+  { id: "portal", name: "Портальный арбуз", icon: "🌀", price: 38000, rarity: "legendary" },
   { id: "saint", name: "Святой арбуз", icon: "😇", price: 55000, rarity: "mythic" },
-  { id: "planet", name: "Арбуз вселенной", icon: "🪐", price: 120000, rarity: "mythic" }
+  { id: "galaxy", name: "Галактический арбуз", icon: "🌠", price: 80000, rarity: "mythic" },
+  { id: "planet", name: "Арбуз вселенной", icon: "🪐", price: 120000, rarity: "mythic" },
+  { id: "god", name: "Бог арбузов", icon: "🔱", price: 250000, rarity: "mythic" }
 ];
 
 var UPG_START = ["classic", "pig", "seed"];
@@ -5699,7 +6004,9 @@ var UPG = {
   profit: 0,
   hist: [],
   lastCase: 0,
-  spinning: false
+  spinning: false,
+  assortOpen: false,
+  arrowDeg: 0
 };
 
 var UPG_FAKES = [];
@@ -5766,6 +6073,7 @@ function upgLoad() {
   var sel = d && upgItem(d.selected) ? d.selected : null;
   UPG.selected = sel && UPG.inv.indexOf(sel) >= 0 ? sel : (UPG.inv[0] || null);
   UPG.target = d && upgItem(d.target) ? d.target : null;
+  UPG.assortOpen = false; /* по умолчанию скрыт при заходе */
 }
 
 function upgEnsure() {
@@ -5829,27 +6137,64 @@ function upgRenderInv() {
 
 function upgRenderTargets() {
   var box = document.getElementById("upgTargets");
+  var peek = document.getElementById("upgAssortPeek");
+  var wrap = document.getElementById("upgAssort");
+  var countEl = document.getElementById("upgAssortCount");
+  var toggle = document.getElementById("upgAssortToggle");
   if (!box) return;
   var from = upgItem(UPG.selected);
 
+  if (wrap) {
+    if (UPG.assortOpen) wrap.classList.add("is-open"); else wrap.classList.remove("is-open");
+  }
+  if (toggle) toggle.setAttribute("aria-expanded", UPG.assortOpen ? "true" : "false");
+
   if (!from) {
     box.innerHTML = '<p class="upg-empty">Сначала выбери предмет в инвентаре.</p>';
+    if (peek) peek.innerHTML = '';
+    if (countEl) countEl.textContent = '';
     return;
   }
 
   var html = "";
+  var allCount = 0;
   for (var i = 0; i < UPG_ITEMS.length; i++) {
     var it = UPG_ITEMS[i];
     if (it.price <= from.price) continue;
+    allCount++;
     var p = upgPct(from, it);
     var cls = p < 25 ? "upg-chance--low" : p < 55 ? "upg-chance--mid" : "upg-chance--high";
-    html += '<button class="upg-item upg-item--' + it.rarity + (it.id === UPG.target ? " is-tgt" : "") + '" type="button" data-target="' + it.id + '">' +
-      '<span class="upg-item__icon">' + it.icon + '</span>' +
-      '<span class="upg-item__body"><b>' + it.name + '</b><small class="upg-r">' + UPG_RARITY[it.rarity].name + '</small></span>' +
-      '<span class="upg-item__side"><b>' + upgMoney(it.price) + '</b><i class="upg-chance ' + cls + '">' + p + '%</i></span>' +
+    html += '<button class="upg-t-item upg-item--' + it.rarity + (it.id === UPG.target ? " is-tgt" : "") + '" type="button" data-target="' + it.id + '" style="--rc:' + UPG_RARITY[it.rarity].color + '">' +
+      '<span class="upg-t-item__ic">' + it.icon + '</span>' +
+      '<span class="upg-t-item__b"><b>' + it.name + '</b><small>' + upgMoney(it.price) + ' · <i class="upg-chance ' + cls + '">' + p + '%</i></small></span>' +
       '</button>';
   }
   box.innerHTML = html || '<p class="upg-empty">Ты уже на вершине. Апгрейдить некуда — только продавать бабушке.</p>';
+  if (countEl) countEl.textContent = allCount ? '(' + allCount + ')' : '';
+
+  if (peek) {
+    var pops = [];
+    for (var j = 0; j < UPG_ITEMS.length; j++) {
+      var pit = UPG_ITEMS[j];
+      if (pit.price <= from.price) continue;
+      if (pit.pop) pops.push(pit);
+    }
+    pops.sort(function(a,b){ return a.price - b.price; });
+    if (!pops.length) {
+      for (var k = 0; k < UPG_ITEMS.length; k++) {
+        var pit2 = UPG_ITEMS[k];
+        if (pit2.price <= from.price) continue;
+        pops.push(pit2);
+        if (pops.length >= 6) break;
+      }
+    }
+    if (pops.length > 8) pops = pops.slice(0, 8);
+    var ph = '';
+    for (var m = 0; m < pops.length; m++) {
+      ph += '<button class="upg-peek" type="button" data-target="' + pops[m].id + '"><i>' + pops[m].icon + '</i>' + pops[m].name + '</button>';
+    }
+    peek.innerHTML = ph || '<span style="font-size:12px;color:var(--muted)">Нет доступных целей</span>';
+  }
 }
 
 function upgTile(item, emptyText) {
@@ -5868,10 +6213,10 @@ function upgRenderCore() {
 
   var fromTile = document.getElementById("upgFromTile");
   var toTile = document.getElementById("upgToTile");
-  var ring = document.getElementById("upgRing");
+  var wheel = document.getElementById("upgWheel");
   var chanceEl = document.getElementById("upgChance");
   var go = document.getElementById("upgGo");
-  if (!fromTile || !toTile || !ring || !chanceEl || !go) return;
+  if (!fromTile || !toTile || !chanceEl || !go) return;
 
   var a = upgTile(from, "Ничего не выбрано");
   var b = upgTile(to, "Выбери цель");
@@ -5881,8 +6226,7 @@ function upgRenderCore() {
   toTile.innerHTML = b.html;
 
   var chance = upgPct(from, to);
-  ring.style.setProperty("--p", String(chance));
-  ring.className = "upg-ring" + (chance ? (chance < 25 ? " is-low" : chance < 55 ? " is-mid" : " is-high") : "");
+  if (wheel) wheel.style.setProperty("--p", String(chance));
   chanceEl.textContent = chance ? chance + "%" : "—";
 
   if (UPG.spinning) {
@@ -5924,6 +6268,10 @@ function upgRenderHud() {
     profit.textContent = sign + upgMoney(Math.abs(UPG.profit));
     profit.style.color = UPG.profit < 0 ? "#ff8f8f" : "";
   }
+  var tval = document.getElementById("upgTopMyVal");
+  if (tval) tval.textContent = upgMoney(val);
+  var tcnt = document.getElementById("upgTopMyCnt");
+  if (tcnt) tcnt.textContent = String(UPG.inv.length);
 }
 
 function upgFeedRow(h) {
@@ -5947,22 +6295,7 @@ function upgRenderFeed() {
   box.innerHTML = html || '<p class="upg-empty">Пока тихо. Начни — и бабушка всё запишет.</p>';
 }
 
-function upgFillReel() {
-  var track = document.getElementById("upgTrack");
-  var reel = document.getElementById("upgReel");
-  if (!track || !reel || track.childNodes.length) return;
-
-  var count = 26;
-  var html = "";
-  for (var i = 0; i < count; i++) {
-    html += '<span class="upg-reel__cell">' + UPG_ITEMS[Math.floor(Math.random() * UPG_ITEMS.length)].icon + '</span>';
-  }
-  track.innerHTML = html;
-  var view = reel.clientWidth || 400;
-  var offset = view / 2 - (12 * 76 + 38);
-  track.style.transition = "none";
-  track.style.transform = "translate3d(" + offset + "px,0,0)";
-}
+function upgFillReel() { /* replaced by wheel */ }
 
 function upgRender() {
   upgEnsure();
@@ -5997,37 +6330,32 @@ function upgHideResult() {
   if (res) res.hidden = true;
 }
 
-function upgSpinReel(to, ms, done) {
-  var track = document.getElementById("upgTrack");
-  var reel = document.getElementById("upgReel");
-  if (!track || !reel) { done(); return; }
-
-  var cell = 76;
-  var count = 46;
-  var html = "";
-  for (var i = 0; i < count; i++) {
-    html += '<span class="upg-reel__cell">' + UPG_ITEMS[Math.floor(Math.random() * UPG_ITEMS.length)].icon + '</span>';
-  }
-  html += '<span class="upg-reel__cell">' + to.icon + '</span>';
-  track.innerHTML = html;
-
+function upgSpinWheel(win, chance, ms, done) {
+  var arrow = document.getElementById("upgArrow");
+  if (!arrow) { done(); return; }
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var view = reel.clientWidth || 400;
-  var offset = -(count * cell) + (view / 2 - cell / 2);
-
+  chance = Math.max(1, Math.min(99, Number(chance) || 50));
+  var greenEnd = chance * 3.6;
+  var target;
+  if (win) {
+    target = 5 + Math.random() * Math.max(1, greenEnd - 10);
+  } else {
+    var redSpan = 360 - greenEnd;
+    target = greenEnd + 5 + Math.random() * Math.max(1, redSpan - 10);
+  }
+  var base = Math.ceil(UPG.arrowDeg / 360) * 360;
+  var next = base + 360 * (4 + Math.floor(Math.random() * 3)) + target;
+  if (next <= UPG.arrowDeg + 360) next += 360;
+  UPG.arrowDeg = next;
   if (reduce) {
-    track.style.transition = "none";
-    track.style.transform = "translate3d(" + offset + "px,0,0)";
+    arrow.style.transition = "none";
+    arrow.style.transform = "rotate(" + UPG.arrowDeg + "deg)";
     setTimeout(done, 120);
     return;
   }
-
-  track.style.transition = "none";
-  track.style.transform = "translate3d(140px,0,0)";
-  void track.offsetWidth;
-  track.style.transition = "transform " + ms + "ms cubic-bezier(.12,.72,.16,1)";
+  arrow.style.transition = "transform " + ms + "ms cubic-bezier(.12,.72,.08,1)";
   requestAnimationFrame(function () {
-    track.style.transform = "translate3d(" + offset + "px,0,0)";
+    arrow.style.transform = "rotate(" + UPG.arrowDeg + "deg)";
   });
   setTimeout(done, ms + 60);
 }
@@ -6064,7 +6392,7 @@ function upgDo() {
   var multBtns = document.querySelectorAll("#upgMults .upg-mult");
   for (var mi = 0; mi < multBtns.length; mi++) multBtns[mi].disabled = true;
 
-  upgSpinReel(to, 2700, function () {
+  upgSpinWheel(win, chance, 3200, function () {
     UPG.spinning = false;
     if (win) {
       UPG.inv.push(to.id);
@@ -6075,6 +6403,7 @@ function upgDo() {
     upgSave();
     upgRender();
     upgShowResult(win, from, to);
+    if (typeof upgTopSyncMe === "function") upgTopSyncMe();
     toast(win ? "🎉 Апгрейд! Забрал «" + to.name + "»" : "💀 «" + from.name + "» ушёл бабушке");
   });
 }
@@ -6111,6 +6440,7 @@ function upgOpenCase() {
 
   upgSave();
   upgRender();
+  if (typeof upgTopSyncMe === "function") upgTopSyncMe();
   toast("🎁 Из кейса выпал «" + item.name + "»");
 }
 
@@ -6142,6 +6472,7 @@ function upgResetAll() {
   if (res) res.hidden = true;
   upgSave();
   upgRender();
+  if (typeof upgTopSyncMe === "function") upgTopSyncMe();
   toast("Апгрейдер сброшен");
 }
 
@@ -6173,6 +6504,280 @@ function upgSeedFakes() {
   if (UPG_FAKES.length > 10) UPG_FAKES.length = 10;
 }
 
+/* ---------- Топ апгрейдера (общий, как в мини-игре) ---------- */
+var UPG_TOP = {
+  storeUrl: "https://api.restful-api.dev/objects/ff808181a09d98f701a1f9aa0a980983",
+  postUrls: [
+    "https://ntfy.sh/prz-upg-top-7a39c1",
+    "https://ntfy.envs.net/prz-upg-top-7a39c1",
+    "https://ntfy.adminforge.de/prz-upg-top-7a39c1"
+  ],
+  liveUrls: [
+    "https://ntfy.sh/prz-upg-top-7a39c1/json?poll=1&since=12h",
+    "https://ntfy.envs.net/prz-upg-top-7a39c1/json?poll=1&since=12h",
+    "https://ntfy.adminforge.de/prz-upg-top-7a39c1/json?poll=1&since=12h"
+  ],
+  storeReady: false,
+  storeScores: null,
+  lastStoreFetch: 0,
+  lastPush: 0,
+  scores: [],
+  seen: {},
+  lastSent: read("prz_upg_top_last", 0) || 0,
+  loaded: false,
+  sending: false
+};
+
+function upgTopInvStats() {
+  var val = 0, count = 0;
+  if (typeof UPG !== "undefined" && UPG.inv) {
+    count = UPG.inv.length;
+    for (var i = 0; i < UPG.inv.length; i++) {
+      var it = upgItem(UPG.inv[i]);
+      if (it) val += it.price;
+    }
+  }
+  return { value: val, count: count };
+}
+
+function upgTopParse(text) {
+  var parts = String(text || "").split("|");
+  if (parts.length < 5 || parts[0] !== "UPGT") return null;
+  return { name: parts[1], score: parseInt(parts[2], 10), count: parseInt(parts[3], 10), ts: parseInt(parts[4], 10) };
+}
+
+function upgTopAdd(name, score, count, ts, key) {
+  name = normalizeName(name);
+  score = parseInt(score, 10);
+  count = parseInt(count, 10) || 0;
+  ts = parseInt(ts, 10) || 0;
+  if (nameProblem(name)) return false;
+  if (!isFinite(score) || score < 0 || score > 2000000000) return false;
+  var low = name.toLowerCase();
+  var k = key || (low + "|" + score + "|" + count + "|" + Math.floor(ts / 1000));
+  if (UPG_TOP.seen[k]) return false;
+  UPG_TOP.seen[k] = true;
+  for (var i = 0; i < UPG_TOP.scores.length; i++) {
+    if (UPG_TOP.scores[i].name.toLowerCase() === low) {
+      if (score < UPG_TOP.scores[i].score) return false;
+      if (score === UPG_TOP.scores[i].score && count <= (UPG_TOP.scores[i].count || 0)) return false;
+      UPG_TOP.scores.splice(i, 1);
+      break;
+    }
+  }
+  UPG_TOP.scores.push({ name: name, score: score, count: count, ts: ts });
+  UPG_TOP.scores.sort(function (a, b) { return b.score - a.score || (b.count || 0) - (a.count || 0) || a.ts - b.ts; });
+  if (UPG_TOP.scores.length > 50) UPG_TOP.scores.length = 50;
+  return true;
+}
+
+function upgTopNormalizeList(arr) {
+  if (!Array.isArray(arr)) return [];
+  var map = {}, out = [];
+  for (var i = 0; i < arr.length; i++) {
+    var s = arr[i]; if (!s) continue;
+    var name = normalizeName(s.name);
+    var score = parseInt(s.score, 10);
+    var count = parseInt(s.count, 10) || 0;
+    var ts = parseInt(s.ts, 10) || 0;
+    if (nameProblem(name)) continue;
+    if (!isFinite(score) || score < 0 || score > 2000000000) continue;
+    var low = name.toLowerCase();
+    if (!map[low] || score > map[low].score || (score === map[low].score && count > (map[low].count || 0))) {
+      map[low] = { name: name, score: score, count: count, ts: ts };
+    }
+  }
+  for (var k in map) { if (Object.prototype.hasOwnProperty.call(map, k)) out.push(map[k]); }
+  out.sort(function (a, b) { return b.score - a.score || (b.count || 0) - (a.count || 0) || a.ts - b.ts; });
+  if (out.length > 50) out.length = 50;
+  return out;
+}
+
+function upgTopRender() {
+  var list = document.getElementById("upgTopList");
+  var note = document.getElementById("upgTopNote");
+  if (!list) return;
+  var myName = normalizeName(read("prz_upg_top_name", "") || (document.getElementById("upgTopName") ? document.getElementById("upgTopName").value : ""));
+  list.innerHTML = "";
+  if (!UPG_TOP.scores.length) {
+    list.innerHTML = '<li class="upg-top__empty">Пока пусто. Отправь свой инвентарь первым!</li>';
+  } else {
+    var medals = ["🥇", "🥈", "🥉"];
+    UPG_TOP.scores.slice(0, 10).forEach(function (s, i) {
+      var li = document.createElement("li");
+      li.className = "upg-top__row" + (i < 3 ? " upg-top__row--" + (i + 1) : "");
+      if (myName && s.name.toLowerCase() === myName.toLowerCase()) li.className += " is-me";
+      var place = document.createElement("span");
+      place.className = "upg-top__place";
+      place.textContent = medals[i] || (i + 1);
+      var who = document.createElement("span");
+      who.className = "upg-top__name-t";
+      who.textContent = s.name;
+      var val = document.createElement("span");
+      val.className = "upg-top__val";
+      val.textContent = upgMoney(s.score);
+      var cnt = document.createElement("span");
+      cnt.className = "upg-top__cnt";
+      cnt.textContent = (s.count || 0) + " шт.";
+      li.appendChild(place);
+      li.appendChild(who);
+      li.appendChild(val);
+      li.appendChild(cnt);
+      list.appendChild(li);
+    });
+  }
+  if (note) {
+    var t = new Date();
+    var hh = ("0" + t.getHours()).slice(-2), mm = ("0" + t.getMinutes()).slice(-2);
+    note.textContent = "Рейтинг общий для всех · " + (UPG_TOP.loaded ? "обновлён " + hh + ":" + mm : "загрузка…");
+  }
+}
+
+function upgTopFetchStore(force) {
+  var now = Date.now();
+  if (!force && now - UPG_TOP.lastStoreFetch < 60000) return Promise.resolve(false);
+  UPG_TOP.lastStoreFetch = now;
+  return fetchT(UPG_TOP.storeUrl, { cache: "no-store" }, 8000)
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (data) {
+      if (!data) return false;
+      var arr = (data.data && data.data.scores) || data.scores || [];
+      if (!Array.isArray(arr)) return false;
+      UPG_TOP.storeReady = true;
+      UPG_TOP.storeScores = upgTopNormalizeList(arr);
+      var changed = false;
+      for (var i = 0; i < arr.length; i++) {
+        var s = arr[i]; if (!s) continue;
+        if (upgTopAdd(s.name, s.score, s.count || 0, s.ts || 0, "s|" + (s.name || "") + "|" + s.score + "|" + (s.count || 0) + "|" + (s.ts || 0))) changed = true;
+      }
+      if (changed) upgTopRender(); else if (force) upgTopRender();
+      return true;
+    })
+    .catch(function () { return false; });
+}
+
+function upgTopPushStore(force) {
+  if (!UPG_TOP.storeReady) return Promise.resolve(false);
+  var scores = upgTopNormalizeList(UPG_TOP.scores);
+  if (!scores.length) return Promise.resolve(false);
+  var json = JSON.stringify(scores);
+  if (!force && UPG_TOP.storeScores && JSON.stringify(UPG_TOP.storeScores) === json) return Promise.resolve(false);
+  var now = Date.now();
+  if (!force && now - UPG_TOP.lastPush < 60000) return Promise.resolve(false);
+  UPG_TOP.lastPush = now;
+  return fetchT(UPG_TOP.storeUrl, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: "prz-upgrader-inv-top", data: { updated: new Date().toISOString(), scores: scores } })
+  }, 8000).then(function (r) {
+    if (!r.ok) throw new Error("bad");
+    UPG_TOP.storeScores = scores;
+    return true;
+  }).catch(function () { return false; });
+}
+
+function upgTopPublishLive(name, score, count, ts) {
+  var urls = UPG_TOP.postUrls;
+  var jobs = urls.map(function (url) {
+    return fetchT(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=UTF-8" },
+      body: "UPGT|" + name + "|" + score + "|" + count + "|" + ts
+    }, 6000).then(function (r) { return !!r.ok; }).catch(function () { return false; });
+  });
+  return Promise.all(jobs).then(function (res) {
+    for (var i = 0; i < res.length; i++) if (res[i]) return true;
+    return false;
+  });
+}
+
+function upgTopFetchLive() {
+  var urls = UPG_TOP.liveUrls;
+  var jobs = urls.map(function (url) {
+    return fetchT(url, { cache: "no-store" }, 6000)
+      .then(function (r) { return r.ok ? r.text() : ""; })
+      .then(function (text) { return { ok: !!text, text: text }; })
+      .catch(function () { return { ok: false, text: "" }; });
+  });
+  return Promise.all(jobs).then(function (res) {
+    var changed = false, any = false;
+    for (var j = 0; j < res.length; j++) {
+      if (!res[j].ok) continue;
+      any = true;
+      var lines = res[j].text.split("\n");
+      for (var i = 0; i < lines.length; i++) {
+        if (!lines[i]) continue;
+        var ev; try { ev = JSON.parse(lines[i]); } catch (e) { continue; }
+        if (!ev || ev.event !== "message" || !ev.message) continue;
+        var p = upgTopParse(ev.message);
+        if (p && upgTopAdd(p.name, p.score, p.count, p.ts, "live|" + j + "|" + ev.id)) changed = true;
+      }
+    }
+    if (changed) upgTopRender();
+    return any;
+  });
+}
+
+function upgTopSyncMe() {
+  var st = upgTopInvStats();
+  var tval = document.getElementById("upgTopMyVal");
+  if (tval) tval.textContent = upgMoney(st.value);
+  var tcnt = document.getElementById("upgTopMyCnt");
+  if (tcnt) tcnt.textContent = String(st.count);
+}
+
+function upgTopSubmit(auto) {
+  if (UPG_TOP.sending) return;
+  var input = document.getElementById("upgTopName");
+  var note = document.getElementById("upgTopHint");
+  var btn = document.getElementById("upgTopSend");
+  var name = normalizeName(input ? input.value : (read("prz_upg_top_name", "") || (typeof LB !== "undefined" ? LB.name : "")));
+  if (input) input.value = name;
+  var err = nameProblem(name);
+  if (err) { if (!auto && note) note.textContent = " " + err; return; }
+  var st = upgTopInvStats();
+  if (st.value <= 0 && st.count <= 0) { if (note) note.textContent = " Сначала собери хоть что-то в инвентарь."; return; }
+  var now = Date.now();
+  var wait = 20000 - (now - UPG_TOP.lastSent);
+  if (!auto && wait > 0) { if (note) note.textContent = " Подожди " + Math.ceil(wait / 1000) + " с."; return; }
+  write("prz_upg_top_name", name);
+  UPG_TOP.sending = true;
+  if (btn) { btn.disabled = true; btn.textContent = "Отправляем…"; }
+  UPG_TOP.lastSent = now;
+  write("prz_upg_top_last", now);
+  upgTopAdd(name, st.value, st.count, now, "own|" + now);
+  upgTopRender();
+  if (note) note.textContent = " Отправлено, синхронизируем…";
+  Promise.all([upgTopPublishLive(name, st.value, st.count, now), upgTopFetchStore(true).then(function(){ return upgTopPushStore(true); })]).then(function (res) {
+    UPG_TOP.sending = false;
+    if (btn) { btn.disabled = false; btn.textContent = "Отправить в топ"; }
+    if (note) note.textContent = res[0] || res[1] ? " Готово! Ты в общем рейтинге." : " Сохранено, общий рейтинг обновится при связи.";
+    upgTopFetchStore(true);
+  }).catch(function () {
+    UPG_TOP.sending = false;
+    if (btn) { btn.disabled = false; btn.textContent = "Отправить в топ"; }
+    if (note) note.textContent = " Сохранено локально, обновится при связи.";
+  });
+}
+
+function upgTopLoad(force) {
+  upgTopSyncMe();
+  if (UPG_TOP.loaded && !force) { upgTopRender(); return; }
+  UPG_TOP.loaded = true;
+  Promise.all([upgTopFetchStore(true), upgTopFetchLive()]).then(function () { upgTopRender(); });
+}
+
+function upgTopInit() {
+  upgTopSyncMe();
+  var n = read("prz_upg_top_name", "") || (typeof LB !== "undefined" ? LB.name : "");
+  var inp = document.getElementById("upgTopName");
+  if (inp && n && !inp.value && !nameProblem(n)) inp.value = n;
+  upgTopRender();
+  upgTopFetchStore(true).then(function(){ upgTopRender(); });
+  upgTopFetchLive().then(function(){ upgTopRender(); });
+}
+
+
 function initUpgrader() {
   if (!document.getElementById("upgrader")) return;
 
@@ -6201,7 +6806,30 @@ function initUpgrader() {
   var targets = document.getElementById("upgTargets");
   if (targets) {
     targets.addEventListener("click", function (e) {
-      var el = upgClosest(e.target, ".upg-item");
+      var el = upgClosest(e.target, ".upg-t-item");
+      if (!el) el = upgClosest(e.target, ".upg-item");
+      if (!el || UPG.spinning) return;
+      var id = el.getAttribute("data-target");
+      if (!id) return;
+      UPG.target = id;
+      upgHideResult();
+      upgSave();
+      upgRenderCore();
+      upgRenderTargets();
+    });
+  }
+
+  var assortToggle = document.getElementById("upgAssortToggle");
+  if (assortToggle) {
+    assortToggle.addEventListener("click", function () {
+      UPG.assortOpen = !UPG.assortOpen;
+      upgRenderTargets();
+    });
+  }
+  var assortPeek = document.getElementById("upgAssortPeek");
+  if (assortPeek) {
+    assortPeek.addEventListener("click", function (e) {
+      var el = upgClosest(e.target, ".upg-peek");
       if (!el || UPG.spinning) return;
       var id = el.getAttribute("data-target");
       if (!id) return;
@@ -6230,7 +6858,23 @@ function initUpgrader() {
   if (caseBtn) caseBtn.addEventListener("click", upgOpenCase);
 
   var resetBtn = document.getElementById("upgReset");
-  if (resetBtn) resetBtn.addEventListener("click", upgResetAll);
+  if (resetBtn) resetBtn.addEventListener("click", function () { upgResetAll(); if (typeof upgTopSyncMe === "function") upgTopSyncMe(); });
+
+  var upgTopSendBtn = document.getElementById("upgTopSend");
+  if (upgTopSendBtn) upgTopSendBtn.addEventListener("click", function () { if (typeof upgTopSubmit === "function") upgTopSubmit(false); });
+  var upgTopRefBtn = document.getElementById("upgTopRefresh");
+  if (upgTopRefBtn) upgTopRefBtn.addEventListener("click", function () { if (typeof upgTopLoad === "function") upgTopLoad(true); });
+  var upgTopNameIn = document.getElementById("upgTopName");
+  if (upgTopNameIn) {
+    if (typeof LB !== "undefined" && LB.name && !nameProblem(LB.name)) upgTopNameIn.value = LB.name;
+    upgTopNameIn.addEventListener("input", function () {
+      var n = normalizeName(upgTopNameIn.value);
+      if (n && !nameProblem(n)) { write("prz_upg_top_name", n); }
+    });
+    var savedN = read("prz_upg_top_name", "");
+    if (savedN && !upgTopNameIn.value) upgTopNameIn.value = savedN;
+  }
+  if (typeof upgTopInit === "function") upgTopInit();
 
   setInterval(upgTickCase, 500);
   setInterval(function () {
@@ -6240,6 +6884,11 @@ function initUpgrader() {
     if (UPG_FAKES.length > 10) UPG_FAKES.length = 10;
     upgRenderFeed();
   }, 8000);
+  setInterval(function () {
+    if (document.hidden) return;
+    if (typeof upgTopFetchStore === "function") upgTopFetchStore(false);
+    if (typeof upgTopFetchLive === "function") upgTopFetchLive();
+  }, 60000);
 }
 
 function init() {
