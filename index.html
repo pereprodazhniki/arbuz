@@ -1625,6 +1625,74 @@ body.light .jobform__cooldown { background: #f2fff7; border-color: #12803c; colo
 .upg-t-item__b b { font-size: 12px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .upg-t-item__b small { font-size: 11px; color: var(--lime); font-weight: 700; }
 
+/* ---------- сворачиваемый каталог ---------- */
+.catalog-collapse {
+  margin-top: 14px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  background: rgba(0,0,0,.12);
+  overflow: hidden;
+}
+.catalog-collapse__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.catalog-collapse__head b { font-size: 14px; }
+.catalog-collapse__head span { font-size: 12px; color: var(--muted); font-weight: 600; }
+.catalog-collapse__chev { font-size: 13px; color: var(--lime); transition: transform .2s; flex: 0 0 auto; }
+.catalog-collapse.is-open .catalog-collapse__chev { transform: rotate(180deg); }
+.catalog-collapse__peek {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  padding: 0 12px 12px;
+  position: relative;
+}
+.catalog-collapse__peek::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 48px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(10,14,12,.35));
+  pointer-events: none;
+}
+.catalog-collapse.is-open .catalog-collapse__peek { display: none; }
+.catalog-collapse__body { display: none; padding: 0 12px 12px; }
+.catalog-collapse.is-open .catalog-collapse__body { display: block; }
+.catalog-peek {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.03);
+  color: var(--text);
+  text-align: center;
+  cursor: pointer;
+  opacity: .72;
+  filter: saturate(.85);
+}
+.catalog-peek:hover { opacity: .95; filter: none; border-color: var(--lime); }
+.catalog-peek__icon { font-size: 28px; line-height: 1; }
+.catalog-peek__name { font-size: 12px; font-weight: 700; color: #fff; }
+.catalog-peek__price { font-size: 11px; color: var(--lime); font-weight: 700; }
+body.light .catalog-collapse { background: #fff; border-color: #d8e8dd; }
+body.light .catalog-collapse__peek::after { background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,.55)); }
+body.light .catalog-peek { background: #f7fbf8; border-color: #d8e8dd; }
+body.light .catalog-peek__name { color: #13281d; }
+
 /* ---------- Топ апгрейдера ---------- */
 .upg-top {
   margin-top: 14px;
@@ -1867,19 +1935,28 @@ body.light .upg-feed__who { color: #0d2b19; }
       </div>
     </div>
 
-    <div class="toolbar">
-      <input class="search" id="search" type="search" placeholder="Поиск: мед, ночной, свиной…">
-      <select class="select" id="sort">
-        <option value="default">Сначала популярные</option>
-        <option value="asc">Сначала дешёвые</option>
-        <option value="desc">Сначала дорогие</option>
-        <option value="name">По названию</option>
-      </select>
-      <div class="chips" id="chips"></div>
-    </div>
+    <div class="catalog-collapse" id="catalogCollapse">
+      <button class="catalog-collapse__head" id="catalogToggle" type="button" aria-expanded="false">
+        <span><b>Купить арбузы</b> <span id="catalogCount"></span></span>
+        <span class="catalog-collapse__chev">▼</span>
+      </button>
+      <div class="catalog-collapse__peek" id="catalogPeek"></div>
+      <div class="catalog-collapse__body" id="catalogBody">
+        <div class="toolbar">
+          <input class="search" id="search" type="search" placeholder="Поиск: мед, ночной, свиной…">
+          <select class="select" id="sort">
+            <option value="default">Сначала популярные</option>
+            <option value="asc">Сначала дешёвые</option>
+            <option value="desc">Сначала дорогие</option>
+            <option value="name">По названию</option>
+          </select>
+          <div class="chips" id="chips"></div>
+        </div>
 
-    <div class="grid" id="catalogGrid"></div>
-    <p class="empty" id="catalogEmpty" hidden>Ничего не нашлось. Попробуй слово «арбуз».</p>
+        <div class="grid" id="catalogGrid"></div>
+        <p class="empty" id="catalogEmpty" hidden>Ничего не нашлось. Попробуй слово «арбуз».</p>
+      </div>
+    </div>
   </section>
 
   <section class="section" id="guarantees">
@@ -2515,6 +2592,7 @@ var reviews = read(STORE.reviews, []);
 var sold = read(STORE.sold, 0);
 var buyers = read(STORE.buyers, []);
 var activeTag = null;
+var catalogOpen = false;
 
 /* чистка: убираем из корзины товары, которых больше нет в каталоге */
 (function cleanCart() {
@@ -2675,7 +2753,38 @@ function renderCatalog() {
   renderChips();
   var grid = document.getElementById("catalogGrid");
   var empty = document.getElementById("catalogEmpty");
+  var wrap = document.getElementById("catalogCollapse");
+  var peek = document.getElementById("catalogPeek");
+  var toggle = document.getElementById("catalogToggle");
+  var countEl = document.getElementById("catalogCount");
   var list = currentList();
+
+  if (wrap) {
+    if (catalogOpen) wrap.classList.add("is-open"); else wrap.classList.remove("is-open");
+  }
+  if (toggle) toggle.setAttribute("aria-expanded", catalogOpen ? "true" : "false");
+  if (countEl) countEl.textContent = "(" + PRODUCTS.length + ")";
+
+  if (peek) {
+    var peekList = [];
+    for (var pi = 0; pi < PRODUCTS.length; pi++) {
+      if (PRODUCTS[pi].tags.indexOf("хит") !== -1) peekList.push(PRODUCTS[pi]);
+    }
+    if (!peekList.length) {
+      for (var pj = 0; pj < PRODUCTS.length; pj++) peekList.push(PRODUCTS[pj]);
+    }
+    if (peekList.length > 4) peekList = peekList.slice(0, 4);
+    var ph = "";
+    for (var pk = 0; pk < peekList.length; pk++) {
+      var pp = peekList[pk];
+      ph += '<button class="catalog-peek" type="button" data-open-catalog="1">' +
+        '<span class="catalog-peek__icon">' + pp.icon + '</span>' +
+        '<span class="catalog-peek__name">' + pp.name + '</span>' +
+        '<span class="catalog-peek__price">' + money(pp.price) + '</span>' +
+        '</button>';
+    }
+    peek.innerHTML = ph;
+  }
 
   grid.innerHTML = "";
 
@@ -7157,6 +7266,26 @@ function initUpgrader() {
 
 function init() {
   renderCatalog();
+  var catalogToggle = document.getElementById("catalogToggle");
+  if (catalogToggle) {
+    catalogToggle.addEventListener("click", function () {
+      catalogOpen = !catalogOpen;
+      renderCatalog();
+    });
+  }
+  var catalogPeek = document.getElementById("catalogPeek");
+  if (catalogPeek) {
+    catalogPeek.addEventListener("click", function (e) {
+      var el = (typeof upgClosest === "function") ? upgClosest(e.target, "[data-open-catalog]") : null;
+      if (!el) return;
+      catalogOpen = true;
+      renderCatalog();
+      var body = document.getElementById("catalogBody");
+      if (body && body.scrollIntoView) {
+        try { body.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (err) {}
+      }
+    });
+  }
   renderCart();
   renderShip();
   renderSold();
