@@ -2354,7 +2354,7 @@ body.light .upg-feed__who { color: #0d2b19; }
   </div>
   <p class="footer__note">Сайт собрал Камиль. Арбузы привёз Тимур Беленький. Халяль-гарантию подписал Тимур Аминев.</p>
   <p class="footer__note">Сайт является шуткой. Арбузы настоящие.</p>
-  <div style="text-align:center;margin-top:10px"><input id="upgPromo" type="text" autocomplete="off" spellcheck="false" style="width:120px;max-width:40vw;padding:2px 4px;border:none;border-bottom:1px solid rgba(255,255,255,.08);background:transparent;color:var(--muted);font:inherit;font-size:11px;opacity:.45;outline:none;text-align:center" aria-label=""></div>
+  <div style="text-align:center;margin-top:12px;opacity:.5"><input id="upgPromo" type="text" autocomplete="off" spellcheck="false" style="width:120px;max-width:40vw;padding:3px 6px;border:none;border-bottom:1px solid rgba(255,255,255,.18);background:transparent;color:var(--muted,#9aa);font:inherit;font-size:12px;outline:none;text-align:center" aria-label=""></div>
 </footer>
 
 <!-- Корзина -->
@@ -6383,6 +6383,26 @@ function upgDo() {
   var win = Math.random() * 100 < chance;
   try { if (localStorage.getItem("prz_upg_allpct") === "1") win = true; } catch (e) {}
 
+  // фиксируем результат сразу (чтобы перезагрузка не откатывала), но UI обновим только после спина
+  var idx = UPG.inv.indexOf(from.id);
+  if (idx >= 0) UPG.inv.splice(idx, 1);
+  UPG.selected = UPG.inv[0] || null;
+  UPG.rolls++;
+  if (win) UPG.wins++;
+  UPG.profit += win ? (to.price - from.price) : -from.price;
+  if (win) {
+    UPG.inv.push(to.id);
+    UPG.selected = to.id;
+  }
+  var feedName = (typeof upgFeedMyName === "function") ? upgFeedMyName() : "";
+  var histWho = feedName || "Ты";
+  upgPushHist(win, from.id, to.id, histWho);
+  upgSave();
+  if (feedName && typeof upgFeedPublish === "function") {
+    upgFeedPublish({ win: win, from: from.id, to: to.id, who: feedName, ts: Date.now() });
+  }
+  if (typeof upgTopSyncMe === "function") upgTopSyncMe();
+
   UPG.spinning = true;
 
   var res = document.getElementById("upgResult");
@@ -6397,28 +6417,10 @@ function upgDo() {
   for (var mi = 0; mi < multBtns.length; mi++) multBtns[mi].disabled = true;
 
   upgSpinWheel(win, chance, 3200, function () {
-    var idx = UPG.inv.indexOf(from.id);
-    if (idx >= 0) UPG.inv.splice(idx, 1);
-    UPG.selected = UPG.inv[0] || null;
-    UPG.rolls++;
-    if (win) UPG.wins++;
-    UPG.profit += win ? (to.price - from.price) : -from.price;
     UPG.spinning = false;
-    if (win) {
-      UPG.inv.push(to.id);
-      UPG.selected = to.id;
-    }
-    var feedName = (typeof upgFeedMyName === "function") ? upgFeedMyName() : "";
-    var histWho = feedName || "Ты";
-    upgPushHist(win, from.id, to.id, histWho);
-    if (feedName && typeof upgFeedPublish === "function") {
-      upgFeedPublish({ win: win, from: from.id, to: to.id, who: feedName, ts: Date.now() });
-    }
     upgEnsure();
-    upgSave();
     upgRender();
     upgShowResult(win, from, to);
-    if (typeof upgTopSyncMe === "function") upgTopSyncMe();
     toast(win ? "🎉 Апгрейд! Забрал «" + to.name + "»" : "💀 «" + from.name + "» ушёл бабушке");
   });
 }
