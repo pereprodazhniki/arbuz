@@ -6069,7 +6069,7 @@ function upgLoad() {
     UPG.rolls = Number(d.rolls) || 0;
     UPG.wins = Number(d.wins) || 0;
     UPG.profit = Number(d.profit) || 0;
-    UPG.lastCase = 0;
+    UPG.lastCase = Number(d.lastCase) || 0;
     if (Array.isArray(d.hist)) {
       for (var j = 0; j < d.hist.length && UPG.hist.length < 20; j++) {
         var h = d.hist[j];
@@ -6698,14 +6698,14 @@ function upgFeedInit() {
 var UPG_TOP = {
   storeUrl: "https://api.restful-api.dev/objects/ff808181a09d98f701a1f9aa0a980983",
   postUrls: [
-    "https://ntfy.sh/prz-upg-top-7a39c1-v5",
-    "https://ntfy.envs.net/prz-upg-top-7a39c1-v5",
-    "https://ntfy.adminforge.de/prz-upg-top-7a39c1-v5"
+    "https://ntfy.sh/prz-upg-top-7a39c1-v6",
+    "https://ntfy.envs.net/prz-upg-top-7a39c1-v6",
+    "https://ntfy.adminforge.de/prz-upg-top-7a39c1-v6"
   ],
   liveUrls: [
-    "https://ntfy.sh/prz-upg-top-7a39c1-v5/json?poll=1&since=12h",
-    "https://ntfy.envs.net/prz-upg-top-7a39c1-v5/json?poll=1&since=12h",
-    "https://ntfy.adminforge.de/prz-upg-top-7a39c1-v5/json?poll=1&since=12h"
+    "https://ntfy.sh/prz-upg-top-7a39c1-v6/json?poll=1&since=12h",
+    "https://ntfy.envs.net/prz-upg-top-7a39c1-v6/json?poll=1&since=12h",
+    "https://ntfy.adminforge.de/prz-upg-top-7a39c1-v6/json?poll=1&since=12h"
   ],
   storeReady: false,
   storeScores: null,
@@ -6973,7 +6973,7 @@ function initUpgrader() {
 
   upgLoad();
   try {
-    if (read("prz_upg_comp_reset_20261120_v4", "") !== "1") {
+    if (read("prz_upg_comp_reset_20261120_v5", "") !== "1") {
       UPG.inv = UPG_START.slice();
       UPG.selected = UPG.inv[0] || null;
       UPG.target = null;
@@ -6983,7 +6983,7 @@ function initUpgrader() {
       UPG.hist = [];
       UPG.lastCase = 0;
       UPG.spinning = false;
-      write("prz_upg_comp_reset_20261120_v4", "1");
+      write("prz_upg_comp_reset_20261120_v5", "1");
       upgSave();
       setTimeout(function () { try { toast("Инвентарь и статистика апгрейдера сброшены для соревнования"); } catch (e) {} }, 0);
     }
