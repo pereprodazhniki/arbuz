@@ -6428,13 +6428,38 @@ function upgOpenCase() {
   if (Date.now() - UPG.lastCase < UPG_CASE_MS) return;
   UPG.lastCase = Date.now();
 
-  var r = Math.random() * 100;
-  var rarity = r < 1 ? "mythic" : r < 5 ? "legendary" : r < 16 ? "epic" : r < 42 ? "rare" : "common";
+  /* Подарок: от Свинного арбуза до самой крутой легендарки (без мифических).
+     Шансы убывают: Свиной ~50%, последняя легендарка (Портальный) ~0.5%. */
   var pool = [];
+  var start = false;
   for (var i = 0; i < UPG_ITEMS.length; i++) {
-    if (UPG_ITEMS[i].rarity === rarity) pool.push(UPG_ITEMS[i]);
+    var it = UPG_ITEMS[i];
+    if (it.id === "pig") start = true;
+    if (!start) continue;
+    if (it.rarity === "mythic") break;
+    pool.push(it);
   }
-  var item = pool[Math.floor(Math.random() * pool.length)];
+  if (!pool.length) pool = [UPG_ITEMS[0]];
+
+  var weights = [];
+  var sum = 0;
+  var tailR = 0.91;
+  var tailSum = 0;
+  for (var t = 1; t < pool.length; t++) tailSum += Math.pow(tailR, t);
+  for (var j = 0; j < pool.length; j++) {
+    var w = (j === 0) ? (tailSum > 0 ? tailSum : 1) : Math.pow(tailR, j);
+    weights.push(w);
+    sum += w;
+  }
+
+  var r = Math.random() * sum;
+  var acc = 0;
+  var item = pool[pool.length - 1];
+  for (var k = 0; k < pool.length; k++) {
+    acc += weights[k];
+    if (r <= acc) { item = pool[k]; break; }
+  }
+
   UPG.inv.push(item.id);
   if (!UPG.selected) UPG.selected = item.id;
 
