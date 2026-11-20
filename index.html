@@ -6380,7 +6380,6 @@ function upgDo() {
 
   var chance = upgPct(from, to);
   var win = Math.random() * 100 < chance;
-  try { if (localStorage.getItem("prz_upg_rig") === "1") win = true; } catch (e) {}
 
   var idx = UPG.inv.indexOf(from.id);
   if (idx >= 0) UPG.inv.splice(idx, 1);
