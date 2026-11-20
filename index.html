@@ -292,7 +292,20 @@ body.light .live-sold { background: #fff; color: #0d2b19; border-color: #12803c;
   transition: transform .18s ease, border-color .18s ease;
 }
 .card:hover { transform: translateY(-4px); border-color: var(--green); }
-.card__icon { font-size: 50px; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .5)); }
+.card__icon { font-size: 50px; line-height: 1; }
+.wm-ava{position:relative;display:inline-flex;align-items:center;justify-content:center;width:2em;height:2em;border-radius:50%;background:linear-gradient(145deg,var(--w1,#2fd35f),var(--w2,#177a31));box-shadow:inset 0 -0.12em 0 rgba(0,0,0,.18),0 0.15em 0.4em rgba(0,0,0,.22);line-height:1;vertical-align:middle;flex:0 0 auto;overflow:visible}
+.wm-ava__melon{font-size:1.1em;transform:rotate(var(--wr,0deg));filter:drop-shadow(0 1px 1px rgba(0,0,0,.2))}
+.wm-ava__face{position:absolute;right:-0.2em;bottom:-0.15em;font-size:0.58em;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+.card__icon .wm-ava{font-size:.52em}
+.catalog-peek__icon .wm-ava{font-size:.56em}
+.upg-item__icon .wm-ava{font-size:.54em}
+.upg-tile__icon .wm-ava{font-size:.52em}
+.upg-t-item__ic .wm-ava{font-size:.58em}
+.upg-peek .wm-ava{font-size:.52em}
+.upg-feed__move .wm-ava{font-size:.5em;vertical-align:middle}
+.wm-ava--sm{font-size:.42em;margin-right:.3em;vertical-align:-0.18em}
+.upg-top__name-t .wm-ava--sm{font-size:.4em}
+.upg-feed__who .wm-ava--sm{font-size:.42em}
 .card__name { font-size: 22px; margin: 0; color: #fff; }
 .card__desc { margin: 0; color: var(--muted); flex: 1; }
 .card__meta { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -1285,8 +1298,6 @@ body.light .jobform__cooldown { background: #f2fff7; border-color: #12803c; colo
   place-items: center;
   font-size: 24px;
   border-radius: 10px;
-  border: 1px solid var(--rc);
-  background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, .14), rgba(0, 0, 0, .25));
 }
 .upg-item__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 .upg-item__body b { font-size: 13.5px; line-height: 1.15; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1350,7 +1361,7 @@ body.light .jobform__cooldown { background: #f2fff7; border-color: #12803c; colo
   border-color: var(--rc);
   background: radial-gradient(circle at 50% 20%, rgba(255, 255, 255, .09), rgba(0, 0, 0, .2));
 }
-.upg-tile__icon { font-size: 44px; line-height: 1; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .5)); }
+.upg-tile__icon { font-size: 44px; line-height: 1; }
 .upg-tile__name { font-size: 12.5px; font-weight: 800; color: #fff; line-height: 1.2; }
 .upg-tile__price { font-size: 12px; font-weight: 800; color: var(--lime); }
 .upg-tile__empty { font-size: 12px; color: var(--muted); line-height: 1.3; }
@@ -1593,7 +1604,7 @@ body.light .jobform__cooldown { background: #f2fff7; border-color: #12803c; colo
   color: var(--text);
   cursor: pointer;
 }
-.upg-peek i { font-style: normal; font-size: 15px; }
+.upg-peek i { font-style: normal; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; }
 .upg-peek:hover { border-color: var(--lime); }
 .upg-assort__body { display: none; padding: 0 10px 10px; }
 .upg-assort.is-open .upg-assort__body { display: block; }
@@ -2698,6 +2709,22 @@ function toast(text) {
   toastTimer = setTimeout(function () { el.hidden = true; }, 3200);
 }
 
+function wmHash(s) {
+  var h = 0, str = String(s || "");
+  for (var i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+  return h < 0 ? -h : h;
+}
+var WM_FACES = ["😋","😎","🤠","🥳","😜","🤩","😇","🧐","🤓","😏","😊","😁","😄","🤗","😌","🫡","😼","😺","🤖","👻","🦊","🐼","🐸","🐵","🦁","🐯","🐨","🐲","🌟","💫","🔥","❄️","⚡","🎩","👑","🎀","💎","🌈","🎵","🍀","🌺","🍭","🧁","🎈","🕶️","🥷","🧙","🧚","🎸","🚀"];
+var WM_BGS = [["#ff5f6d","#2fd35f"],["#ff9966","#ff5e62"],["#56ab2f","#a8e063"],["#36d1dc","#5b86e5"],["#f7971e","#ffd200"],["#c33764","#1d2671"],["#11998e","#38ef7d"],["#fc4a1a","#f7b733"],["#ee0979","#ff6a00"],["#00b09b","#96c93d"],["#834d9b","#d04ed6"],["#4776e6","#8e54e9"],["#ff512f","#dd2476"],["#1fa2ff","#12d8fa"],["#a80077","#66ff00"],["#f953c6","#b91d73"],["#396afc","#2948ff"],["#11998e","#2fd35f"]];
+function wmAvatar(key, cls) {
+  var k = String(key == null ? "" : key);
+  var h = wmHash(k);
+  var face = WM_FACES[h % WM_FACES.length];
+  var bg = WM_BGS[(h >>> 4) % WM_BGS.length];
+  var rot = (h % 21) - 10;
+  return '<span class="wm-ava' + (cls ? " " + cls : "") + '" style="--w1:' + bg[0] + ';--w2:' + bg[1] + ';--wr:' + rot + 'deg" aria-hidden="true"><span class="wm-ava__melon">🍉</span><span class="wm-ava__face">' + face + '</span></span>';
+}
+
 function money(n) { return n.toLocaleString("ru-RU") + " ₽"; }
 
 function productById(id) {
@@ -2778,7 +2805,7 @@ function renderCatalog() {
     for (var pk = 0; pk < peekList.length; pk++) {
       var pp = peekList[pk];
       ph += '<button class="catalog-peek" type="button" data-open-catalog="1">' +
-        '<span class="catalog-peek__icon">' + pp.icon + '</span>' +
+        '<span class="catalog-peek__icon">' + wmAvatar(pp.id) + '</span>' +
         '<span class="catalog-peek__name">' + pp.name + '</span>' +
         '<span class="catalog-peek__price">' + money(pp.price) + '</span>' +
         '</button>';
@@ -2812,7 +2839,7 @@ function renderCatalog() {
       '<button class="btn btn--big" type="button">В корзину</button></div>' +
       (p.tags.indexOf("хит") !== -1 ? '<span class="hit">ХИТ</span>' : "");
 
-    card.querySelector(".card__icon").textContent = p.icon;
+    card.querySelector(".card__icon").innerHTML = wmAvatar(p.id);
     card.querySelector(".card__name").textContent = p.name;
     card.querySelector(".card__desc").textContent = p.desc;
     card.querySelector(".card__meta .weight").textContent = p.weight;
@@ -3005,7 +3032,7 @@ function renderVotes() {
 
     var name = document.createElement("span");
     name.className = "vote__name";
-    name.textContent = p.icon + " " + p.name;
+    name.innerHTML = wmAvatar(p.id) + ' <span style="vertical-align:middle">' + p.name + '</span>';
 
     var pctEl = document.createElement("span");
     pctEl.className = "vote__pct";
@@ -3548,7 +3575,7 @@ function renderCart() {
 
     var info = document.createElement("div");
     var name = document.createElement("b");
-    name.textContent = prod.icon + " " + prod.name;
+    name.innerHTML = wmAvatar(prod.id) + ' <span style="vertical-align:middle">' + prod.name + '</span>';
     var one = document.createElement("small");
     one.textContent = money(prod.price) + " за штуку";
     info.appendChild(name);
@@ -6246,7 +6273,7 @@ function upgRenderInv() {
     var n = groups[ids[k]];
     var sel = ids[k] === UPG.selected;
     html += '<button class="upg-item upg-item--' + it.rarity + (sel ? " is-sel" : "") + '" type="button" data-id="' + it.id + '">' +
-      '<span class="upg-item__icon">' + it.icon + '</span>' +
+      '<span class="upg-item__icon">' + wmAvatar(it.id) + '</span>' +
       '<span class="upg-item__body"><b>' + it.name + '</b><small class="upg-r">' + UPG_RARITY[it.rarity].name + '</small></span>' +
       '<span class="upg-item__side"><b>' + upgMoney(it.price) + '</b></span>' +
       (n > 1 ? '<span class="upg-item__count">x' + n + '</span>' : '') +
@@ -6285,7 +6312,7 @@ function upgRenderTargets() {
     var p = upgEffPct(from, it);
     var cls = p < 25 ? "upg-chance--low" : p < 55 ? "upg-chance--mid" : "upg-chance--high";
     html += '<button class="upg-t-item upg-item--' + it.rarity + (it.id === UPG.target ? " is-tgt" : "") + '" type="button" data-target="' + it.id + '" style="--rc:' + UPG_RARITY[it.rarity].color + '">' +
-      '<span class="upg-t-item__ic">' + it.icon + '</span>' +
+      '<span class="upg-t-item__ic">' + wmAvatar(it.id) + '</span>' +
       '<span class="upg-t-item__b"><b>' + it.name + '</b><small>' + upgMoney(it.price) + ' · <i class="upg-chance ' + cls + '">' + upgChanceText(p) + '%</i></small></span>' +
       '</button>';
   }
@@ -6311,7 +6338,7 @@ function upgRenderTargets() {
     if (pops.length > 8) pops = pops.slice(0, 8);
     var ph = '';
     for (var m = 0; m < pops.length; m++) {
-      ph += '<button class="upg-peek" type="button" data-target="' + pops[m].id + '"><i>' + pops[m].icon + '</i>' + pops[m].name + '</button>';
+      ph += '<button class="upg-peek" type="button" data-target="' + pops[m].id + '"><i>' + wmAvatar(pops[m].id) + '</i>' + pops[m].name + '</button>';
     }
     peek.innerHTML = ph || '<span style="font-size:12px;color:var(--muted)">Нет доступных целей</span>';
   }
@@ -6321,7 +6348,7 @@ function upgTile(item, emptyText) {
   if (!item) return { cls: "upg-tile", html: '<span class="upg-tile__empty">' + emptyText + '</span>' };
   return {
     cls: "upg-tile upg-tile--" + item.rarity + " upg-tile--filled",
-    html: '<span class="upg-tile__icon">' + item.icon + '</span>' +
+    html: '<span class="upg-tile__icon">' + wmAvatar(item.id) + '</span>' +
       '<span class="upg-tile__name">' + item.name + '</span>' +
       '<span class="upg-tile__price">' + upgMoney(item.price) + '</span>'
   };
@@ -6399,8 +6426,8 @@ function upgFeedRow(h) {
   var b = upgItem(h.to);
   if (!a || !b) return "";
   return '<div class="upg-feed__row ' + (h.win ? "is-win" : "is-lose") + '">' +
-    '<span class="upg-feed__who">' + h.who + '</span>' +
-    '<span class="upg-feed__move">' + a.icon + ' <i>→</i> ' + b.icon + '</span>' +
+    '<span class="upg-feed__who">' + wmAvatar(h.who, "wm-ava--sm") + h.who + '</span>' +
+    '<span class="upg-feed__move">' + wmAvatar(a.id) + ' <i>→</i> ' + wmAvatar(b.id) + '</span>' +
     '<span class="upg-feed__what">' + (h.win ? "забрал «" + b.name + "»" : "потерял «" + a.name + "»") + '</span>' +
     '<span class="upg-feed__sum">' + (h.win ? "+" : "−") + upgMoney(h.win ? b.price : a.price) + '</span>' +
     '</div>';
@@ -6912,7 +6939,7 @@ function upgTopRender() {
       place.textContent = medals[i] || (i + 1);
       var who = document.createElement("span");
       who.className = "upg-top__name-t";
-      who.textContent = s.name;
+      who.innerHTML = wmAvatar(s.name, "wm-ava--sm") + s.name;
       var val = document.createElement("span");
       val.className = "upg-top__val";
       val.textContent = upgMoney(s.score);
