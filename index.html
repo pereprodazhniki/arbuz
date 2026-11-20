@@ -6069,7 +6069,7 @@ function upgLoad() {
     UPG.rolls = Number(d.rolls) || 0;
     UPG.wins = Number(d.wins) || 0;
     UPG.profit = Number(d.profit) || 0;
-    UPG.lastCase = Number(d.lastCase) || 0;
+    UPG.lastCase = 0;
     if (Array.isArray(d.hist)) {
       for (var j = 0; j < d.hist.length && UPG.hist.length < 20; j++) {
         var h = d.hist[j];
@@ -7102,7 +7102,12 @@ function initUpgrader() {
   var upgTopSendBtn = document.getElementById("upgTopSend");
   if (upgTopSendBtn) upgTopSendBtn.addEventListener("click", function () { if (typeof upgTopSubmit === "function") upgTopSubmit(false); });
   var upgTopRefBtn = document.getElementById("upgTopRefresh");
-  if (upgTopRefBtn) upgTopRefBtn.addEventListener("click", function () { if (typeof upgTopLoad === "function") upgTopLoad(true); });
+  if (upgTopRefBtn) upgTopRefBtn.addEventListener("click", function () {
+    UPG.lastCase = 0;
+    if (typeof upgSave === "function") upgSave();
+    if (typeof upgTickCase === "function") upgTickCase();
+    if (typeof upgTopLoad === "function") upgTopLoad(true);
+  });
   var upgTopNameIn = document.getElementById("upgTopName");
   if (upgTopNameIn) {
     if (typeof LB !== "undefined" && LB.name && !nameProblem(LB.name)) upgTopNameIn.value = LB.name;
