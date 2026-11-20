@@ -6516,6 +6516,7 @@ function upgResetAll() {
   if (res) res.hidden = true;
   upgSave();
   upgRender();
+  if (typeof upgTickCase === "function") upgTickCase();
   if (typeof upgTopSyncMe === "function") upgTopSyncMe();
   toast("Апгрейдер сброшен");
 }
@@ -6694,14 +6695,14 @@ function upgFeedInit() {
 var UPG_TOP = {
   storeUrl: "https://api.restful-api.dev/objects/ff808181a09d98f701a1f9aa0a980983",
   postUrls: [
-    "https://ntfy.sh/prz-upg-top-7a39c1-v2",
-    "https://ntfy.envs.net/prz-upg-top-7a39c1-v2",
-    "https://ntfy.adminforge.de/prz-upg-top-7a39c1-v2"
+    "https://ntfy.sh/prz-upg-top-7a39c1-v3",
+    "https://ntfy.envs.net/prz-upg-top-7a39c1-v3",
+    "https://ntfy.adminforge.de/prz-upg-top-7a39c1-v3"
   ],
   liveUrls: [
-    "https://ntfy.sh/prz-upg-top-7a39c1-v2/json?poll=1&since=12h",
-    "https://ntfy.envs.net/prz-upg-top-7a39c1-v2/json?poll=1&since=12h",
-    "https://ntfy.adminforge.de/prz-upg-top-7a39c1-v2/json?poll=1&since=12h"
+    "https://ntfy.sh/prz-upg-top-7a39c1-v3/json?poll=1&since=12h",
+    "https://ntfy.envs.net/prz-upg-top-7a39c1-v3/json?poll=1&since=12h",
+    "https://ntfy.adminforge.de/prz-upg-top-7a39c1-v3/json?poll=1&since=12h"
   ],
   storeReady: false,
   storeScores: null,
@@ -6969,7 +6970,7 @@ function initUpgrader() {
 
   upgLoad();
   try {
-    if (read("prz_upg_comp_reset_20261120_v1", "") !== "1") {
+    if (read("prz_upg_comp_reset_20261120_v2", "") !== "1") {
       UPG.inv = UPG_START.slice();
       UPG.selected = UPG.inv[0] || null;
       UPG.target = null;
@@ -6979,7 +6980,7 @@ function initUpgrader() {
       UPG.hist = [];
       UPG.lastCase = 0;
       UPG.spinning = false;
-      write("prz_upg_comp_reset_20261120_v1", "1");
+      write("prz_upg_comp_reset_20261120_v2", "1");
       upgSave();
       setTimeout(function () { try { toast("Инвентарь и статистика апгрейдера сброшены для соревнования"); } catch (e) {} }, 0);
     }
