@@ -3739,12 +3739,13 @@ function nameWordLooksReal(w) {
   return true;
 }
 
-/* в топе разрешены только настоящие имена (из списка) */
+/* в топе/ленте разрешены настоящие имена: из списка или правдоподобные (без мата и явной абракадабры) */
 function looksLikeName(t) {
   var words = String(t || "").toLowerCase().replace(/ё/g, "е").split(/[ \-]+/).filter(function (w) { return !!w; });
   if (!words.length) return false;
   for (var i = 0; i < words.length; i++) {
-    if (!NAME_SET[words[i]]) return false;
+    var w = words[i];
+    if (!NAME_SET[w] && !nameWordLooksReal(w)) return false;
   }
   return true;
 }
