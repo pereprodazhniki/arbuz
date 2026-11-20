@@ -3738,17 +3738,12 @@ function nameWordLooksReal(w) {
   return true;
 }
 
-/* первое слово должно быть настоящим именем, остальные — фамилией */
+/* в топе разрешены только настоящие имена (из списка) */
 function looksLikeName(t) {
   var words = String(t || "").toLowerCase().replace(/ё/g, "е").split(/[ \-]+/).filter(function (w) { return !!w; });
   if (!words.length) return false;
-
-  /* имя: либо из списка, либо очень похожее на настоящее */
-  if (!NAME_SET[words[0]] && !nameWordLooksReal(words[0])) return false;
-
-  /* остальные слова — фамилия */
-  for (var i = 1; i < words.length; i++) {
-    if (!nameWordOk(words[i])) return false;
+  for (var i = 0; i < words.length; i++) {
+    if (!NAME_SET[words[i]]) return false;
   }
   return true;
 }
