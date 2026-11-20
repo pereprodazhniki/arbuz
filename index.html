@@ -6401,9 +6401,6 @@ function upgDo() {
   var histWho = feedName || "Ты";
   upgPushHist(win, from.id, to.id, histWho);
   upgSave();
-  if (feedName && typeof upgFeedPublish === "function") {
-    upgFeedPublish({ win: win, from: from.id, to: to.id, who: feedName, ts: Date.now() });
-  }
   if (typeof upgTopSyncMe === "function") upgTopSyncMe();
 
   UPG.spinning = true;
@@ -6424,6 +6421,9 @@ function upgDo() {
     upgEnsure();
     upgRender();
     upgShowResult(win, from, to);
+    if (feedName && typeof upgFeedPublish === "function") {
+      upgFeedPublish({ win: win, from: from.id, to: to.id, who: feedName, ts: Date.now() });
+    }
     toast(win ? "🎉 Апгрейд! Забрал «" + to.name + "»" : "💀 «" + from.name + "» ушёл бабушке");
   });
 }
