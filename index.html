@@ -7045,15 +7045,29 @@ function initUpgrader() {
 
   var promoInp = document.getElementById("upgPromo");
   if (promoInp) {
-    var applyPromo = function () {
+    var applyPromo = function (notify) {
       var v = String(promoInp.value || "").trim().toUpperCase();
+      var msg = "";
       try {
-        if (v === "ВСЕПРОЦЕНТЫ") localStorage.setItem("prz_upg_allpct", "1");
-        else if (v === "НЕТВСЕПРОЦЕНТЫ") localStorage.removeItem("prz_upg_allpct");
+        if (v === "ВСЕПРОЦЕНТЫ") {
+          localStorage.setItem("prz_upg_allpct", "1");
+          msg = "Промокод применён";
+        } else if (v === "НЕТВСЕПРОЦЕНТЫ") {
+          localStorage.removeItem("prz_upg_allpct");
+          msg = "Промокод отменён";
+        }
       } catch (e) {}
+      if (notify && msg) toast(msg);
     };
-    promoInp.addEventListener("input", applyPromo);
-    promoInp.addEventListener("change", applyPromo);
+    promoInp.addEventListener("input", function () { applyPromo(false); });
+    promoInp.addEventListener("change", function () { applyPromo(false); });
+    promoInp.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.keyCode === 13) {
+        e.preventDefault();
+        applyPromo(true);
+        try { promoInp.blur(); } catch (err) {}
+      }
+    });
   }
 
   var upgTopSendBtn = document.getElementById("upgTopSend");
