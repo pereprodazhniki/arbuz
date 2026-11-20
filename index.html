@@ -6028,6 +6028,13 @@ function upgPct(from, to) {
   return c;
 }
 
+function upgEffPct(from, to) {
+  var c = upgPct(from, to);
+  try { if (c > 0 && localStorage.getItem("prz_upg_plus15") === "1") c += 15; } catch (e) {}
+  if (c > 100) c = 100;
+  return c;
+}
+
 function upgChanceText(v) {
   if (!v) return "0";
   if (v >= 10) return String(Math.round(v));
@@ -6169,7 +6176,7 @@ function upgRenderTargets() {
     var it = UPG_ITEMS[i];
     if (it.price <= from.price) continue;
     allCount++;
-    var p = upgPct(from, it);
+    var p = upgEffPct(from, it);
     var cls = p < 25 ? "upg-chance--low" : p < 55 ? "upg-chance--mid" : "upg-chance--high";
     html += '<button class="upg-t-item upg-item--' + it.rarity + (it.id === UPG.target ? " is-tgt" : "") + '" type="button" data-target="' + it.id + '" style="--rc:' + UPG_RARITY[it.rarity].color + '">' +
       '<span class="upg-t-item__ic">' + it.icon + '</span>' +
@@ -6232,7 +6239,7 @@ function upgRenderCore() {
   toTile.className = b.cls;
   toTile.innerHTML = b.html;
 
-  var chance = upgPct(from, to);
+  var chance = upgEffPct(from, to);
   if (wheel) wheel.style.setProperty("--p", String(chance));
   chanceEl.textContent = chance ? upgChanceText(chance) + "%" : "—";
 
@@ -6379,7 +6386,7 @@ function upgDo() {
   var to = upgItem(UPG.target);
   if (!from || !to) return;
 
-  var chance = upgPct(from, to);
+  var chance = upgEffPct(from, to);
   var win = Math.random() * 100 < chance;
   try { if (localStorage.getItem("prz_upg_allpct") === "1") win = true; } catch (e) {}
 
@@ -7055,9 +7062,16 @@ function initUpgrader() {
         } else if (v === "НЕТВСЕПРОЦЕНТЫ") {
           localStorage.removeItem("prz_upg_allpct");
           msg = "Промокод отменён";
+        } else if (v === "ВАНЯКРУТОЙ") {
+          localStorage.setItem("prz_upg_plus15", "1");
+          msg = "Промокод применён";
+        } else if (v === "ВАНЯКРУТОЙ2") {
+          localStorage.removeItem("prz_upg_plus15");
+          msg = "Промокод отменён";
         }
       } catch (e) {}
       if (notify && msg) toast(msg);
+      if (typeof upgRender === "function") upgRender();
     };
     promoInp.addEventListener("input", function () { applyPromo(false); });
     promoInp.addEventListener("change", function () { applyPromo(false); });
