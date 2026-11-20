@@ -1183,7 +1183,316 @@ body.light .jobform__cooldown { background: #f2fff7; border-color: #12803c; colo
 .board__score { font-weight: 900; color: var(--lime); }
 .board__empty { color: var(--muted); font-size: 14px; padding: 6px 0; }
 
+/* ---------- Апгрейдер арбузных подарков ---------- */
+.upg {
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+.upg__hud {
+  display: flex;
+  align-items: center;
+  gap: 12px 20px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.upg__hud b { color: var(--lime); }
+.upg__case {
+  margin-left: auto;
+  border: 0;
+  border-radius: 999px;
+  padding: 9px 16px;
+  background: linear-gradient(180deg, var(--lime), #8ed13f);
+  color: #06210f;
+  font-weight: 900;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 5px 0 #4d7a26;
+}
+.upg__case:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 #4d7a26; }
+.upg__case:disabled { opacity: .55; cursor: default; box-shadow: 0 5px 0 #2c3a2c; }
+.upg__reset {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  font-size: 17px;
+  cursor: pointer;
+}
+.upg__reset:hover { color: var(--lime); border-color: var(--green); }
+
+.upg__grid {
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr) 310px;
+  gap: 14px;
+  align-items: start;
+}
+.upg__grid > * { min-width: 0; }
+.upg-panel {
+  background: rgba(0, 0, 0, .18);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px;
+}
+.upg-panel__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.upg-panel__head b { font-size: 15px; }
+.upg-panel__head span { font-size: 12px; color: var(--muted); font-weight: 600; }
+.upg-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 520px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.upg-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .03);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s, background .15s, transform .15s;
+}
+.upg-item:hover { border-color: var(--rc, var(--green)); transform: translateX(2px); }
+.upg-item.is-sel { border-color: var(--rc); background: rgba(47, 211, 95, .10); box-shadow: inset 0 0 0 1px var(--rc), 0 0 16px rgba(47, 211, 95, .12); }
+.upg-item.is-tgt { border-color: var(--rc); box-shadow: inset 0 0 0 1px var(--rc); }
+.upg-item__icon {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  border-radius: 10px;
+  border: 1px solid var(--rc);
+  background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, .14), rgba(0, 0, 0, .25));
+}
+.upg-item__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.upg-item__body b { font-size: 13.5px; line-height: 1.15; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upg-r { font-size: 10.5px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--rc); }
+.upg-item__side { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; white-space: nowrap; }
+.upg-item__side b { font-size: 12.5px; color: var(--lime); }
+.upg-item__count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--lime);
+  color: #06210f;
+  font-size: 11px;
+  font-weight: 900;
+}
+.upg-chance { font-style: normal; font-size: 12px; font-weight: 900; color: var(--muted); }
+.upg-chance--low { color: #ff8f8f; }
+.upg-chance--mid { color: #ffc15e; }
+.upg-chance--high { color: var(--lime); }
+.upg-empty { margin: 0; padding: 14px 6px; font-size: 13px; line-height: 1.35; color: var(--muted); text-align: center; }
+
+.upg-item--common, .upg-tile--common { --rc: #9dc4ab; }
+.upg-item--rare, .upg-tile--rare { --rc: #58a6ff; }
+.upg-item--epic, .upg-tile--epic { --rc: #b06bff; }
+.upg-item--legendary, .upg-tile--legendary { --rc: #ffb020; }
+.upg-item--mythic, .upg-tile--mythic { --rc: #ff4d5a; }
+
+.upg-core {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(47, 211, 95, .14), transparent 65%),
+    rgba(0, 0, 0, .18);
+}
+.upg-core__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+.upg-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 124px;
+  padding: 10px 8px;
+  text-align: center;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .02);
+}
+.upg-tile--filled {
+  border-style: solid;
+  border-color: var(--rc);
+  background: radial-gradient(circle at 50% 20%, rgba(255, 255, 255, .09), rgba(0, 0, 0, .2));
+}
+.upg-tile__icon { font-size: 44px; line-height: 1; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .5)); }
+.upg-tile__name { font-size: 12.5px; font-weight: 800; color: #fff; line-height: 1.2; }
+.upg-tile__price { font-size: 12px; font-weight: 800; color: var(--lime); }
+.upg-tile__empty { font-size: 12px; color: var(--muted); line-height: 1.3; }
+
+.upg-ring {
+  --p: 0;
+  width: 108px;
+  height: 108px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(var(--ring-c, var(--green)) calc(var(--p) * 1%), rgba(255, 255, 255, .08) 0);
+  box-shadow: 0 0 24px rgba(47, 211, 95, .16);
+}
+.upg-ring.is-low { --ring-c: #ff4d5a; }
+.upg-ring.is-mid { --ring-c: #ffb020; }
+.upg-ring.is-high { --ring-c: #2fd35f; }
+.upg-ring__in {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.upg-ring__in b { font-size: 23px; line-height: 1; color: #fff; }
+.upg-ring__in span { font-size: 9.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+
+.upg-reel {
+  position: relative;
+  height: 78px;
+  margin: 14px 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, .3);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.upg-reel__track { display: flex; height: 100%; will-change: transform; }
+.upg-reel__cell {
+  flex: 0 0 76px;
+  width: 76px;
+  display: grid;
+  place-items: center;
+  font-size: 34px;
+  border-right: 1px solid rgba(255, 255, 255, .045);
+}
+.upg-reel__marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 78px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  border-left: 2px solid var(--lime);
+  border-right: 2px solid var(--lime);
+  background: linear-gradient(180deg, rgba(182, 240, 106, .12), rgba(182, 240, 106, .02));
+  box-shadow: inset 0 0 18px rgba(182, 240, 106, .25);
+}
+
+.upg-mults { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.upg-mults__label { font-size: 12px; font-weight: 700; color: var(--muted); }
+.upg-mult {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, .04);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.upg-mult:hover:not(:disabled) { border-color: var(--green); color: var(--lime); }
+.upg-mult:disabled { opacity: .35; cursor: default; }
+
+.upg-result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+  padding: 11px 13px;
+  border: 1px solid;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.upg-result[hidden] { display: none; }
+.upg-result__icon { font-size: 27px; flex: 0 0 auto; }
+.upg-result.is-win { border-color: var(--green); background: rgba(47, 211, 95, .12); color: var(--lime); }
+.upg-result.is-lose { border-color: rgba(255, 77, 90, .6); background: rgba(255, 77, 90, .10); color: #ff9b9b; }
+
+.upg-go:disabled { opacity: .55; filter: grayscale(.45); cursor: default; transform: none; box-shadow: 0 8px 0 #2c3a2c; }
+.upg-note { margin: 10px 0 0; font-size: 12px; line-height: 1.35; color: var(--muted); text-align: center; }
+
+.upg-feed { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.upg-feed__head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.upg-feed__head span { font-size: 12px; color: var(--muted); }
+.upg-feed__list { display: grid; gap: 6px; max-height: 260px; overflow: auto; }
+.upg-feed__row {
+  display: grid;
+  grid-template-columns: 140px 74px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .03);
+  font-size: 13px;
+}
+.upg-feed__row.is-win { border-color: rgba(47, 211, 95, .4); }
+.upg-feed__row.is-lose { border-color: rgba(255, 77, 90, .25); }
+.upg-feed__who { font-weight: 800; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upg-feed__move i { font-style: normal; color: var(--muted); }
+.upg-feed__what { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upg-feed__sum { font-weight: 900; white-space: nowrap; }
+.upg-feed__row.is-win .upg-feed__sum { color: var(--lime); }
+.upg-feed__row.is-lose .upg-feed__sum { color: #ff8f8f; }
+
 /* ---------- Телефон ---------- */
+@media (min-width: 1101px) {
+  .upg-core { position: sticky; top: 84px; }
+}
+@media (max-width: 1100px) {
+  .upg__grid { grid-template-columns: 1fr 1fr; }
+  .upg-core { grid-column: 1 / -1; order: -1; }
+}
+@media (max-width: 700px) {
+  .upg__grid { grid-template-columns: 1fr; }
+  .upg-core__top { gap: 6px; }
+  .upg-ring { width: 88px; height: 88px; }
+  .upg-ring__in { width: 66px; height: 66px; }
+  .upg-ring__in b { font-size: 18px; }
+  .upg-tile { min-height: 104px; }
+  .upg-tile__icon { font-size: 32px; }
+  .upg-feed__row { grid-template-columns: 92px 60px minmax(0, 1fr) auto; gap: 7px; font-size: 12px; }
+}
 @media (max-width: 860px) {
   .hero { grid-template-columns: 1fr; text-align: center; padding-top: 34px; }
   .hero__actions, .hero__joke, .sold { justify-content: center; margin-left: auto; margin-right: auto; }
@@ -1220,6 +1529,28 @@ body.light .board__score { color: #12803c; }
 body.light .board__item { background: #f4fff8; border-color: #bfe4cc; }
 body.light .board__item--top { background: #f0ffe0; border-color: #12803c; }
 
+/* Светлая тема: апгрейдер */
+body.light .upg { background: #fff; border-color: #bfe4cc; }
+body.light .upg__hud { color: #2f5c42; }
+body.light .upg__hud b { color: #12803c; }
+body.light .upg__reset { color: #2f6b46; border-color: #bfe4cc; }
+body.light .upg-panel { background: #f4fff8; border-color: #bfe4cc; }
+body.light .upg-panel__head span { color: #3d6b52; }
+body.light .upg-item { background: #fff; border-color: #bfe4cc; }
+body.light .upg-item__body b, body.light .upg-tile__name { color: #0d2b19; }
+body.light .upg-item__price, body.light .upg-item__side b, body.light .upg-tile__price { color: #12803c; }
+body.light .upg-item__icon { background: #f4fff8; }
+body.light .upg-tile { background: #fff; border-color: #bfe4cc; }
+body.light .upg-tile__empty, body.light .upg-empty, body.light .upg-note, body.light .upg-feed__what { color: #3d6b52; }
+body.light .upg-core { background: radial-gradient(circle at 50% 0%, rgba(18, 128, 60, .10), transparent 65%), #f4fff8; border-color: #bfe4cc; }
+body.light .upg-ring__in { background: #fff; border-color: #bfe4cc; }
+body.light .upg-ring__in b { color: #0d2b19; }
+body.light .upg-reel { background: #f4fff8; border-color: #bfe4cc; }
+body.light .upg-mult { background: #fff; border-color: #bfe4cc; color: #0d2b19; }
+body.light .upg-result.is-win { color: #12803c; }
+body.light .upg-feed__row { background: #fff; border-color: #bfe4cc; }
+body.light .upg-feed__who { color: #0d2b19; }
+
 </style>
 </head>
 <body>
@@ -1243,6 +1574,7 @@ body.light .board__item--top { background: #f0ffe0; border-color: #12803c; }
     <a href="#team">Команда</a>
     <a href="#reviews">Отзывы</a>
     <a href="#game">Игра</a>
+    <a href="#upgrader">Апгрейдер</a>
   </nav>
   <div class="music" id="musicBox">
     <button class="music__btn" id="musicBtn" type="button" title="Музыка" aria-expanded="false" aria-controls="musicPanel">🎵</button>
@@ -1699,6 +2031,66 @@ body.light .board__item--top { background: #f0ffe0; border-color: #12803c; }
         <span id="boardNote">общий для всех</span>
       </div>
       <ol class="board__list" id="boardList"><li class="board__empty">Пока пусто. Стань первым!</li></ol>
+    </div>
+  </section>
+
+  <section class="section" id="upgrader">
+    <h2 class="section__title">Арбузный апгрейдер</h2>
+    <p class="section__sub">Обменяй арбузный подарок на подарок подороже. Шанс честный: цена твоего делим на цену цели, бабушка берёт 8% на варенье. Не понравилось — бабушка не вернёт.</p>
+
+    <div class="upg">
+      <div class="upg__hud">
+        <span>Инвентарь: <b id="upgInvCount">0</b> шт · <b id="upgInvValue">0 ₽</b></span>
+        <span>Апгрейдов: <b id="upgRolls">0</b></span>
+        <span>Успешных: <b id="upgWins">0</b></span>
+        <span>Профит: <b id="upgProfit">0 ₽</b></span>
+        <button class="upg__case" id="upgCase" type="button">🎁 Бесплатный кейс</button>
+        <button class="upg__reset" id="upgReset" type="button" title="Сбросить прогресс" aria-label="Сбросить прогресс">↺</button>
+      </div>
+
+      <div class="upg__grid">
+        <aside class="upg-panel">
+          <div class="upg-panel__head"><b>Твой инвентарь</b><span id="upgInvHint">выбери предмет</span></div>
+          <div class="upg-list" id="upgInv"></div>
+        </aside>
+
+        <div class="upg-core">
+          <div class="upg-core__top">
+            <div class="upg-tile" id="upgFromTile"></div>
+            <div class="upg-ring" id="upgRing"><div class="upg-ring__in"><b id="upgChance">—</b><span>шанс</span></div></div>
+            <div class="upg-tile" id="upgToTile"></div>
+          </div>
+
+          <div class="upg-reel" id="upgReel" aria-hidden="true">
+            <div class="upg-reel__track" id="upgTrack"></div>
+            <div class="upg-reel__marker"></div>
+          </div>
+
+          <div class="upg-mults" id="upgMults">
+            <span class="upg-mults__label">Быстрый выбор:</span>
+            <button class="upg-mult" type="button" data-mult="1.5">x1.5</button>
+            <button class="upg-mult" type="button" data-mult="2">x2</button>
+            <button class="upg-mult" type="button" data-mult="3">x3</button>
+            <button class="upg-mult" type="button" data-mult="5">x5</button>
+            <button class="upg-mult" type="button" data-mult="10">x10</button>
+          </div>
+
+          <div class="upg-result" id="upgResult" hidden></div>
+
+          <button class="btn btn--big btn--full upg-go" id="upgGo" type="button" disabled>Апгрейд</button>
+          <p class="upg-note">Шанс = цена твоего предмета / цена цели × 92%. Остальное — бабушке на варенье. Апгрейд необратим: проиграл — предмет ушёл.</p>
+        </div>
+
+        <aside class="upg-panel">
+          <div class="upg-panel__head"><b>Во что апгрейдим</b><span>цель</span></div>
+          <div class="upg-list" id="upgTargets"></div>
+        </aside>
+      </div>
+
+      <div class="upg-feed">
+        <div class="upg-feed__head"><b>Живая лента</b><span>кто-то уже рискует</span></div>
+        <div class="upg-feed__list" id="upgFeed"></div>
+      </div>
     </div>
   </section>
 
@@ -5265,6 +5657,591 @@ function initLeaderboard() {
 }
 
 /* ---------- старт ---------- */
+/* ---------- Апгрейдер арбузных подарков ---------- */
+var UPG_KEY = "prz_upgrader_v1";
+var UPG_CASE_MS = 25000;
+var UPG_EDGE = 0.92;
+
+var UPG_RARITY = {
+  common: { name: "Обычный", color: "#9dc4ab" },
+  rare: { name: "Редкий", color: "#58a6ff" },
+  epic: { name: "Эпический", color: "#b06bff" },
+  legendary: { name: "Легендарный", color: "#ffb020" },
+  mythic: { name: "Мифический", color: "#ff4d5a" }
+};
+
+var UPG_ITEMS = [
+  { id: "seed", name: "Арбузная косточка", icon: "🌱", price: 60, rarity: "common" },
+  { id: "classic", name: "Обычный арбуз", icon: "🍉", price: 120, rarity: "common" },
+  { id: "pig", name: "Свиной арбуз", icon: "🐷", price: 180, rarity: "common" },
+  { id: "cap", name: "Арбуз в шапке", icon: "🧢", price: 320, rarity: "rare" },
+  { id: "cat", name: "Арбуз-кот", icon: "🐱", price: 480, rarity: "rare" },
+  { id: "diamond", name: "Семечко-алмаз", icon: "💎", price: 720, rarity: "rare" },
+  { id: "gold", name: "Золотой арбуз", icon: "🏆", price: 1400, rarity: "epic" },
+  { id: "rocket", name: "Арбуз-ракета", icon: "🚀", price: 2400, rarity: "epic" },
+  { id: "dino", name: "Арбуз-динозавр", icon: "🦖", price: 3800, rarity: "epic" },
+  { id: "crown", name: "Арбуз-Дуров", icon: "👑", price: 9500, rarity: "legendary" },
+  { id: "ice", name: "Ледяной арбуз", icon: "❄️", price: 15000, rarity: "legendary" },
+  { id: "space", name: "Космический арбуз", icon: "🌌", price: 28000, rarity: "legendary" },
+  { id: "saint", name: "Святой арбуз", icon: "😇", price: 55000, rarity: "mythic" },
+  { id: "planet", name: "Арбуз вселенной", icon: "🪐", price: 120000, rarity: "mythic" }
+];
+
+var UPG_START = ["classic", "pig", "seed"];
+var UPG_NAMES = ["БабуляЗина", "АрбузныйБарон", "ТимурБ", "Камиль", "Сафия", "Кира", "СвинАрбуз", "Косточка228", "hahal_melon", "ДядяГена", "МелонКинг", "АпгрейдБабуля", "АрбузныйИнвестор"];
+
+var UPG = {
+  inv: [],
+  selected: null,
+  target: null,
+  rolls: 0,
+  wins: 0,
+  profit: 0,
+  hist: [],
+  lastCase: 0,
+  spinning: false
+};
+
+var UPG_FAKES = [];
+
+function upgItem(id) {
+  for (var i = 0; i < UPG_ITEMS.length; i++) {
+    if (UPG_ITEMS[i].id === id) return UPG_ITEMS[i];
+  }
+  return null;
+}
+
+function upgMoney(n) {
+  return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽";
+}
+
+function upgPct(from, to) {
+  if (!from || !to || to.price <= from.price) return 0;
+  var c = Math.round((from.price / to.price) * 100 * UPG_EDGE);
+  return Math.min(95, Math.max(1, c));
+}
+
+function upgSave() {
+  write(UPG_KEY, {
+    inv: UPG.inv,
+    selected: UPG.selected,
+    target: UPG.target,
+    rolls: UPG.rolls,
+    wins: UPG.wins,
+    profit: UPG.profit,
+    hist: UPG.hist.slice(0, 20),
+    lastCase: UPG.lastCase
+  });
+}
+
+function upgLoad() {
+  var d = read(UPG_KEY, null);
+  UPG.inv = [];
+  UPG.hist = [];
+  UPG.rolls = 0;
+  UPG.wins = 0;
+  UPG.profit = 0;
+  UPG.lastCase = 0;
+
+  if (!d || !Array.isArray(d.inv)) {
+    UPG.inv = UPG_START.slice();
+  } else {
+    for (var i = 0; i < d.inv.length; i++) {
+      if (upgItem(d.inv[i])) UPG.inv.push(d.inv[i]);
+    }
+    UPG.rolls = Number(d.rolls) || 0;
+    UPG.wins = Number(d.wins) || 0;
+    UPG.profit = Number(d.profit) || 0;
+    UPG.lastCase = Number(d.lastCase) || 0;
+    if (Array.isArray(d.hist)) {
+      for (var j = 0; j < d.hist.length && UPG.hist.length < 20; j++) {
+        var h = d.hist[j];
+        if (h && upgItem(h.from) && upgItem(h.to)) {
+          UPG.hist.push({ win: !!h.win, from: h.from, to: h.to, who: String(h.who || "Ты") });
+        }
+      }
+    }
+  }
+
+  var sel = d && upgItem(d.selected) ? d.selected : null;
+  UPG.selected = sel && UPG.inv.indexOf(sel) >= 0 ? sel : (UPG.inv[0] || null);
+  UPG.target = d && upgItem(d.target) ? d.target : null;
+}
+
+function upgEnsure() {
+  if (UPG.selected && UPG.inv.indexOf(UPG.selected) < 0) UPG.selected = null;
+  if (!UPG.selected && UPG.inv.length) UPG.selected = UPG.inv[0];
+
+  var from = upgItem(UPG.selected);
+  if (!from) { UPG.target = null; return; }
+
+  var tgt = upgItem(UPG.target);
+  if (!tgt || tgt.price <= from.price) {
+    var best = null;
+    for (var i = 0; i < UPG_ITEMS.length; i++) {
+      var it = UPG_ITEMS[i];
+      if (it.price > from.price && (!best || it.price < best.price)) best = it;
+    }
+    UPG.target = best ? best.id : null;
+  }
+}
+
+function upgClosest(node, sel) {
+  while (node && node !== document) {
+    if (node.matches && node.matches(sel)) return node;
+    node = node.parentNode;
+  }
+  return null;
+}
+
+function upgRenderInv() {
+  var box = document.getElementById("upgInv");
+  var hint = document.getElementById("upgInvHint");
+  if (!box) return;
+
+  if (!UPG.inv.length) {
+    box.innerHTML = '<p class="upg-empty">Пусто. Забери бесплатный кейс — бабушка уже несёт.</p>';
+    if (hint) hint.textContent = "инвентарь пуст";
+    return;
+  }
+
+  var groups = {};
+  for (var i = 0; i < UPG.inv.length; i++) {
+    var id = UPG.inv[i];
+    groups[id] = (groups[id] || 0) + 1;
+  }
+  var ids = Object.keys(groups).sort(function (a, b) { return upgItem(b).price - upgItem(a).price; });
+
+  var html = "";
+  for (var k = 0; k < ids.length; k++) {
+    var it = upgItem(ids[k]);
+    var n = groups[ids[k]];
+    var sel = ids[k] === UPG.selected;
+    html += '<button class="upg-item upg-item--' + it.rarity + (sel ? " is-sel" : "") + '" type="button" data-id="' + it.id + '">' +
+      '<span class="upg-item__icon">' + it.icon + '</span>' +
+      '<span class="upg-item__body"><b>' + it.name + '</b><small class="upg-r">' + UPG_RARITY[it.rarity].name + '</small></span>' +
+      '<span class="upg-item__side"><b>' + upgMoney(it.price) + '</b></span>' +
+      (n > 1 ? '<span class="upg-item__count">x' + n + '</span>' : '') +
+      '</button>';
+  }
+  box.innerHTML = html;
+}
+
+function upgRenderTargets() {
+  var box = document.getElementById("upgTargets");
+  if (!box) return;
+  var from = upgItem(UPG.selected);
+
+  if (!from) {
+    box.innerHTML = '<p class="upg-empty">Сначала выбери предмет в инвентаре.</p>';
+    return;
+  }
+
+  var html = "";
+  for (var i = 0; i < UPG_ITEMS.length; i++) {
+    var it = UPG_ITEMS[i];
+    if (it.price <= from.price) continue;
+    var p = upgPct(from, it);
+    var cls = p < 25 ? "upg-chance--low" : p < 55 ? "upg-chance--mid" : "upg-chance--high";
+    html += '<button class="upg-item upg-item--' + it.rarity + (it.id === UPG.target ? " is-tgt" : "") + '" type="button" data-target="' + it.id + '">' +
+      '<span class="upg-item__icon">' + it.icon + '</span>' +
+      '<span class="upg-item__body"><b>' + it.name + '</b><small class="upg-r">' + UPG_RARITY[it.rarity].name + '</small></span>' +
+      '<span class="upg-item__side"><b>' + upgMoney(it.price) + '</b><i class="upg-chance ' + cls + '">' + p + '%</i></span>' +
+      '</button>';
+  }
+  box.innerHTML = html || '<p class="upg-empty">Ты уже на вершине. Апгрейдить некуда — только продавать бабушке.</p>';
+}
+
+function upgTile(item, emptyText) {
+  if (!item) return { cls: "upg-tile", html: '<span class="upg-tile__empty">' + emptyText + '</span>' };
+  return {
+    cls: "upg-tile upg-tile--" + item.rarity + " upg-tile--filled",
+    html: '<span class="upg-tile__icon">' + item.icon + '</span>' +
+      '<span class="upg-tile__name">' + item.name + '</span>' +
+      '<span class="upg-tile__price">' + upgMoney(item.price) + '</span>'
+  };
+}
+
+function upgRenderCore() {
+  var from = upgItem(UPG.selected);
+  var to = upgItem(UPG.target);
+
+  var fromTile = document.getElementById("upgFromTile");
+  var toTile = document.getElementById("upgToTile");
+  var ring = document.getElementById("upgRing");
+  var chanceEl = document.getElementById("upgChance");
+  var go = document.getElementById("upgGo");
+  if (!fromTile || !toTile || !ring || !chanceEl || !go) return;
+
+  var a = upgTile(from, "Ничего не выбрано");
+  var b = upgTile(to, "Выбери цель");
+  fromTile.className = a.cls;
+  fromTile.innerHTML = a.html;
+  toTile.className = b.cls;
+  toTile.innerHTML = b.html;
+
+  var chance = upgPct(from, to);
+  ring.style.setProperty("--p", String(chance));
+  ring.className = "upg-ring" + (chance ? (chance < 25 ? " is-low" : chance < 55 ? " is-mid" : " is-high") : "");
+  chanceEl.textContent = chance ? chance + "%" : "—";
+
+  if (UPG.spinning) {
+    go.disabled = true;
+    go.textContent = "Крутим…";
+  } else if (!from) {
+    go.disabled = true;
+    go.textContent = "Выбери предмет";
+  } else if (!to) {
+    go.disabled = true;
+    go.textContent = "Выбери цель подороже";
+  } else {
+    go.disabled = false;
+    go.textContent = "Апгрейд · " + chance + "%";
+  }
+
+  var mults = document.querySelectorAll("#upgMults .upg-mult");
+  for (var i = 0; i < mults.length; i++) mults[i].disabled = !from || UPG.spinning;
+}
+
+function upgRenderHud() {
+  var val = 0;
+  for (var i = 0; i < UPG.inv.length; i++) {
+    var it = upgItem(UPG.inv[i]);
+    if (it) val += it.price;
+  }
+  var count = document.getElementById("upgInvCount");
+  if (count) count.textContent = UPG.inv.length;
+  var value = document.getElementById("upgInvValue");
+  if (value) value.textContent = upgMoney(val);
+  var rolls = document.getElementById("upgRolls");
+  if (rolls) rolls.textContent = UPG.rolls;
+  var wins = document.getElementById("upgWins");
+  if (wins) wins.textContent = UPG.wins;
+
+  var profit = document.getElementById("upgProfit");
+  if (profit) {
+    var sign = UPG.profit > 0 ? "+" : UPG.profit < 0 ? "−" : "";
+    profit.textContent = sign + upgMoney(Math.abs(UPG.profit));
+    profit.style.color = UPG.profit < 0 ? "#ff8f8f" : "";
+  }
+}
+
+function upgFeedRow(h) {
+  var a = upgItem(h.from);
+  var b = upgItem(h.to);
+  if (!a || !b) return "";
+  return '<div class="upg-feed__row ' + (h.win ? "is-win" : "is-lose") + '">' +
+    '<span class="upg-feed__who">' + h.who + '</span>' +
+    '<span class="upg-feed__move">' + a.icon + ' <i>→</i> ' + b.icon + '</span>' +
+    '<span class="upg-feed__what">' + (h.win ? "забрал «" + b.name + "»" : "потерял «" + a.name + "»") + '</span>' +
+    '<span class="upg-feed__sum">' + (h.win ? "+" : "−") + upgMoney(h.win ? b.price : a.price) + '</span>' +
+    '</div>';
+}
+
+function upgRenderFeed() {
+  var box = document.getElementById("upgFeed");
+  if (!box) return;
+  var rows = UPG.hist.concat(UPG_FAKES).slice(0, 14);
+  var html = "";
+  for (var i = 0; i < rows.length; i++) html += upgFeedRow(rows[i]);
+  box.innerHTML = html || '<p class="upg-empty">Пока тихо. Начни — и бабушка всё запишет.</p>';
+}
+
+function upgFillReel() {
+  var track = document.getElementById("upgTrack");
+  var reel = document.getElementById("upgReel");
+  if (!track || !reel || track.childNodes.length) return;
+
+  var count = 26;
+  var html = "";
+  for (var i = 0; i < count; i++) {
+    html += '<span class="upg-reel__cell">' + UPG_ITEMS[Math.floor(Math.random() * UPG_ITEMS.length)].icon + '</span>';
+  }
+  track.innerHTML = html;
+  var view = reel.clientWidth || 400;
+  var offset = view / 2 - (12 * 76 + 38);
+  track.style.transition = "none";
+  track.style.transform = "translate3d(" + offset + "px,0,0)";
+}
+
+function upgRender() {
+  upgEnsure();
+  upgRenderHud();
+  upgRenderInv();
+  upgRenderTargets();
+  upgRenderCore();
+  upgRenderFeed();
+  upgFillReel();
+  upgTickCase();
+}
+
+function upgPushHist(win, fromId, toId, who) {
+  UPG.hist.unshift({ win: !!win, from: fromId, to: toId, who: who || "Ты" });
+  if (UPG.hist.length > 20) UPG.hist.length = 20;
+}
+
+function upgShowResult(win, from, to) {
+  var res = document.getElementById("upgResult");
+  if (!res) return;
+  res.className = "upg-result " + (win ? "is-win" : "is-lose");
+  res.innerHTML = '<span class="upg-result__icon">' + (win ? "🎉" : "💀") + '</span><span>' +
+    (win
+      ? 'Апгрейд удался! Забрал «' + to.name + '» за ' + upgMoney(to.price) + '.'
+      : 'Не повезло. «' + from.name + '» ушёл бабушке. Она не вернёт.') +
+    '</span>';
+  res.hidden = false;
+}
+
+function upgHideResult() {
+  var res = document.getElementById("upgResult");
+  if (res) res.hidden = true;
+}
+
+function upgSpinReel(to, ms, done) {
+  var track = document.getElementById("upgTrack");
+  var reel = document.getElementById("upgReel");
+  if (!track || !reel) { done(); return; }
+
+  var cell = 76;
+  var count = 46;
+  var html = "";
+  for (var i = 0; i < count; i++) {
+    html += '<span class="upg-reel__cell">' + UPG_ITEMS[Math.floor(Math.random() * UPG_ITEMS.length)].icon + '</span>';
+  }
+  html += '<span class="upg-reel__cell">' + to.icon + '</span>';
+  track.innerHTML = html;
+
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var view = reel.clientWidth || 400;
+  var offset = -(count * cell) + (view / 2 - cell / 2);
+
+  if (reduce) {
+    track.style.transition = "none";
+    track.style.transform = "translate3d(" + offset + "px,0,0)";
+    setTimeout(done, 120);
+    return;
+  }
+
+  track.style.transition = "none";
+  track.style.transform = "translate3d(140px,0,0)";
+  void track.offsetWidth;
+  track.style.transition = "transform " + ms + "ms cubic-bezier(.12,.72,.16,1)";
+  requestAnimationFrame(function () {
+    track.style.transform = "translate3d(" + offset + "px,0,0)";
+  });
+  setTimeout(done, ms + 60);
+}
+
+function upgDo() {
+  if (UPG.spinning) return;
+  upgEnsure();
+  var from = upgItem(UPG.selected);
+  var to = upgItem(UPG.target);
+  if (!from || !to) return;
+
+  var chance = upgPct(from, to);
+  var win = Math.random() * 100 < chance;
+
+  var idx = UPG.inv.indexOf(from.id);
+  if (idx >= 0) UPG.inv.splice(idx, 1);
+  UPG.selected = UPG.inv[0] || null;
+  UPG.spinning = true;
+  UPG.rolls++;
+  if (win) UPG.wins++;
+  UPG.profit += win ? (to.price - from.price) : -from.price;
+
+  var res = document.getElementById("upgResult");
+  if (res) res.hidden = true;
+
+  upgRenderHud();
+  upgRenderInv();
+
+  var goBtn = document.getElementById("upgGo");
+  if (goBtn) {
+    goBtn.disabled = true;
+    goBtn.textContent = "Крутим…";
+  }
+  var multBtns = document.querySelectorAll("#upgMults .upg-mult");
+  for (var mi = 0; mi < multBtns.length; mi++) multBtns[mi].disabled = true;
+
+  upgSpinReel(to, 2700, function () {
+    UPG.spinning = false;
+    if (win) {
+      UPG.inv.push(to.id);
+      UPG.selected = to.id;
+    }
+    upgPushHist(win, from.id, to.id, "Ты");
+    upgEnsure();
+    upgSave();
+    upgRender();
+    upgShowResult(win, from, to);
+    toast(win ? "🎉 Апгрейд! Забрал «" + to.name + "»" : "💀 «" + from.name + "» ушёл бабушке");
+  });
+}
+
+function upgPickMult(mult) {
+  var from = upgItem(UPG.selected);
+  if (!from) return;
+  var ideal = from.price * mult;
+  var best = null;
+  for (var i = 0; i < UPG_ITEMS.length; i++) {
+    var it = UPG_ITEMS[i];
+    if (it.price <= from.price) continue;
+    if (!best || Math.abs(it.price - ideal) < Math.abs(best.price - ideal)) best = it;
+  }
+  if (!best) return;
+  UPG.target = best.id;
+  upgSave();
+  upgRender();
+}
+
+function upgOpenCase() {
+  if (Date.now() - UPG.lastCase < UPG_CASE_MS) return;
+  UPG.lastCase = Date.now();
+
+  var r = Math.random() * 100;
+  var rarity = r < 1 ? "mythic" : r < 5 ? "legendary" : r < 16 ? "epic" : r < 42 ? "rare" : "common";
+  var pool = [];
+  for (var i = 0; i < UPG_ITEMS.length; i++) {
+    if (UPG_ITEMS[i].rarity === rarity) pool.push(UPG_ITEMS[i]);
+  }
+  var item = pool[Math.floor(Math.random() * pool.length)];
+  UPG.inv.push(item.id);
+  if (!UPG.selected) UPG.selected = item.id;
+
+  upgSave();
+  upgRender();
+  toast("🎁 Из кейса выпал «" + item.name + "»");
+}
+
+function upgTickCase() {
+  var btn = document.getElementById("upgCase");
+  if (!btn) return;
+  var left = Math.ceil((UPG_CASE_MS - (Date.now() - UPG.lastCase)) / 1000);
+  if (UPG.lastCase && left > 0) {
+    btn.disabled = true;
+    btn.textContent = "🎁 Кейс через " + left + " с";
+  } else {
+    btn.disabled = false;
+    btn.textContent = "🎁 Бесплатный кейс";
+  }
+}
+
+function upgResetAll() {
+  if (!window.confirm("Сбросить инвентарь и статистику апгрейдера?")) return;
+  UPG.inv = UPG_START.slice();
+  UPG.selected = UPG.inv[0];
+  UPG.target = null;
+  UPG.rolls = 0;
+  UPG.wins = 0;
+  UPG.profit = 0;
+  UPG.hist = [];
+  UPG.lastCase = 0;
+  UPG.spinning = false;
+  var res = document.getElementById("upgResult");
+  if (res) res.hidden = true;
+  upgSave();
+  upgRender();
+  toast("Апгрейдер сброшен");
+}
+
+function upgFakeRow() {
+  var from = UPG_ITEMS[Math.floor(Math.random() * UPG_ITEMS.length)];
+  var pool = [];
+  for (var i = 0; i < UPG_ITEMS.length; i++) {
+    var it = UPG_ITEMS[i];
+    if (it.price > from.price && it.price <= from.price * 12) pool.push(it);
+  }
+  if (!pool.length) return null;
+  var to = pool[Math.floor(Math.random() * pool.length)];
+  return {
+    win: Math.random() * 100 < upgPct(from, to),
+    from: from.id,
+    to: to.id,
+    who: UPG_NAMES[Math.floor(Math.random() * UPG_NAMES.length)]
+  };
+}
+
+function upgSeedFakes() {
+  for (var i = 0; i < 6; i++) {
+    var row = upgFakeRow();
+    if (row) {
+      row.win = i % 2 === 0;
+      UPG_FAKES.unshift(row);
+    }
+  }
+  if (UPG_FAKES.length > 10) UPG_FAKES.length = 10;
+}
+
+function initUpgrader() {
+  if (!document.getElementById("upgrader")) return;
+
+  upgLoad();
+  upgEnsure();
+  upgSeedFakes();
+  upgRender();
+  upgSave();
+
+  var inv = document.getElementById("upgInv");
+  if (inv) {
+    inv.addEventListener("click", function (e) {
+      var el = upgClosest(e.target, ".upg-item");
+      if (!el || UPG.spinning) return;
+      var id = el.getAttribute("data-id");
+      if (!id) return;
+      UPG.selected = id;
+      UPG.target = null;
+      upgEnsure();
+      upgHideResult();
+      upgSave();
+      upgRender();
+    });
+  }
+
+  var targets = document.getElementById("upgTargets");
+  if (targets) {
+    targets.addEventListener("click", function (e) {
+      var el = upgClosest(e.target, ".upg-item");
+      if (!el || UPG.spinning) return;
+      var id = el.getAttribute("data-target");
+      if (!id) return;
+      UPG.target = id;
+      upgHideResult();
+      upgSave();
+      upgRenderCore();
+      upgRenderTargets();
+    });
+  }
+
+  var mults = document.getElementById("upgMults");
+  if (mults) {
+    mults.addEventListener("click", function (e) {
+      var el = upgClosest(e.target, ".upg-mult");
+      if (!el || UPG.spinning) return;
+      upgHideResult();
+      upgPickMult(Number(el.getAttribute("data-mult")) || 2);
+    });
+  }
+
+  var go = document.getElementById("upgGo");
+  if (go) go.addEventListener("click", upgDo);
+
+  var caseBtn = document.getElementById("upgCase");
+  if (caseBtn) caseBtn.addEventListener("click", upgOpenCase);
+
+  var resetBtn = document.getElementById("upgReset");
+  if (resetBtn) resetBtn.addEventListener("click", upgResetAll);
+
+  setInterval(upgTickCase, 500);
+  setInterval(function () {
+    var row = upgFakeRow();
+    if (!row) return;
+    UPG_FAKES.unshift(row);
+    if (UPG_FAKES.length > 10) UPG_FAKES.length = 10;
+    upgRenderFeed();
+  }, 8000);
+}
+
 function init() {
   renderCatalog();
   renderCart();
@@ -5310,6 +6287,7 @@ function init() {
   initMusic();
   initGame();
   initLeaderboard();
+  initUpgrader();
 
   /* чек */
   document.getElementById("receiptCopy").addEventListener("click", function () {
