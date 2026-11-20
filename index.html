@@ -6449,7 +6449,7 @@ function upgOpenCase() {
   UPG.lastCase = Date.now();
 
   /* Подарок: от Свинного арбуза до самой крутой легендарки (без мифических).
-     Шансы убывают: Свиной ~50%, последняя легендарка (Портальный) ~0.5%. */
+     Шансы более пологие: редкие/легендарные выпадают заметно чаще. */
   var pool = [];
   var start = false;
   for (var i = 0; i < UPG_ITEMS.length; i++) {
@@ -6463,11 +6463,9 @@ function upgOpenCase() {
 
   var weights = [];
   var sum = 0;
-  var tailR = 0.91;
-  var tailSum = 0;
-  for (var t = 1; t < pool.length; t++) tailSum += Math.pow(tailR, t);
+  var tailR = 0.955;
   for (var j = 0; j < pool.length; j++) {
-    var w = (j === 0) ? (tailSum > 0 ? tailSum : 1) : Math.pow(tailR, j);
+    var w = (j === 0) ? 2.5 : Math.pow(tailR, j);
     weights.push(w);
     sum += w;
   }
@@ -6698,14 +6696,14 @@ function upgFeedInit() {
 var UPG_TOP = {
   storeUrl: "https://api.restful-api.dev/objects/ff808181a09d98f701a1f9aa0a980983",
   postUrls: [
-    "https://ntfy.sh/prz-upg-top-7a39c1-v6",
-    "https://ntfy.envs.net/prz-upg-top-7a39c1-v6",
-    "https://ntfy.adminforge.de/prz-upg-top-7a39c1-v6"
+    "https://ntfy.sh/prz-upg-top-7a39c1-v7",
+    "https://ntfy.envs.net/prz-upg-top-7a39c1-v7",
+    "https://ntfy.adminforge.de/prz-upg-top-7a39c1-v7"
   ],
   liveUrls: [
-    "https://ntfy.sh/prz-upg-top-7a39c1-v6/json?poll=1&since=12h",
-    "https://ntfy.envs.net/prz-upg-top-7a39c1-v6/json?poll=1&since=12h",
-    "https://ntfy.adminforge.de/prz-upg-top-7a39c1-v6/json?poll=1&since=12h"
+    "https://ntfy.sh/prz-upg-top-7a39c1-v7/json?poll=1&since=12h",
+    "https://ntfy.envs.net/prz-upg-top-7a39c1-v7/json?poll=1&since=12h",
+    "https://ntfy.adminforge.de/prz-upg-top-7a39c1-v7/json?poll=1&since=12h"
   ],
   storeReady: false,
   storeScores: null,
@@ -6828,11 +6826,11 @@ function upgTopFetchStore(force) {
   if (!force && now - UPG_TOP.lastStoreFetch < 60000) return Promise.resolve(false);
   UPG_TOP.lastStoreFetch = now;
   return fetchT(UPG_TOP.storeUrl, { cache: "no-store" }, 8000)
-    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (r) { return r.ok ? r.json().catch(function () { return null; }) : null; })
     .then(function (data) {
-      if (!data) return false;
-      var arr = (data.data && data.data.scores) || data.scores || [];
-      if (!Array.isArray(arr)) return false;
+      if (!data || data.error) return false;
+      var arr = (data.data && Array.isArray(data.data.scores)) ? data.data.scores : (Array.isArray(data.scores) ? data.scores : null);
+      if (!arr) return false;
       UPG_TOP.storeReady = true;
       UPG_TOP.storeScores = upgTopNormalizeList(arr);
       var changed = false;
@@ -6847,7 +6845,6 @@ function upgTopFetchStore(force) {
 }
 
 function upgTopPushStore(force) {
-  if (!UPG_TOP.storeReady) return Promise.resolve(false);
   var scores = upgTopNormalizeList(UPG_TOP.scores);
   if (!scores.length) return Promise.resolve(false);
   var json = JSON.stringify(scores);
@@ -6861,6 +6858,7 @@ function upgTopPushStore(force) {
     body: JSON.stringify({ name: "prz-upgrader-inv-top", data: { updated: new Date().toISOString(), scores: scores } })
   }, 8000).then(function (r) {
     if (!r.ok) throw new Error("bad");
+    UPG_TOP.storeReady = true;
     UPG_TOP.storeScores = scores;
     return true;
   }).catch(function () { return false; });
@@ -6973,7 +6971,7 @@ function initUpgrader() {
 
   upgLoad();
   try {
-    if (read("prz_upg_comp_reset_20261120_v5", "") !== "1") {
+    if (read("prz_upg_comp_reset_20261120_v6", "") !== "1") {
       UPG.inv = UPG_START.slice();
       UPG.selected = UPG.inv[0] || null;
       UPG.target = null;
@@ -6983,7 +6981,7 @@ function initUpgrader() {
       UPG.hist = [];
       UPG.lastCase = 0;
       UPG.spinning = false;
-      write("prz_upg_comp_reset_20261120_v5", "1");
+      write("prz_upg_comp_reset_20261120_v6", "1");
       upgSave();
       setTimeout(function () { try { toast("Инвентарь и статистика апгрейдера сброшены для соревнования"); } catch (e) {} }, 0);
     }
@@ -7133,10 +7131,19 @@ function initUpgrader() {
   setInterval(upgTickCase, 500);
   setInterval(function () {
     if (document.hidden) return;
-    if (typeof upgTopFetchStore === "function") upgTopFetchStore(false);
-    if (typeof upgTopFetchLive === "function") upgTopFetchLive();
     if (typeof upgFeedFetchLive === "function") upgFeedFetchLive();
-  }, 60000);
+  }, 15000);
+  setInterval(function () {
+    if (document.hidden) return;
+    if (typeof upgTopFetchLive === "function") upgTopFetchLive();
+    if (typeof upgTopFetchStore === "function") upgTopFetchStore(false);
+  }, 45000);
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) return;
+    if (typeof upgFeedFetchLive === "function") upgFeedFetchLive();
+    if (typeof upgTopFetchLive === "function") upgTopFetchLive();
+    if (typeof upgTopFetchStore === "function") upgTopFetchStore(false);
+  });
   if (typeof upgFeedInit === "function") upgFeedInit();
 }
 
