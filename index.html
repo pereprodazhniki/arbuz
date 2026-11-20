@@ -6583,9 +6583,11 @@ function upgFeedAdd(row, key) {
   row.who = who;
   row.ts = parseInt(row.ts, 10) || Date.now();
   row.win = !!row.win;
-  var k = key || (who.toLowerCase() + "|" + row.from + "|" + row.to + "|" + (row.win ? 1 : 0) + "|" + Math.floor(row.ts / 1000));
-  if (UPG_FEED.seen[k]) return false;
+  var canon = who.toLowerCase() + "|" + row.from + "|" + row.to + "|" + (row.win ? 1 : 0) + "|" + Math.floor(row.ts / 1000);
+  var k = key || canon;
+  if (UPG_FEED.seen[k] || UPG_FEED.seen[canon]) return false;
   UPG_FEED.seen[k] = true;
+  UPG_FEED.seen[canon] = true;
   UPG_FEED.rows.push({ win: row.win, from: row.from, to: row.to, who: who, ts: row.ts });
   UPG_FEED.rows.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
   if (UPG_FEED.rows.length > 40) UPG_FEED.rows.length = 40;
@@ -6696,14 +6698,14 @@ function upgFeedInit() {
 var UPG_TOP = {
   storeUrl: "https://api.restful-api.dev/objects/ff808181a09d98f701a1f9aa0a980983",
   postUrls: [
-    "https://ntfy.sh/prz-upg-top-7a39c1-v4",
-    "https://ntfy.envs.net/prz-upg-top-7a39c1-v4",
-    "https://ntfy.adminforge.de/prz-upg-top-7a39c1-v4"
+    "https://ntfy.sh/prz-upg-top-7a39c1-v5",
+    "https://ntfy.envs.net/prz-upg-top-7a39c1-v5",
+    "https://ntfy.adminforge.de/prz-upg-top-7a39c1-v5"
   ],
   liveUrls: [
-    "https://ntfy.sh/prz-upg-top-7a39c1-v4/json?poll=1&since=12h",
-    "https://ntfy.envs.net/prz-upg-top-7a39c1-v4/json?poll=1&since=12h",
-    "https://ntfy.adminforge.de/prz-upg-top-7a39c1-v4/json?poll=1&since=12h"
+    "https://ntfy.sh/prz-upg-top-7a39c1-v5/json?poll=1&since=12h",
+    "https://ntfy.envs.net/prz-upg-top-7a39c1-v5/json?poll=1&since=12h",
+    "https://ntfy.adminforge.de/prz-upg-top-7a39c1-v5/json?poll=1&since=12h"
   ],
   storeReady: false,
   storeScores: null,
@@ -6971,7 +6973,7 @@ function initUpgrader() {
 
   upgLoad();
   try {
-    if (read("prz_upg_comp_reset_20261120_v3", "") !== "1") {
+    if (read("prz_upg_comp_reset_20261120_v4", "") !== "1") {
       UPG.inv = UPG_START.slice();
       UPG.selected = UPG.inv[0] || null;
       UPG.target = null;
@@ -6981,7 +6983,7 @@ function initUpgrader() {
       UPG.hist = [];
       UPG.lastCase = 0;
       UPG.spinning = false;
-      write("prz_upg_comp_reset_20261120_v3", "1");
+      write("prz_upg_comp_reset_20261120_v4", "1");
       upgSave();
       setTimeout(function () { try { toast("Инвентарь и статистика апгрейдера сброшены для соревнования"); } catch (e) {} }, 0);
     }
