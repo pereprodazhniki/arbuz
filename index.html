@@ -6026,7 +6026,6 @@ function upgPct(from, to) {
   if (!from || !to || to.price <= from.price) return 0;
   var c = (from.price / to.price) * 100 * UPG_EDGE;
   if (c > 95) c = 95;
-  if (c < 0.0000001) c = 0.0000001;
   return c;
 }
 
@@ -6034,10 +6033,9 @@ function upgChanceText(v) {
   if (!v) return "0";
   if (v >= 10) return String(Math.round(v));
   if (v >= 1) return parseFloat(v.toFixed(2)).toString();
-  var s = v.toFixed(10).replace(/0+$/, "").replace(/.$/, "");
-  return s || "0";
+  if (v >= 0.0001) return parseFloat(v.toFixed(6)).toString();
+  return v.toExponential(2).replace(/\.00e/, "e").replace(/0e/, "e").replace(/e\+?(-?\d+)/, "e$1");
 }
-
 function upgSave() {
   write(UPG_KEY, {
     inv: UPG.inv,
