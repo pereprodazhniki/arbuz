@@ -6530,9 +6530,17 @@ var UPG_FEED = {
     "https://ntfy.envs.net/prz-upg-feed-k7m2p4/json?poll=1&since=12h",
     "https://ntfy.adminforge.de/prz-upg-feed-k7m2p4/json?poll=1&since=12h"
   ],
+  streamUrls: [
+    "https://ntfy.sh/prz-upg-feed-k7m2p4/json?since=12h",
+    "https://ntfy.envs.net/prz-upg-feed-k7m2p4/json?since=12h",
+    "https://ntfy.adminforge.de/prz-upg-feed-k7m2p4/json?since=12h"
+  ],
   rows: [],
   seen: {},
-  loaded: false
+  loaded: false,
+  streamAbort: null,
+  streamIdx: 0,
+  streamTimer: null
 };
 
 function upgFeedMyName() {
@@ -6600,13 +6608,20 @@ function upgFeedPublish(row) {
   });
 }
 
+function upgFeedHandleEvent(ev, src) {
+  if (!ev || ev.event !== "message" || !ev.message) return false;
+  var p = upgFeedParse(ev.message);
+  if (!p) return false;
+  return upgFeedAdd(p, "live|" + src + "|" + (ev.id || (p.who + "|" + p.ts)));
+}
+
 function upgFeedFetchLive() {
   var urls = UPG_FEED.liveUrls;
-  var jobs = urls.map(function (url) {
+  var jobs = urls.map(function (url, j) {
     return fetchT(url, { cache: "no-store" }, 8000)
       .then(function (r) { return r.ok ? r.text() : ""; })
-      .then(function (text) { return { ok: !!text, text: text }; })
-      .catch(function () { return { ok: false, text: "" }; });
+      .then(function (text) { return { ok: !!text, text: text, j: j }; })
+      .catch(function () { return { ok: false, text: "", j: j }; });
   });
   return Promise.all(jobs).then(function (res) {
     var changed = false;
@@ -6616,9 +6631,7 @@ function upgFeedFetchLive() {
       for (var i = 0; i < lines.length; i++) {
         if (!lines[i]) continue;
         var ev; try { ev = JSON.parse(lines[i]); } catch (e) { continue; }
-        if (!ev || ev.event !== "message" || !ev.message) continue;
-        var p = upgFeedParse(ev.message);
-        if (p && upgFeedAdd(p, "live|" + j + "|" + ev.id)) changed = true;
+        if (upgFeedHandleEvent(ev, "poll" + res[j].j)) changed = true;
       }
     }
     if (changed) upgRenderFeed();
@@ -6626,9 +6639,52 @@ function upgFeedFetchLive() {
   });
 }
 
+function upgFeedStreamStart() {
+  if (typeof fetch !== "function" || typeof AbortController === "undefined") return;
+  if (UPG_FEED.streamAbort) return;
+  var urls = UPG_FEED.streamUrls || [];
+  if (!urls.length) return;
+  var idx = UPG_FEED.streamIdx % urls.length;
+  var url = urls[idx];
+  var ctrl = new AbortController();
+  UPG_FEED.streamAbort = ctrl;
+  fetch(url, { cache: "no-store", signal: ctrl.signal }).then(function (r) {
+    if (!r.ok || !r.body || !r.body.getReader) throw new Error("bad");
+    var reader = r.body.getReader();
+    var decoder = (typeof TextDecoder !== "undefined") ? new TextDecoder() : null;
+    var buf = "";
+    function pump() {
+      return reader.read().then(function (part) {
+        if (part.done) throw new Error("end");
+        var chunk = decoder ? decoder.decode(part.value, { stream: true }) : String(part.value || "");
+        buf += chunk;
+        var lines = buf.split("\n");
+        buf = lines.pop() || "";
+        var changed = false;
+        for (var i = 0; i < lines.length; i++) {
+          if (!lines[i]) continue;
+          var ev; try { ev = JSON.parse(lines[i]); } catch (e) { continue; }
+          if (upgFeedHandleEvent(ev, "stream" + idx)) changed = true;
+        }
+        if (changed) upgRenderFeed();
+        return pump();
+      });
+    }
+    return pump();
+  }).catch(function () {
+    // aborted or failed: reconnect to next mirror
+  }).finally(function () {
+    if (UPG_FEED.streamAbort === ctrl) UPG_FEED.streamAbort = null;
+    UPG_FEED.streamIdx = (idx + 1) % urls.length;
+    if (UPG_FEED.streamTimer) clearTimeout(UPG_FEED.streamTimer);
+    UPG_FEED.streamTimer = setTimeout(function () { upgFeedStreamStart(); }, 3000);
+  });
+}
+
 function upgFeedInit() {
   upgRenderFeed();
   upgFeedFetchLive().then(function () { upgRenderFeed(); });
+  upgFeedStreamStart();
 }
 
 
