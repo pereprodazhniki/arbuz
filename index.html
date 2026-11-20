@@ -6024,8 +6024,18 @@ function upgMoney(n) {
 
 function upgPct(from, to) {
   if (!from || !to || to.price <= from.price) return 0;
-  var c = Math.round((from.price / to.price) * 100 * UPG_EDGE);
-  return Math.min(95, Math.max(1, c));
+  var c = (from.price / to.price) * 100 * UPG_EDGE;
+  if (c > 95) c = 95;
+  if (c < 0.0000001) c = 0.0000001;
+  return c;
+}
+
+function upgChanceText(v) {
+  if (!v) return "0";
+  if (v >= 10) return String(Math.round(v));
+  if (v >= 1) return parseFloat(v.toFixed(2)).toString();
+  var s = v.toFixed(10).replace(/0+$/, "").replace(/.$/, "");
+  return s || "0";
 }
 
 function upgSave() {
@@ -6166,7 +6176,7 @@ function upgRenderTargets() {
     var cls = p < 25 ? "upg-chance--low" : p < 55 ? "upg-chance--mid" : "upg-chance--high";
     html += '<button class="upg-t-item upg-item--' + it.rarity + (it.id === UPG.target ? " is-tgt" : "") + '" type="button" data-target="' + it.id + '" style="--rc:' + UPG_RARITY[it.rarity].color + '">' +
       '<span class="upg-t-item__ic">' + it.icon + '</span>' +
-      '<span class="upg-t-item__b"><b>' + it.name + '</b><small>' + upgMoney(it.price) + ' · <i class="upg-chance ' + cls + '">' + p + '%</i></small></span>' +
+      '<span class="upg-t-item__b"><b>' + it.name + '</b><small>' + upgMoney(it.price) + ' · <i class="upg-chance ' + cls + '">' + upgChanceText(p) + '%</i></small></span>' +
       '</button>';
   }
   box.innerHTML = html || '<p class="upg-empty">Ты уже на вершине. Апгрейдить некуда — только продавать бабушке.</p>';
@@ -6227,7 +6237,7 @@ function upgRenderCore() {
 
   var chance = upgPct(from, to);
   if (wheel) wheel.style.setProperty("--p", String(chance));
-  chanceEl.textContent = chance ? chance + "%" : "—";
+  chanceEl.textContent = chance ? upgChanceText(chance) + "%" : "—";
 
   if (UPG.spinning) {
     go.disabled = true;
@@ -6240,7 +6250,7 @@ function upgRenderCore() {
     go.textContent = "Выбери цель подороже";
   } else {
     go.disabled = false;
-    go.textContent = "Апгрейд · " + chance + "%";
+    go.textContent = "Апгрейд · " + upgChanceText(chance) + "%";
   }
 
   var mults = document.querySelectorAll("#upgMults .upg-mult");
