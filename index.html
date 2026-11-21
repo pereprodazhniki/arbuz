@@ -1544,6 +1544,11 @@ body.light .upg-bcase-peek { background: #fff; border-color: color-mix(in srgb, 
 .cbattle__player.is-lose .cbattle__ptotal { color: #ff8f8f; }
 .cbattle__drops { display: grid; gap: 6px; }
 .cbattle__drop { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 8px; border-radius: 10px; background: #122319; border: 1px solid rgba(255,255,255,.04); font-size: 13px; }
+.cbattle__drop.is-spinning { border-color: rgba(255,204,87,.45); background: linear-gradient(180deg, #1a3322, #142519); }
+.cbattle__drop.is-spinning .cb-spin { display:inline-block; animation: cbSpin .55s linear infinite; transform-origin: 50% 50%; }
+.cbattle__drop.is-reveal { animation: cbReveal .28s ease-out; }
+@keyframes cbSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes cbReveal { from { opacity: .35; transform: translateY(4px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 .cbattle__dropname { display: flex; align-items: center; gap: 6px; color: #fff; font-weight: 700; min-width: 0; }
 .cbattle__dropname span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cbattle__dropval { color: var(--muted); font-weight: 800; white-space: nowrap; }
@@ -2795,7 +2800,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261121-cb-room-fix-1";
+var APP_BUILD = "20261121-cb-room-fix-2";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7269,11 +7274,18 @@ function cbRoomRender() {
   var link = location.origin + location.pathname + "#cbattle=" + encodeURIComponent(r.id);
   var hostName = r.hostName || (r.host ? cbMyName() : "Хост");
   var guestName = r.guestName || "Ожидание друга…";
-  if (status) status.textContent = r.host ? "Ты хост. Поделись ссылкой с другом." : "Ты в комнате " + hostName + ".";
+  var pickNames = [];
+  for (var pi = 0; pi < CB.picks.length; pi++) { var pc = cbCaseById(CB.picks[pi]); if (pc) pickNames.push(pc.icon + " " + pc.name); }
+  var picksText = pickNames.length ? pickNames.join(", ") : "кейсы ещё не выбраны";
+  if (status) {
+    if (r.host) status.textContent = "Ты хост. Выбери кейсы и поделись ссылкой с другом.";
+    else status.textContent = hostName + " зовёт тебя на батл по: " + picksText + ". Нажмите «Готов» — кейсы откроются, когда оба будут готовы.";
+  }
   if (info) {
     info.innerHTML =
       '<div class="cbattle__room-card' + (r.hostReady ? ' is-ready' : '') + '"><b>👑 ' + hostName + '</b><span>' + (r.hostReady ? "готов" : "не готов") + '</span></div>' +
       '<div class="cbattle__room-card' + (r.guestReady ? ' is-ready' : '') + '"><b>👤 ' + guestName + '</b><span>' + (r.guestReady ? "готов" : "ожидание") + '</span></div>' +
+      '<div class="cbattle__meta" style="font-size:12px"><b>Кейсы:</b> ' + picksText + '</div>' +
       '<div class="cbattle__meta" style="font-size:12px">Ссылка: <b style="word-break:break-all">' + link + '</b></div>';
   }
 }
@@ -7325,7 +7337,13 @@ function cbProcessStart(payload) {
   var totalCost = 0;
   for (var c = 0; c < picks.length; c++) { var cc = cbCaseById(picks[c]); if (cc) totalCost += cc.price; }
   var bal = Math.max(0, Number(UPG.balance) || 0);
-  if (bal < totalCost) { toast("Недостаточно баланса для батла"); cbRoomRender(); return; }
+  if (bal < totalCost) {
+    toast("Недостаточно баланса для батла");
+    CB.room.hostReady = false; CB.room.guestReady = false;
+    cbRenderAll(); cbRoomRender();
+    if (CB.room.host) cbRoomPost("state", { host: CB.room.hostName, guest: CB.room.guestName, picks: CB.picks, hostReady: false, guestReady: false });
+    return;
+  }
 
   CB.room.started[key] = true;
   // deterministic drops
@@ -7373,15 +7391,25 @@ function cbProcessStart(payload) {
   for (var vi = 0; vi < players.length; vi++) view.push({ name: players[vi] + (vi === mySlot ? " (ты)" : ""), drops: [], total: 0, win: false, lose: false });
   var round = 0;
   function revealRound() {
+    var caseId = picks[round];
+    var caseCfg = cbCaseById(caseId);
+    var spinIcon = caseCfg ? (caseCfg.icon || "🎁") : "🎁";
+    var spinName = caseCfg ? caseCfg.name : "Кейс";
     for (var p2 = 0; p2 < view.length; p2++) {
-      var dr = allDrops[p2][round];
-      view[p2].drops.push(dr);
-      view[p2].total += dr ? dr.price : 0;
+      view[p2].drops.push({ spinning: true, icon: spinIcon, name: spinName });
     }
-    cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + "…");
-    round++;
-    if (round < picks.length) { setTimeout(revealRound, 700); return; }
-    setTimeout(finish, 450);
+    cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + ": открываем " + spinName + "…");
+    setTimeout(function () {
+      for (var p3 = 0; p3 < view.length; p3++) {
+        var dr = allDrops[p3][round];
+        view[p3].drops[view[p3].drops.length - 1] = dr;
+        view[p3].total += dr ? dr.price : 0;
+      }
+      cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + "…");
+      round++;
+      if (round < picks.length) { setTimeout(revealRound, 550); return; }
+      setTimeout(finish, 550);
+    }, 650);
   }
   function finish() {
     for (var t = 0; t < view.length; t++) { view[t].total = totals[t]; view[t].win = t === winnerIdx; view[t].lose = t !== winnerIdx; }
@@ -7414,11 +7442,21 @@ function cbRoomHandle(ev) {
   if (room !== CB.room.id) return false;
   var payloadRaw = parts.slice(6).join("|");
   var payload; try { payload = JSON.parse(payloadRaw); } catch (e) { payload = {}; }
+  var msgCid = String(payload.cid || "");
+  var isSelf = msgCid ? (msgCid === CB.clientId) : (from && from.toLowerCase() === cbMyName().toLowerCase());
   if (type === "join") {
-    if (CB.room.host && from && from.toLowerCase() !== cbMyName().toLowerCase()) {
-      CB.room.guestName = from;
+    if (isSelf) return true;
+    if (CB.room.host) {
+      if (from) CB.room.guestName = from;
+      if (msgCid) CB.room.guestCid = msgCid;
       cbRoomRender();
-      cbRoomPost("state", { host: cbMyName(), guest: CB.room.guestName, picks: CB.picks, hostReady: CB.room.hostReady, guestReady: CB.room.guestReady });
+      cbRenderAll();
+      cbRoomPost("state", { host: CB.room.hostName || cbMyName(), guest: CB.room.guestName, picks: CB.picks, hostReady: CB.room.hostReady, guestReady: CB.room.guestReady });
+    } else {
+      if (from) CB.room.hostName = from;
+      if (msgCid && !CB.room.hostCid) CB.room.hostCid = msgCid;
+      cbRoomRender();
+      cbRenderAll();
     }
     return true;
   }
@@ -7434,7 +7472,7 @@ function cbRoomHandle(ev) {
     if (isSelf) return true;
     var fromGuest = CB.room.host && (msgCid ? (CB.room.guestCid && msgCid === CB.room.guestCid) : (from && from.toLowerCase() === String(CB.room.guestName || "").toLowerCase()));
     var fromHost = !CB.room.host && (msgCid ? (CB.room.hostCid && msgCid === CB.room.hostCid) : (from && from.toLowerCase() === String(CB.room.hostName || "").toLowerCase()));
-    if (fromGuest) { CB.room.guestReady = !!payload.ready; if (msgCid) CB.room.guestCid = msgCid; cbRoomRender(); cbRenderAll(); }
+    if (fromGuest) { CB.room.guestReady = !!payload.ready; if (msgCid) CB.room.guestCid = msgCid; cbRoomRender(); cbRenderAll(); cbRoomMaybeAutoStart(); }
     else if (fromHost) { CB.room.hostReady = !!payload.ready; if (msgCid) CB.room.hostCid = msgCid; cbRoomRender(); cbRenderAll(); }
     return true;
   }
@@ -7583,6 +7621,13 @@ function cbRoomCopyLink() {
   }
 }
 
+function cbRoomMaybeAutoStart() {
+  if (CB.mode !== "friend" || !CB.room.id || !CB.room.host || CB.busy) return;
+  if (!CB.room.guestName || !CB.room.hostReady || !CB.room.guestReady) return;
+  if (!CB.picks.length) return;
+  try { cbStart(); } catch (e) { console.error("cbRoomMaybeAutoStart", e); }
+}
+
 function cbRoomToggleReady() {
   if (!CB.room.id || CB.busy) return;
   if (CB.room.host) {
@@ -7594,6 +7639,7 @@ function cbRoomToggleReady() {
   }
   cbRoomRender();
   cbRenderAll();
+  cbRoomMaybeAutoStart();
 }
 
 function cbMaybeJoinFromHash() {
@@ -7694,8 +7740,13 @@ function cbRenderArena(players, statusText, statusCls) {
     html += '<div class="' + cls + '"><div class="cbattle__phead"><span class="cbattle__pname">' + p.name + '</span><span class="cbattle__ptotal">' + upgMoney(p.total || 0) + '</span></div><div class="cbattle__drops">';
     for (var j = 0; j < p.drops.length; j++) {
       var d = p.drops[j];
-      if (!d) html += '<div class="cbattle__drop"><span class="cbattle__dropname">🎁 <span>...</span></span><span class="cbattle__dropval">—</span></div>';
-      else html += '<div class="cbattle__drop"><span class="cbattle__dropname">' + (d.icon || '🍉') + ' <span>' + d.name + '</span></span><span class="cbattle__dropval">' + upgMoney(d.price) + '</span></div>';
+      if (!d) {
+        html += '<div class="cbattle__drop"><span class="cbattle__dropname">🎁 <span>...</span></span><span class="cbattle__dropval">—</span></div>';
+      } else if (d.spinning) {
+        html += '<div class="cbattle__drop is-spinning"><span class="cbattle__dropname"><span class="cb-spin">' + (d.icon || '🎁') + '</span> <span>' + (d.name || 'Крутится...') + '</span></span><span class="cbattle__dropval">…</span></div>';
+      } else {
+        html += '<div class="cbattle__drop is-reveal"><span class="cbattle__dropname">' + (d.icon || '🍉') + ' <span>' + d.name + '</span></span><span class="cbattle__dropval">' + upgMoney(d.price) + '</span></div>';
+      }
     }
     html += '</div></div>';
   }
@@ -7788,18 +7839,28 @@ function cbStart() {
   for (var i = 0; i < playerCount; i++) view.push({ name: names[i], drops: [], total: 0, win: false, lose: false });
   var round = 0;
   function revealRound() {
+    var caseId = CB.picks[round];
+    var caseCfg = cbCaseById(caseId);
+    var spinIcon = caseCfg ? (caseCfg.icon || "🎁") : "🎁";
+    var spinName = caseCfg ? caseCfg.name : "Кейс";
     for (var p2 = 0; p2 < view.length; p2++) {
-      var dr = allDrops[p2][round];
-      view[p2].drops.push(dr);
-      view[p2].total += dr ? dr.price : 0;
+      view[p2].drops.push({ spinning: true, icon: spinIcon, name: spinName });
     }
-    cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + "…");
-    round++;
-    if (round < CB.picks.length) {
-      setTimeout(revealRound, 700);
-      return;
-    }
-    setTimeout(finishBattle, 450);
+    cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + ": открываем " + spinName + "…");
+    setTimeout(function () {
+      for (var p3 = 0; p3 < view.length; p3++) {
+        var dr = allDrops[p3][round];
+        view[p3].drops[view[p3].drops.length - 1] = dr;
+        view[p3].total += dr ? dr.price : 0;
+      }
+      cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + "…");
+      round++;
+      if (round < CB.picks.length) {
+        setTimeout(revealRound, 550);
+        return;
+      }
+      setTimeout(finishBattle, 550);
+    }, 650);
   }
 
   function finishBattle() {
