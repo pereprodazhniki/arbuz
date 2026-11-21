@@ -2674,7 +2674,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261121-casepop-1";
+var APP_BUILD = "20261121-casepop-2";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -6330,6 +6330,7 @@ var UPG = {
   hist: [],
   lastCase: 0,
   balance: 0,
+  pendingCase: null,
   spinning: false,
   assortOpen: false,
   arrowDeg: 0
@@ -6378,7 +6379,8 @@ function upgSave() {
     profit: UPG.profit,
     hist: UPG.hist.slice(0, 20),
     lastCase: UPG.lastCase,
-    balance: UPG.balance
+    balance: UPG.balance,
+    pendingCase: UPG.pendingCase
   });
 }
 
@@ -6391,6 +6393,7 @@ function upgLoad() {
   UPG.profit = 0;
   UPG.lastCase = 0;
   UPG.balance = 0;
+  UPG.pendingCase = null;
 
   if (!d || !Array.isArray(d.inv)) {
     UPG.inv = UPG_START.slice();
@@ -6413,12 +6416,28 @@ function upgLoad() {
         }
       }
     }
+    if (d.pendingCase && upgItem(d.pendingCase.id)) {
+      UPG.pendingCase = { id: d.pendingCase.id, name: String(d.pendingCase.name || "") };
+    }
+  }
+
+  var recoveredPending = false;
+  if (UPG.pendingCase && upgItem(UPG.pendingCase.id)) {
+    UPG.inv.push(UPG.pendingCase.id);
+    UPG.selected = UPG.pendingCase.id;
+    UPG.pendingCase = null;
+    recoveredPending = true;
   }
 
   var sel = d && upgItem(d.selected) ? d.selected : null;
-  UPG.selected = sel && UPG.inv.indexOf(sel) >= 0 ? sel : (UPG.inv[0] || null);
+  if (!recoveredPending) {
+    UPG.selected = sel && UPG.inv.indexOf(sel) >= 0 ? sel : (UPG.inv[0] || null);
+  } else if (UPG.selected && UPG.inv.indexOf(UPG.selected) < 0) {
+    UPG.selected = UPG.inv[0] || null;
+  }
   UPG.target = d && upgItem(d.target) ? d.target : null;
   UPG.assortOpen = false; /* по умолчанию скрыт при заходе */
+  if (recoveredPending) upgSave();
 }
 
 function upgEnsure() {
@@ -6685,20 +6704,32 @@ function upgPickWeighted(pool) {
   return pool[pool.length - 1].id;
 }
 
-var CASE_POP = { timer: null, busy: false };
+var CASE_POP = { timer: null, busy: false, granted: false, onGrant: null };
+
+function casePopGrant() {
+  if (CASE_POP.granted) return;
+  CASE_POP.granted = true;
+  if (typeof CASE_POP.onGrant === "function") {
+    try { CASE_POP.onGrant(); } catch (e) {}
+  }
+  CASE_POP.onGrant = null;
+}
 
 function casePopClose() {
   if (CASE_POP.busy) return;
   if (CASE_POP.timer) { clearInterval(CASE_POP.timer); CASE_POP.timer = null; }
+  casePopGrant();
   var pop = document.getElementById("casePop");
   if (pop) pop.hidden = true;
 }
 
-function casePopShow(cfg, dropItem) {
+function casePopShow(cfg, dropItem, onGrant) {
   var pop = document.getElementById("casePop");
   if (!pop || !dropItem) return;
   if (CASE_POP.timer) { clearInterval(CASE_POP.timer); CASE_POP.timer = null; }
   CASE_POP.busy = true;
+  CASE_POP.granted = false;
+  CASE_POP.onGrant = typeof onGrant === "function" ? onGrant : null;
 
   var title = document.getElementById("casePopTitle");
   var sub = document.getElementById("casePopSub");
@@ -6748,13 +6779,15 @@ function casePopShow(cfg, dropItem) {
     CASE_POP.timer = null;
     paint(dropItem, false);
     if (sub) sub.textContent = "Выпало!";
-    if (close) { close.disabled = false; }
     CASE_POP.busy = false;
+    casePopGrant();
+    if (close) { close.disabled = false; }
   }, 90);
 }
 
 function upgOpenBalanceCase(caseId) {
   if (UPG.spinning) { toast("Дождись конца апгрейда"); return; }
+  if (UPG.pendingCase) { toast("Сначала забери дроп из кейса"); return; }
   var cfg = null;
   for (var i = 0; i < UPG_BALANCE_CASES.length; i++) {
     if (UPG_BALANCE_CASES[i].id === caseId) { cfg = UPG_BALANCE_CASES[i]; break; }
@@ -6765,16 +6798,24 @@ function upgOpenBalanceCase(caseId) {
   var dropId = upgPickWeighted(cfg.pool);
   var item = upgItem(dropId);
   if (!item) { toast("Ошибка кейса, попробуй ещё раз"); return; }
-  // атомарно: списание + дроп в одном сохранении
+  // атомарно: списываем баланс и сохраняем pending-дроп (выдача после анимации)
   UPG.balance = bal - cfg.price;
-  UPG.inv.push(item.id);
-  UPG.selected = item.id;
+  UPG.pendingCase = { id: item.id, name: item.name, caseName: cfg.name };
   upgSave();
   upgRender();
-  if (typeof upgTopSyncMe === "function") upgTopSyncMe();
   var note = document.getElementById("upgBalanceCaseNote");
-  if (note) note.textContent = "Из кейса «" + cfg.name + "» выпал: " + item.name + " (" + upgMoney(item.price) + ")";
-  casePopShow(cfg, item);
+  if (note) note.textContent = "Открываем «" + cfg.name + "»...";
+  casePopShow(cfg, item, function () {
+    if (!UPG.pendingCase || UPG.pendingCase.id !== item.id) return;
+    UPG.inv.push(item.id);
+    UPG.selected = item.id;
+    UPG.pendingCase = null;
+    upgSave();
+    upgRender();
+    if (typeof upgTopSyncMe === "function") upgTopSyncMe();
+    var note2 = document.getElementById("upgBalanceCaseNote");
+    if (note2) note2.textContent = "Из кейса «" + cfg.name + "» выпал: " + item.name + " (" + upgMoney(item.price) + ")";
+  });
 }
 
 function upgRender() {
@@ -6848,6 +6889,7 @@ function upgSpinWheel(win, chance, ms, done) {
 
 function upgDo() {
   if (UPG.spinning) return;
+  if (UPG.pendingCase) { toast("Сначала забери дроп из кейса"); return; }
   upgEnsure();
   var from = upgItem(UPG.selected);
   var to = upgItem(UPG.target);
@@ -6918,6 +6960,7 @@ function upgPickMult(mult) {
 
 function upgOpenCase() {
   if (Date.now() - UPG.lastCase < UPG_CASE_MS) return;
+  if (UPG.pendingCase) { toast("Сначала забери дроп из кейса"); return; }
   UPG.lastCase = Date.now();
 
   /* Подарок: от Свинного арбуза до самой крутой легендарки (без мифических).
@@ -6950,16 +6993,28 @@ function upgOpenCase() {
     if (r <= acc) { item = pool[k]; break; }
   }
 
-  UPG.inv.push(item.id);
-  if (!UPG.selected) UPG.selected = item.id;
-
+  UPG.pendingCase = { id: item.id, name: item.name, caseName: "Бесплатный кейс" };
   upgSave();
   upgRender();
-  if (typeof upgTopSyncMe === "function") upgTopSyncMe();
   var caseCfg = { name: "Бесплатный кейс", pool: [] };
   for (var pi = 0; pi < pool.length; pi++) caseCfg.pool.push({ id: pool[pi].id, w: 1 });
-  if (typeof casePopShow === "function") casePopShow(caseCfg, item);
-  else toast("🎁 Из кейса выпал «" + item.name + "»");
+  if (typeof casePopShow === "function") {
+    casePopShow(caseCfg, item, function () {
+      if (!UPG.pendingCase || UPG.pendingCase.id !== item.id) return;
+      UPG.inv.push(item.id);
+      if (!UPG.selected) UPG.selected = item.id;
+      UPG.pendingCase = null;
+      upgSave();
+      upgRender();
+      if (typeof upgTopSyncMe === "function") upgTopSyncMe();
+    });
+  } else {
+    UPG.inv.push(item.id);
+    if (!UPG.selected) UPG.selected = item.id;
+    UPG.pendingCase = null;
+    upgSave();
+    upgRender();
+  }
 }
 
 function upgTickCase() {
@@ -6996,6 +7051,7 @@ function upgResetAll() {
 
 function upgWithdraw() {
   if (UPG.spinning) { toast("Дождись конца апгрейда"); return; }
+  if (UPG.pendingCase) { toast("Сначала забери дроп из кейса"); return; }
   upgEnsure();
   if (!UPG.inv.length) { toast("Инвентарь пуст — выводить нечего"); return; }
   var total = 0;
