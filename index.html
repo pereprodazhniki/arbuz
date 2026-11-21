@@ -2795,7 +2795,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261121-cb-room-1";
+var APP_BUILD = "20261121-cb-fair-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7395,6 +7395,414 @@ function cbProcessStart(payload) {
     cbRoomRender();
     if (CB.room.host) cbRoomPost("state", { host: CB.room.hostName, guest: CB.room.guestName, picks: CB.picks, hostReady: false, guestReady: false });
   }
+  cbRenderArena(view, "Готовим батл…");
+  setTimeout(revealRound, 500);
+}
+
+function cbRoomHandle(ev) {
+  if (!ev || ev.event !== "message" || !ev.message) return false;
+  var msg = String(ev.message);
+  if (msg.indexOf("CBR|1|") !== 0) return false;
+  var parts = msg.split("|");
+  // CBR|1|room|type|from|ts|json
+  if (parts.length < 7) return false;
+  var room = parts[2], type = parts[3], from = normalizeName(parts[4] || ""), ts = parseInt(parts[5], 10) || 0;
+  if (room !== CB.room.id) return false;
+  var payloadRaw = parts.slice(6).join("|");
+  var payload; try { payload = JSON.parse(payloadRaw); } catch (e) { payload = {}; }
+  if (type === "join") {
+    if (CB.room.host && from && from.toLowerCase() !== cbMyName().toLowerCase()) {
+      CB.room.guestName = from;
+      cbRoomRender();
+      cbRoomPost("state", { host: cbMyName(), guest: CB.room.guestName, picks: CB.picks, hostReady: CB.room.hostReady, guestReady: CB.room.guestReady });
+    }
+    return true;
+  }
+  if (type === "state") { cbRoomApplyState(payload, from); return true; }
+  if (type === "ready") {
+    if (CB.room.host && from && from.toLowerCase() === String(CB.room.guestName || "").toLowerCase()) {
+      CB.room.guestReady = !!payload.ready;
+      cbRoomRender(); cbRenderAll();
+    } else if (!CB.room.host && from && from.toLowerCase() === String(CB.room.hostName || "").toLowerCase()) {
+      CB.room.hostReady = !!payload.ready;
+      cbRoomRender(); cbRenderAll();
+    }
+    return true;
+  }
+  if (type === "start") { cbProcessStart(payload); return true; }
+  if (type === "leave") {
+    if (from && from.toLowerCase() === String(CB.room.guestName || "").toLowerCase()) { CB.room.guestName = ""; CB.room.guestReady = false; cbRoomRender(); cbRenderAll(); }
+    return true;
+  }
+  return false;
+}
+
+function cbRoomFetch() {
+  var r = CB.room;
+  if (!r.id) return Promise.resolve(false);
+  var urls = cbRoomUrls(r.id).live;
+  var jobs = urls.map(function (url) {
+    return fetchT(url, { cache: "no-store" }, 8000).then(function (res) { return res.ok ? res.text() : ""; }).catch(function () { return ""; });
+  });
+  return Promise.all(jobs).then(function (texts) {
+    var changed = false;
+    for (var j = 0; j < texts.length; j++) {
+      var lines = String(texts[j] || "").split("\n");
+      for (var i = 0; i < lines.length; i++) {
+        if (!lines[i]) continue;
+        var ev; try { ev = JSON.parse(lines[i]); } catch (e) { continue; }
+        if (cbRoomHandle(ev)) changed = true;
+      }
+    }
+    return changed;
+  });
+}
+
+function cbRoomStreamStart() {
+  if (typeof fetch !== "function" || typeof AbortController === "undefined") return;
+  var r = CB.room;
+  if (!r.id || r.streamAbort) return;
+  var urls = cbRoomUrls(r.id).stream;
+  var idx = r.streamIdx % urls.length;
+  var url = urls[idx];
+  var ctrl = new AbortController();
+  r.streamAbort = ctrl;
+  fetch(url, { cache: "no-store", signal: ctrl.signal }).then(function (res) {
+    if (!res.ok || !res.body || !res.body.getReader) throw new Error("bad");
+    var reader = res.body.getReader();
+    var decoder = (typeof TextDecoder !== "undefined") ? new TextDecoder() : null;
+    var buf = "";
+    function pump() {
+      return reader.read().then(function (part) {
+        if (part.done) throw new Error("end");
+        buf += decoder ? decoder.decode(part.value, { stream: true }) : String(part.value || "");
+        var lines = buf.split("\n");
+        buf = lines.pop() || "";
+        for (var i = 0; i < lines.length; i++) {
+          if (!lines[i]) continue;
+          var ev; try { ev = JSON.parse(lines[i]); } catch (e) { continue; }
+          cbRoomHandle(ev);
+        }
+        return pump();
+      });
+    }
+    return pump();
+  }).catch(function () {}).finally(function () {
+    if (CB.room.streamAbort === ctrl) CB.room.streamAbort = null;
+    CB.room.streamIdx = (idx + 1) % urls.length;
+    if (CB.room.streamTimer) clearTimeout(CB.room.streamTimer);
+    if (CB.room.id) CB.room.streamTimer = setTimeout(function () { cbRoomStreamStart(); }, 3000);
+  });
+}
+
+function cbRoomStop() {
+  var r = CB.room;
+  if (r.streamAbort) { try { r.streamAbort.abort(); } catch (e) {} r.streamAbort = null; }
+  if (r.streamTimer) { clearTimeout(r.streamTimer); r.streamTimer = null; }
+  if (r.pollTimer) { clearInterval(r.pollTimer); r.pollTimer = null; }
+}
+
+function cbRoomStartSync() {
+  cbRoomStop();
+  if (!CB.room.id) return;
+  cbRoomFetch();
+  cbRoomStreamStart();
+  CB.room.pollTimer = setInterval(function () { if (!document.hidden) cbRoomFetch(); }, 5000);
+}
+
+function cbRoomCreate() {
+  if (CB.busy) return;
+  var id = cbUid();
+  CB.room.id = id;
+  CB.room.host = true;
+  CB.room.hostName = cbMyName();
+  CB.room.guestName = "";
+  CB.room.hostReady = false;
+  CB.room.guestReady = false;
+  CB.room.started = {};
+  try { location.hash = "cbattle=" + encodeURIComponent(id); } catch (e) {}
+  cbSetMode("friend");
+  cbRoomRender();
+  cbRoomStartSync();
+  cbRoomPost("join", { name: cbMyName() });
+  cbRoomPost("state", { host: CB.room.hostName, guest: "", picks: CB.picks, hostReady: false, guestReady: false });
+  toast("Комната создана. Скопируй ссылку другу!");
+}
+
+function cbRoomJoin(id) {
+  id = String(id || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 32);
+  if (!id) return;
+  CB.room.id = id;
+  CB.room.host = false;
+  CB.room.hostName = "";
+  CB.room.guestName = cbMyName();
+  CB.room.hostReady = false;
+  CB.room.guestReady = false;
+  CB.room.started = {};
+  cbSetMode("friend");
+  cbRoomRender();
+  cbRoomStartSync();
+  cbRoomPost("join", { name: cbMyName() });
+  toast("Подключаемся к комнате…");
+}
+
+function cbRoomLeave(silent) {
+  if (CB.room.id) cbRoomPost("leave", { name: cbMyName() });
+  cbRoomStop();
+  CB.room.id = ""; CB.room.host = false; CB.room.hostName = ""; CB.room.guestName = "";
+  CB.room.hostReady = false; CB.room.guestReady = false; CB.room.started = {};
+  try { if (location.hash.indexOf("cbattle=") >= 0) history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+  cbRoomRender();
+  cbRenderAll();
+  if (!silent) toast("Ты вышел из комнаты");
+}
+
+function cbRoomCopyLink() {
+  if (!CB.room.id) return;
+  var link = location.origin + location.pathname + "#cbattle=" + encodeURIComponent(CB.room.id);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(function () { toast("Ссылка скопирована!"); }).catch(function () { window.prompt("Скопируй ссылку:", link); });
+  } else {
+    window.prompt("Скопируй ссылку:", link);
+  }
+}
+
+function cbRoomToggleReady() {
+  if (!CB.room.id || CB.busy) return;
+  if (CB.room.host) {
+    CB.room.hostReady = !CB.room.hostReady;
+    cbRoomPost("state", { host: CB.room.hostName || cbMyName(), guest: CB.room.guestName, picks: CB.picks, hostReady: CB.room.hostReady, guestReady: CB.room.guestReady });
+  } else {
+    CB.room.guestReady = !CB.room.guestReady;
+    cbRoomPost("ready", { ready: CB.room.guestReady });
+  }
+  cbRoomRender();
+  cbRenderAll();
+}
+
+function cbMaybeJoinFromHash() {
+  var m = String(location.hash || "").match(/cbattle=([a-zA-Z0-9_-]+)/);
+  if (m && m[1]) {
+    if (CB.room.id === m[1]) return;
+    cbRoomJoin(m[1]);
+  }
+}
+
+function cbRenderPicks() {
+  var box = document.getElementById("cbPick");
+  if (!box) return;
+  var canEdit = CB.mode !== "friend" || (CB.room.host && !!CB.room.id) || (CB.mode === "friend" && !CB.room.id);
+  if (CB.mode === "friend" && CB.room.id && !CB.room.host) canEdit = false;
+  var html = "";
+  for (var i = 0; i < UPG_BALANCE_CASES.length; i++) {
+    var c = UPG_BALANCE_CASES[i];
+    var count = 0;
+    for (var j = 0; j < CB.picks.length; j++) if (CB.picks[j] === c.id) count++;
+    var style = '--case-color:' + (c.color || '#7ddc8c');
+    html += '<button class="cbattle__pickbtn' + (count ? ' is-active' : '') + '" type="button" data-cb-pick="' + c.id + '" style="' + style + '"' + (canEdit ? "" : " disabled") + '>' +
+      (c.icon || '🎁') + ' ' + c.name + ' <small>' + upgMoney(c.price) + (count ? ' ×' + count : '') + '</small></button>';
+  }
+  box.innerHTML = html;
+}
+
+function cbRenderMeta() {
+  var meta = document.getElementById("cbMeta");
+  var start = document.getElementById("cbStart");
+  var clear = document.getElementById("cbClear");
+  var readyBtn = document.getElementById("cbReady");
+  var total = cbTotalCost();
+  var bal = Math.max(0, Number(UPG.balance) || 0);
+  var friend = CB.mode === "friend";
+  var inRoom = friend && !!CB.room.id;
+  var canEdit = !friend || !CB.room.id || CB.room.host;
+
+  if (meta) {
+    if (!CB.picks.length) meta.innerHTML = friend ? (inRoom && !CB.room.host ? "Хост выбирает кейсы…" : "Выбери кейсы для батла") : "Выбери кейсы для батла";
+    else meta.innerHTML = "Кейсов: <b>" + CB.picks.length + "</b> · Стоимость входа: <b>" + upgMoney(total) + "</b> · Баланс: <b>" + upgMoney(bal) + "</b>";
+  }
+
+  if (clear) clear.disabled = !!CB.busy || !CB.picks.length || !canEdit;
+  if (readyBtn) readyBtn.hidden = !inRoom;
+
+  if (start) {
+    if (!friend) {
+      start.hidden = false;
+      start.textContent = "Начать батл";
+      start.disabled = !!CB.busy || !CB.picks.length || bal < total;
+    } else if (!inRoom) {
+      start.hidden = false;
+      start.textContent = "Создай комнату";
+      start.disabled = !!CB.busy;
+    } else if (!CB.room.host) {
+      start.hidden = true;
+      start.disabled = true;
+    } else {
+      start.hidden = false;
+      start.textContent = "Начать батл";
+      var guestOk = !!CB.room.guestName;
+      var bothReady = !!CB.room.hostReady && !!CB.room.guestReady;
+      start.disabled = !!CB.busy || !CB.picks.length || bal < total || !guestOk || !bothReady;
+      if (meta && CB.picks.length) {
+        if (!guestOk) meta.innerHTML = "Кейсов: <b>" + CB.picks.length + "</b> · " + upgMoney(total) + " · ждём друга по ссылке";
+        else if (!bothReady) meta.innerHTML = "Кейсов: <b>" + CB.picks.length + "</b> · " + upgMoney(total) + " · оба игрока должны нажать «Готов»";
+      }
+    }
+  }
+}
+
+function cbRenderAll() {
+  cbRenderPicks();
+  cbRenderMeta();
+  if (typeof cbRoomRender === "function") cbRoomRender();
+}
+
+function cbDropItem(caseId) {
+  var c = cbCaseById(caseId);
+  if (!c) return null;
+  var id = upgPickWeighted(c.pool);
+  return upgItem(id);
+}
+
+function cbBotName(i) {
+  var names = ["АрбузБот", "БабкаБот", "СемечкоБот"];
+  return names[i] || ("Бот " + (i + 1));
+}
+
+function cbRenderArena(players, statusText, statusCls) {
+  var arena = document.getElementById("cbArena");
+  if (!arena) return;
+  var html = '<div class="cbattle__players">';
+  for (var i = 0; i < players.length; i++) {
+    var p = players[i];
+    var cls = "cbattle__player" + (p.win ? " is-win" : (p.lose ? " is-lose" : ""));
+    html += '<div class="' + cls + '"><div class="cbattle__phead"><span class="cbattle__pname">' + p.name + '</span><span class="cbattle__ptotal">' + upgMoney(p.total || 0) + '</span></div><div class="cbattle__drops">';
+    for (var j = 0; j < p.drops.length; j++) {
+      var d = p.drops[j];
+      if (!d) html += '<div class="cbattle__drop"><span class="cbattle__dropname">🎁 <span>...</span></span><span class="cbattle__dropval">—</span></div>';
+      else html += '<div class="cbattle__drop"><span class="cbattle__dropname">' + (d.icon || '🍉') + ' <span>' + d.name + '</span></span><span class="cbattle__dropval">' + upgMoney(d.price) + '</span></div>';
+    }
+    html += '</div></div>';
+  }
+  html += '</div>';
+  if (statusText) html += '<div class="cbattle__status ' + (statusCls || '') + '">' + statusText + '</div>';
+  arena.innerHTML = html;
+}
+
+function cbStart() {
+  if (CB.busy) return;
+  if (UPG.spinning) { toast("Дождись конца апгрейда"); return; }
+  if (UPG.pendingCase) { toast("Сначала забери дроп из кейса"); return; }
+
+  // friend mode
+  if (CB.mode === "friend") {
+    if (!CB.room.id) { cbRoomCreate(); return; }
+    if (!CB.room.host) { toast("Стартует хост комнаты"); return; }
+    if (!CB.room.guestName) { toast("Сначала пригласи друга по ссылке"); return; }
+    if (!CB.room.hostReady || !CB.room.guestReady) { toast("Оба игрока должны нажать «Готов»"); return; }
+    if (!CB.picks.length) { toast("Выбери кейсы для батла"); return; }
+    if (CB.picks.length > 10) { toast("Максимум 10 кейсов в батле"); return; }
+    var totalCostF = cbTotalCost();
+    var balF = Math.max(0, Number(UPG.balance) || 0);
+    if (balF < totalCostF) { toast("Недостаточно баланса для батла"); return; }
+    var seed = cbUid() + "-" + Date.now();
+    var players = [CB.room.hostName || cbMyName(), CB.room.guestName].map(function (n) { n = normalizeName(n || ""); return n && !nameProblem(n) ? n : "Игрок"; });
+    var payload = { seed: seed, picks: CB.picks.slice(), players: players, ts: Date.now() };
+    cbRoomPost("start", payload);
+    cbProcessStart(payload); // local, dedupe protects
+    return;
+  }
+
+  // bots mode
+  if (!CB.picks.length) { toast("Выбери кейсы для батла"); return; }
+  if (CB.picks.length > 10) { toast("Максимум 10 кейсов в батле"); return; }
+  var totalCost = cbTotalCost();
+  var bal = Math.max(0, Number(UPG.balance) || 0);
+  if (bal < totalCost) { toast("Недостаточно баланса для батла"); return; }
+
+  var playerCount = 1 + Math.max(1, Math.min(3, Number(CB.opp) || 1));
+  var names = [];
+  for (var ni = 0; ni < playerCount; ni++) names.push(ni === 0 ? "Ты" : cbBotName(ni - 1));
+
+  var seed = cbUid() + "-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+  var allDrops = [];
+  var totals = [];
+  for (var p = 0; p < playerCount; p++) {
+    var rnd = cbSeededRng(seed + "|p|" + p);
+    var row = [];
+    var sum = 0;
+    for (var k = 0; k < CB.picks.length; k++) {
+      var cfg = cbCaseById(CB.picks[k]);
+      var did = cfg ? cbPickWeightedSeeded(cfg.pool, rnd) : null;
+      var it = did ? upgItem(did) : null;
+      row.push(it);
+      sum += it ? it.price : 0;
+    }
+    allDrops.push(row);
+    totals.push(sum);
+  }
+  var max = -1;
+  for (var m = 0; m < totals.length; m++) if (totals[m] > max) max = totals[m];
+  var winners = [];
+  for (var w = 0; w < totals.length; w++) if (totals[w] === max) winners.push(w);
+  var winRnd = cbSeededRng(seed + "|winner");
+  var winnerIdx = winners[Math.floor(winRnd() * winners.length)];
+  var totalBank = 0;
+  for (var tb = 0; tb < totals.length; tb++) totalBank += totals[tb];
+
+  // apply outcome atomically (reload-safe)
+  UPG.balance = bal - totalCost;
+  var wonItems = [];
+  if (winnerIdx === 0) {
+    for (var a = 0; a < allDrops.length; a++) {
+      for (var b = 0; b < allDrops[a].length; b++) {
+        var it2 = allDrops[a][b];
+        if (it2) wonItems.push(it2.id);
+      }
+    }
+    for (var wi = 0; wi < wonItems.length; wi++) UPG.inv.push(wonItems[wi]);
+    UPG.selected = wonItems[wonItems.length - 1] || UPG.selected;
+  }
+  CB.busy = true;
+  upgSave();
+  upgRender();
+  cbRenderAll();
+
+  // animate reveal
+  var view = [];
+  for (var i = 0; i < playerCount; i++) view.push({ name: names[i], drops: [], total: 0, win: false, lose: false });
+  var round = 0;
+  function revealRound() {
+    for (var p2 = 0; p2 < view.length; p2++) {
+      var dr = allDrops[p2][round];
+      view[p2].drops.push(dr);
+      view[p2].total += dr ? dr.price : 0;
+    }
+    cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + "…");
+    round++;
+    if (round < CB.picks.length) {
+      setTimeout(revealRound, 700);
+      return;
+    }
+    setTimeout(finishBattle, 450);
+  }
+
+  function finishBattle() {
+    for (var t = 0; t < view.length; t++) {
+      view[t].total = totals[t];
+      view[t].win = t === winnerIdx;
+      view[t].lose = t !== winnerIdx;
+    }
+    if (winnerIdx === 0) {
+      cbRenderArena(view, "Ты выиграл батл! Забрал " + wonItems.length + " предметов. Твой дроп: " + upgMoney(totals[0]) + ", общий банк дропа: " + upgMoney(totalBank) + ".", "is-win");
+      toast("⚔️ Победа в Case Battle! +" + wonItems.length + " предметов в инвентарь");
+    } else {
+      cbRenderArena(view, "Победил " + names[winnerIdx] + " с дропом " + upgMoney(totals[winnerIdx]) + ". Ты потерял вход " + upgMoney(totalCost) + ". Твой дроп был " + upgMoney(totals[0]) + ".", "is-lose");
+      toast("⚔️ Батл проигран: победил " + names[winnerIdx]);
+    }
+    CB.busy = false;
+    cbRenderAll();
+  }
+
   cbRenderArena(view, "Готовим батл…");
   setTimeout(revealRound, 500);
 }
