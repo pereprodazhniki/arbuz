@@ -1500,6 +1500,33 @@ body.light .jobform__cooldown { background: #f2fff7; border-color: #12803c; colo
 .upg-bcases__note { margin-top: 8px; color: var(--muted); font-size: 12px; min-height: 18px; }
 body.light .upg-bcase { background: #fff; border-color: #bfe4cc; }
 body.light .upg-bcase__name { color: #0d2b19; }
+.casepop { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; padding: 16px; }
+.casepop[hidden] { display: none !important; }
+.casepop__overlay { position: absolute; inset: 0; background: rgba(0,0,0,.62); }
+.casepop__panel { position: relative; width: min(560px, 100%); background: linear-gradient(180deg, #13271b, #0b1711); border: 1px solid var(--line); border-radius: 18px; padding: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.45); }
+.casepop__title { margin: 0 0 4px; font-size: 24px; color: #fff; }
+.casepop__sub { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+.casepop__roll { height: 132px; border: 1px solid var(--line); border-radius: 14px; background: #08120d; display: grid; place-items: center; overflow: hidden; position: relative; }
+.casepop__roll::before,.casepop__roll::after{content:"";position:absolute;top:0;bottom:0;width:50px;pointer-events:none;z-index:2}
+.casepop__roll::before{left:0;background:linear-gradient(90deg,#08120d,transparent)}
+.casepop__roll::after{right:0;background:linear-gradient(270deg,#08120d,transparent)}
+.casepop__item { text-align: center; transition: transform .12s ease, opacity .12s ease; }
+.casepop__icon { font-size: 56px; line-height: 1; filter: drop-shadow(0 8px 18px rgba(0,0,0,.35)); }
+.casepop__name { margin-top: 8px; font-weight: 900; color: #fff; font-size: 20px; }
+.casepop__rarity { margin-top: 4px; font-size: 13px; font-weight: 800; }
+.casepop__price { margin-top: 4px; color: var(--muted); font-size: 13px; }
+.casepop__item.is-blur .casepop__icon { transform: scale(.92); opacity: .7; }
+.casepop__item.is-win .casepop__icon { animation: casepop-pop .45s ease; }
+@keyframes casepop-pop { 0%{transform:scale(.7);opacity:.5} 60%{transform:scale(1.12);opacity:1} 100%{transform:scale(1)} }
+.casepop__actions { display: flex; justify-content: flex-end; margin-top: 14px; gap: 8px; }
+.casepop__close { border: 0; border-radius: 10px; padding: 10px 14px; font-weight: 800; cursor: pointer; background: #234332; color: #fff; }
+.casepop__close:disabled { opacity: .5; cursor: not-allowed; }
+body.light .casepop__panel { background: linear-gradient(180deg,#fff,#f4fff8); border-color: #bfe4cc; }
+body.light .casepop__title, body.light .casepop__name { color: #0d2b19; }
+body.light .casepop__roll { background: #f0fff5; border-color: #bfe4cc; }
+body.light .casepop__roll::before{background:linear-gradient(90deg,#f0fff5,transparent)}
+body.light .casepop__roll::after{background:linear-gradient(270deg,#f0fff5,transparent)}
+body.light .casepop__close { background: #dff3e6; color: #0d2b19; }
 
 /* ---------- Колесо апгрейда ---------- */
 .upg-wheel-wrap {
@@ -2526,6 +2553,25 @@ body.light .upg-feed__who { color: #0d2b19; }
   <div class="cart__overlay" id="cartOverlay" onclick="closeCart()"></div>
 </div>
 
+<div class="casepop" id="casePop" hidden>
+  <div class="casepop__overlay" id="casePopOverlay"></div>
+  <div class="casepop__panel" role="dialog" aria-modal="true" aria-label="Открытие кейса">
+    <h3 class="casepop__title" id="casePopTitle">Открытие кейса</h3>
+    <p class="casepop__sub" id="casePopSub">Крутим...</p>
+    <div class="casepop__roll">
+      <div class="casepop__item is-blur" id="casePopItem">
+        <div class="casepop__icon" id="casePopIcon">🎁</div>
+        <div class="casepop__name" id="casePopName">...</div>
+        <div class="casepop__rarity" id="casePopRarity"></div>
+        <div class="casepop__price" id="casePopPrice"></div>
+      </div>
+    </div>
+    <div class="casepop__actions">
+      <button class="casepop__close" id="casePopClose" type="button" disabled>Забрать</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" hidden></div>
 
 <script>
@@ -2628,7 +2674,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261121-balance-2";
+var APP_BUILD = "20261121-casepop-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -6639,6 +6685,74 @@ function upgPickWeighted(pool) {
   return pool[pool.length - 1].id;
 }
 
+var CASE_POP = { timer: null, busy: false };
+
+function casePopClose() {
+  if (CASE_POP.busy) return;
+  if (CASE_POP.timer) { clearInterval(CASE_POP.timer); CASE_POP.timer = null; }
+  var pop = document.getElementById("casePop");
+  if (pop) pop.hidden = true;
+}
+
+function casePopShow(cfg, dropItem) {
+  var pop = document.getElementById("casePop");
+  if (!pop || !dropItem) return;
+  if (CASE_POP.timer) { clearInterval(CASE_POP.timer); CASE_POP.timer = null; }
+  CASE_POP.busy = true;
+
+  var title = document.getElementById("casePopTitle");
+  var sub = document.getElementById("casePopSub");
+  var itemEl = document.getElementById("casePopItem");
+  var icon = document.getElementById("casePopIcon");
+  var name = document.getElementById("casePopName");
+  var rarity = document.getElementById("casePopRarity");
+  var price = document.getElementById("casePopPrice");
+  var close = document.getElementById("casePopClose");
+
+  if (title) title.textContent = cfg && cfg.name ? cfg.name : "Открытие кейса";
+  if (sub) sub.textContent = "Крутим...";
+  if (close) { close.disabled = true; close.textContent = "Забрать"; }
+  if (itemEl) { itemEl.className = "casepop__item is-blur"; }
+
+  var pool = [];
+  if (cfg && cfg.pool) {
+    for (var i = 0; i < cfg.pool.length; i++) {
+      var it = upgItem(cfg.pool[i].id);
+      if (it) pool.push(it);
+    }
+  }
+  if (!pool.length) pool = [dropItem];
+
+  function paint(it, blur) {
+    if (!it) return;
+    var r = UPG_RARITY[it.rarity] || UPG_RARITY.common;
+    if (icon) icon.textContent = it.icon || "🍉";
+    if (name) name.textContent = it.name;
+    if (rarity) { rarity.textContent = r.name; rarity.style.color = r.color; }
+    if (price) price.textContent = upgMoney(it.price);
+    if (itemEl) itemEl.className = "casepop__item " + (blur ? "is-blur" : "is-win");
+  }
+
+  paint(pool[Math.floor(Math.random() * pool.length)], true);
+  pop.hidden = false;
+
+  var ticks = 0;
+  var totalTicks = 22;
+  CASE_POP.timer = setInterval(function () {
+    ticks++;
+    if (ticks < totalTicks) {
+      paint(pool[Math.floor(Math.random() * pool.length)], true);
+      return;
+    }
+    clearInterval(CASE_POP.timer);
+    CASE_POP.timer = null;
+    paint(dropItem, false);
+    if (sub) sub.textContent = "Выпало!";
+    if (close) { close.disabled = false; }
+    CASE_POP.busy = false;
+  }, 90);
+}
+
 function upgOpenBalanceCase(caseId) {
   if (UPG.spinning) { toast("Дождись конца апгрейда"); return; }
   var cfg = null;
@@ -6660,7 +6774,7 @@ function upgOpenBalanceCase(caseId) {
   if (typeof upgTopSyncMe === "function") upgTopSyncMe();
   var note = document.getElementById("upgBalanceCaseNote");
   if (note) note.textContent = "Из кейса «" + cfg.name + "» выпал: " + item.name + " (" + upgMoney(item.price) + ")";
-  toast("🎁 " + cfg.name + ": выпал «" + item.name + "»");
+  casePopShow(cfg, item);
 }
 
 function upgRender() {
@@ -6842,7 +6956,10 @@ function upgOpenCase() {
   upgSave();
   upgRender();
   if (typeof upgTopSyncMe === "function") upgTopSyncMe();
-  toast("🎁 Из кейса выпал «" + item.name + "»");
+  var caseCfg = { name: "Бесплатный кейс", pool: [] };
+  for (var pi = 0; pi < pool.length; pi++) caseCfg.pool.push({ id: pool[pi].id, w: 1 });
+  if (typeof casePopShow === "function") casePopShow(caseCfg, item);
+  else toast("🎁 Из кейса выпал «" + item.name + "»");
 }
 
 function upgTickCase() {
@@ -7523,6 +7640,11 @@ function initUpgrader() {
     });
   }
 
+  var casePopCloseBtn = document.getElementById("casePopClose");
+  if (casePopCloseBtn) casePopCloseBtn.addEventListener("click", casePopClose);
+  var casePopOverlay = document.getElementById("casePopOverlay");
+  if (casePopOverlay) casePopOverlay.addEventListener("click", function () { if (!CASE_POP.busy) casePopClose(); });
+
   var promoInp = document.getElementById("upgPromo");
   if (promoInp) {
     var applyPromo = function (notify) {
@@ -7774,7 +7896,10 @@ function init() {
   });
 
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") closeCart();
+    if (e.key === "Escape") {
+      closeCart();
+      if (typeof CASE_POP !== "undefined" && !CASE_POP.busy && typeof casePopClose === "function") casePopClose();
+    }
   });
 }
 
