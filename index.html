@@ -6501,14 +6501,19 @@ function upgSpinWheel(win, chance, ms, done) {
   var arrow = document.getElementById("upgArrow");
   if (!arrow) { done(); return; }
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  chance = Math.max(1, Math.min(99, Number(chance) || 50));
+  chance = Math.max(0.5, Math.min(99.5, Number(chance) || 50));
   var greenEnd = chance * 3.6;
   var target;
   if (win) {
-    target = 5 + Math.random() * Math.max(1, greenEnd - 10);
+    var gPad = Math.min(5, greenEnd * 0.2);
+    var gSpan = Math.max(0.5, greenEnd - gPad * 2);
+    target = gPad + Math.random() * gSpan;
   } else {
-    var redSpan = 360 - greenEnd;
-    target = greenEnd + 5 + Math.random() * Math.max(1, redSpan - 10);
+    var redStart = greenEnd;
+    var redEnd = 360;
+    var rPad = Math.min(5, (redEnd - redStart) * 0.2);
+    var rSpan = Math.max(0.5, (redEnd - redStart) - rPad * 2);
+    target = redStart + rPad + Math.random() * rSpan;
   }
   var base = Math.ceil(UPG.arrowDeg / 360) * 360;
   var next = base + 360 * (4 + Math.floor(Math.random() * 3)) + target;
