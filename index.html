@@ -2596,7 +2596,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers" };
-var APP_BUILD = "20261121-live-4";
+var APP_BUILD = "20261121-live-5";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -6222,7 +6222,9 @@ function upgLoad() {
     UPG.rolls = Number(d.rolls) || 0;
     UPG.wins = Number(d.wins) || 0;
     UPG.profit = Number(d.profit) || 0;
-    UPG.lastCase = 0;
+    UPG.lastCase = Number(d.lastCase) || 0;
+    if (UPG.lastCase > Date.now() + 5000) UPG.lastCase = 0;
+    if (UPG.lastCase && Date.now() - UPG.lastCase > UPG_CASE_MS * 2) UPG.lastCase = 0;
     if (Array.isArray(d.hist)) {
       for (var j = 0; j < d.hist.length && UPG.hist.length < 20; j++) {
         var h = d.hist[j];
