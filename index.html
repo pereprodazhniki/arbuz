@@ -2674,7 +2674,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261121-casepop-2";
+var APP_BUILD = "20261121-casepop-3";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -6778,10 +6778,9 @@ function casePopShow(cfg, dropItem, onGrant) {
     clearInterval(CASE_POP.timer);
     CASE_POP.timer = null;
     paint(dropItem, false);
-    if (sub) sub.textContent = "Выпало!";
+    if (sub) sub.textContent = "Выпало! Забери награду.";
     CASE_POP.busy = false;
-    casePopGrant();
-    if (close) { close.disabled = false; }
+    if (close) { close.disabled = false; close.textContent = "Забрать в инвентарь"; }
   }, 90);
 }
 
