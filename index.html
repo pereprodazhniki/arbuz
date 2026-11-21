@@ -414,6 +414,9 @@ body.light .live-sold { background: #fff; color: #0d2b19; border-color: #12803c;
 }
 .ship__btn.is-active { border-color: var(--green); background: rgba(47, 211, 95, .14); color: var(--lime); }
 .ship__note { color: var(--muted); font-weight: 600; }
+.paymode { display: grid; gap: 8px; }
+.paymode__row { display: flex; gap: 8px; flex-wrap: wrap; }
+.paymode .form__title { margin: 0; }
 
 /* ---------- Команда ---------- */
 .team { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; }
@@ -1486,6 +1489,17 @@ body.light .jobform__cooldown { background: #f2fff7; border-color: #12803c; colo
 .upg-feed__sum { font-weight: 900; white-space: nowrap; text-align: right; }
 .upg-feed__row.is-win .upg-feed__sum { color: var(--lime); }
 .upg-feed__row.is-lose .upg-feed__sum { color: #ff8f8f; }
+.upg-bcases { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.upg-bcases__list { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+.upg-bcase { background: #0b1a12; border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 8px; }
+.upg-bcase__name { font-weight: 900; color: #fff; font-size: 15px; }
+.upg-bcase__price { color: var(--lime); font-weight: 900; }
+.upg-bcase__desc { color: var(--muted); font-size: 12px; line-height: 1.35; min-height: 32px; }
+.upg-bcase__btn { border: 0; border-radius: 10px; padding: 10px 12px; font-weight: 900; cursor: pointer; background: linear-gradient(180deg, #2fd35f, #1c8f45); color: #072012; }
+.upg-bcase__btn:disabled { opacity: .55; cursor: not-allowed; }
+.upg-bcases__note { margin-top: 8px; color: var(--muted); font-size: 12px; min-height: 18px; }
+body.light .upg-bcase { background: #fff; border-color: #bfe4cc; }
+body.light .upg-bcase__name { color: #0d2b19; }
 
 /* ---------- Колесо апгрейда ---------- */
 .upg-wheel-wrap {
@@ -1885,6 +1899,7 @@ body.light .upg-feed__who { color: #0d2b19; }
   </div>
   <button class="theme-toggle" id="themeToggle" type="button" title="Сменить тему">🌙</button>
   <span class="live-sold" title="Столько арбузов продано на сайте">🍉 продано: <b id="soldTop">0</b></span>
+  <span class="live-sold" id="siteBalanceBadge" title="Баланс сайта для покупок и кейсов">💰 <b id="siteBalanceTop">0 ₽</b></span>
   <button class="cart-btn" id="cartOpen" type="button" onclick="openCart()">
     Корзина <span class="cart-btn__count" id="cartCount">0</span>
   </button>
@@ -2335,14 +2350,16 @@ body.light .upg-feed__who { color: #0d2b19; }
 
   <section class="section" id="upgrader">
     <h2 class="section__title">Арбузный апгрейдер</h2>
-    <p class="section__sub">Обменяй арбузный подарок на подарок подороже. Шанс честный: цена твоего делим на цену цели, бабушка берёт 8% на варенье. Не понравилось — бабушка не вернёт.</p>
+    <p class="section__sub">Обменяй арбузный подарок на подарок подороже. Шанс честный: цена твоего делим на цену цели, бабушка берёт 8% на варенье. Выводи инвентарь в баланс сайта, покупай кейсы за баланс или расплачивайся им в каталоге.</p>
 
     <div class="upg">
       <div class="upg__hud">
         <span>Инвентарь: <b id="upgInvCount">0</b> шт · <b id="upgInvValue">0 ₽</b></span>
+        <span>Баланс: <b id="upgBalance">0 ₽</b></span>
         <span>Апгрейдов: <b id="upgRolls">0</b></span>
         <span>Успешных: <b id="upgWins">0</b></span>
         <span>Профит: <b id="upgProfit">0 ₽</b></span>
+        <button class="upg__case" id="upgWithdraw" type="button">💸 Вывести</button>
         <button class="upg__case" id="upgCase" type="button">🎁 Бесплатный кейс</button>
         <button class="upg__reset" id="upgReset" type="button" title="Сбросить прогресс" aria-label="Сбросить прогресс">↺</button>
       </div>
@@ -2412,6 +2429,12 @@ body.light .upg-feed__who { color: #0d2b19; }
         <p class="upg-top__note" id="upgTopNote">Рейтинг общий для всех. Считается суммарная стоимость твоего инвентаря в апгрейдере.</p>
       </div>
 
+      <div class="upg-bcases">
+        <div class="upg-feed__head"><b>Кейсы за баланс</b><span>открывай за баланс сайта — дроп в инвентарь апгрейдера</span></div>
+        <div class="upg-bcases__list" id="upgBalanceCases"></div>
+        <div class="upg-bcases__note" id="upgBalanceCaseNote"></div>
+      </div>
+
       <div class="upg-feed">
         <div class="upg-feed__head"><b>Живая лента</b><span>общая для всех · только настоящие имена</span></div>
         <div class="upg-feed__list" id="upgFeed"></div>
@@ -2477,6 +2500,15 @@ body.light .upg-feed__who { color: #0d2b19; }
       <input class="input" id="couponInput" type="text" maxlength="20" placeholder="Промокод: БАБУШКА, КОСТОЧКИ…">
       <button class="btn btn--ghost" id="couponApply" type="button">Применить</button>
       <p class="coupon__note" id="couponNote">Промокод не найден — это не баг, это фича.</p>
+    </div>
+
+    <div class="paymode" id="payModeBox">
+      <h4 class="form__title">Оплата</h4>
+      <div class="paymode__row">
+        <button class="ship__btn is-active" type="button" data-pay="normal" id="payNormal">Обычная</button>
+        <button class="ship__btn" type="button" data-pay="balance" id="payBalance">Балансом сайта</button>
+      </div>
+      <p class="ship__note" id="payNote">Баланс сайта: <b id="cartBalanceVal">0 ₽</b>. При оплате балансом сумма списывается сразу.</p>
     </div>
 
     <h4 class="form__title">Куда везти</h4>
@@ -2595,11 +2627,12 @@ var TIPS = [
   "Отрезай от себя, а не от соседа. Так делает бабушка."];
 
 var SHIP_FEE = 200;
-var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers" };
-var APP_BUILD = "20261121-live-7";
+var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
+var APP_BUILD = "20261121-balance-2";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
+var payMode = read(STORE.pay, "normal");
 var reviews = read(STORE.reviews, []);
 var sold = read(STORE.sold, 0);
 var buyers = read(STORE.buyers, []);
@@ -2621,6 +2654,7 @@ var catalogOpen = false;
 
 /* чистка: нормализуем способ доставки */
 if (ship !== "delivery" && ship !== "pickup") ship = "delivery";
+if (payMode !== "balance" && payMode !== "normal") payMode = "normal";
 
 /* чистка: отзывы должны быть массивом объектов */
 if (!Array.isArray(reviews)) reviews = [];
@@ -3639,6 +3673,7 @@ function renderCart() {
     row.appendChild(right);
     box.appendChild(row);
   });
+  renderPayMode();
 }
 
 function openCart() {
@@ -3646,6 +3681,7 @@ function openCart() {
   c.hidden = false;
   c.classList.add("is-open");
   document.body.style.overflow = "hidden";
+  if (typeof renderPayMode === "function") renderPayMode();
 }
 
 function closeCart() {
@@ -3659,14 +3695,38 @@ function closeCart() {
 
 /* ---------- доставка ---------- */
 function renderShip() {
-  var buttons = document.querySelectorAll(".ship__btn");
+  var buttons = document.querySelectorAll(".ship__btn[data-ship]");
   for (var i = 0; i < buttons.length; i++) {
     buttons[i].classList.toggle("is-active", buttons[i].getAttribute("data-ship") === ship);
   }
-  document.getElementById("shipNote").textContent =
+  var note = document.getElementById("shipNote");
+  if (note) note.textContent =
     ship === "pickup"
       ? "Самовывоз бесплатно: склад на бабушкиной даче, спроси пароль"
       : "Доставка " + money(SHIP_FEE) + " — курьер приедет за арбузом лично";
+}
+
+function renderPayMode() {
+  var buttons = document.querySelectorAll(".ship__btn[data-pay]");
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].classList.toggle("is-active", buttons[i].getAttribute("data-pay") === payMode);
+  }
+  var bal = (typeof UPG !== "undefined" && UPG) ? (Number(UPG.balance) || 0) : 0;
+  var balEl = document.getElementById("cartBalanceVal");
+  if (balEl) balEl.textContent = money(bal);
+  var note = document.getElementById("payNote");
+  if (note) {
+    var total = (typeof cartTotal === "function") ? cartTotal() : 0;
+    if (payMode === "balance") {
+      if (total > 0 && bal < total) {
+        note.textContent = "Баланс сайта: " + money(bal) + ". Не хватает " + money(total - bal) + " для оплаты этой корзины.";
+      } else {
+        note.textContent = "Баланс сайта: " + money(bal) + ". При оплате балансом сумма списывается сразу.";
+      }
+    } else {
+      note.textContent = "Баланс сайта: " + money(bal) + ". Можно оплатить обычным способом или списать с баланса.";
+    }
+  }
 }
 
 /* ---------- оформление заказа ---------- */
@@ -3676,6 +3736,7 @@ function digitsOnly(s) { return String(s).replace(/\D/g, ""); }
 var PAGE_LOADED_AT = Date.now();
 var MIN_ORDER_GAP_MS = 10000;
 var MAX_ITEMS_PER_ORDER = 20;
+var checkoutBusy = false;
 
 function orderTooFast() {
   var now = Date.now();
@@ -3693,6 +3754,7 @@ function orderTooFast() {
 }
 
 function checkout() {
+  if (checkoutBusy) return;
   var note = document.getElementById("orderNote");
 
   if (cartCount() === 0) {
@@ -3700,6 +3762,8 @@ function checkout() {
     toast("Корзина пуста");
     return;
   }
+  checkoutBusy = true;
+  try {
 
   var name = document.getElementById("orderName").value.trim();
   var phone = digitsOnly(document.getElementById("orderPhone").value);
@@ -3718,25 +3782,54 @@ function checkout() {
     return;
   }
 
+  if (payMode === "balance") {
+    var balNow = (typeof UPG !== "undefined" && UPG) ? (Number(UPG.balance) || 0) : 0;
+    if (balNow < total) {
+      note.textContent = "Недостаточно баланса: нужно " + money(total) + ", у тебя " + money(balNow) + ". Выведи арбузы из апгрейдера или выбери обычную оплату.";
+      toast("Недостаточно баланса");
+      return;
+    }
+  }
+
+  var orderNo = "PRZ-" + Math.floor(100000 + Math.random() * 899999);
+  var usedCoupon = coupon;
+  var questCodeUsed = coupon === QUEST_CODE;
+  var paidWithBalance = payMode === "balance";
+  var receipt = buildReceipt(orderNo, count, total, addr, phone);
+
   var tooFast = orderTooFast();
   if (tooFast) {
     note.textContent = tooFast;
     return;
   }
 
+  if (paidWithBalance) {
+    var balDeduct = (typeof UPG !== "undefined" && UPG) ? (Number(UPG.balance) || 0) : 0;
+    if (balDeduct < total) {
+      note.textContent = "Баланс изменился. Попробуй ещё раз.";
+      return;
+    }
+    // атомарно по возможности: сначала списание баланса, сразу очистка корзины
+    UPG.balance = balDeduct - total;
+    if (typeof upgSave === "function") upgSave();
+    cart = {};
+    write(STORE.cart, cart);
+    if (typeof upgRenderHud === "function") upgRenderHud();
+    if (typeof upgRenderBalanceCases === "function") upgRenderBalanceCases();
+  } else {
+    cart = {};
+    write(STORE.cart, cart);
+  }
+
   addSold(count);
   pushToServer(name, count);
-
-  var orderNo = "PRZ-" + Math.floor(100000 + Math.random() * 899999);
-  var usedCoupon = coupon;
-  var questCodeUsed = coupon === QUEST_CODE;
   if (questCodeUsed && quest.zina && !quest.done) unlockSecretProduct();
-  var receipt = buildReceipt(orderNo, count, total, addr, phone);
   showReceipt(receipt);
+  renderCart();
   note.textContent = "";
   closeCart();
 
-  toast("Заказ " + orderNo + " на " + money(total) + ". Арбузов: " + count + ". Позвоним на +7" + phone.slice(0, 10));
+  toast("Заказ " + orderNo + " на " + money(total) + ". Арбузов: " + count + ". " + (paidWithBalance ? "Оплачено балансом сайта." : "Позвоним на +7" + phone.slice(0, 10)));
 
   if (usedCoupon) {
     toast("Промокод «" + usedCoupon + "» сработал на этот заказ. Следующий — вводи заново.");
@@ -3756,7 +3849,9 @@ function checkout() {
   document.getElementById("orderName").value = "";
   document.getElementById("orderPhone").value = "";
   document.getElementById("orderAddr").value = "";
-  clearCart();
+  } finally {
+    checkoutBusy = false;
+  }
 }
 
 /* ---------- фильтр плохих слов ---------- */
@@ -6144,6 +6239,41 @@ var UPG_ITEMS = [
 
 var UPG_START = ["classic", "pig", "seed"];
 
+var UPG_BALANCE_CASES = [
+  {
+    id: "bcase_mini",
+    name: "Малый арбуз-кейс",
+    price: 250,
+    desc: "Дешёвый кейс для разгона. Дроп: обычные и редкие арбузы.",
+    pool: [
+      { id: "seed", w: 24 }, { id: "slice", w: 22 }, { id: "mini", w: 16 }, { id: "classic", w: 14 },
+      { id: "salt", w: 10 }, { id: "pig", w: 7 }, { id: "cap", w: 4 }, { id: "cool", w: 2 }, { id: "cat", w: 1 }
+    ]
+  },
+  {
+    id: "bcase_mid",
+    name: "Сочный кейс",
+    price: 1000,
+    desc: "Сбалансированный кейс. Можно словить эпик.",
+    pool: [
+      { id: "cap", w: 18 }, { id: "striped", w: 16 }, { id: "cool", w: 14 }, { id: "cat", w: 12 },
+      { id: "heart", w: 10 }, { id: "disco", w: 8 }, { id: "diamond", w: 7 }, { id: "ninja", w: 6 },
+      { id: "fire", w: 4 }, { id: "gold", w: 3 }, { id: "chest", w: 2 }
+    ]
+  },
+  {
+    id: "bcase_big",
+    name: "Легендарный кейс",
+    price: 5000,
+    desc: "Дорогой кейс с шансом на легендарку.",
+    pool: [
+      { id: "gold", w: 20 }, { id: "chest", w: 16 }, { id: "rocket", w: 14 }, { id: "mech", w: 12 },
+      { id: "dino", w: 10 }, { id: "robot", w: 9 }, { id: "dragon", w: 8 }, { id: "crown", w: 5 },
+      { id: "ice", w: 3 }, { id: "ghost", w: 2 }, { id: "black", w: 1 }
+    ]
+  }
+];
+
 var UPG = {
   inv: [],
   selected: null,
@@ -6153,6 +6283,7 @@ var UPG = {
   profit: 0,
   hist: [],
   lastCase: 0,
+  balance: 0,
   spinning: false,
   assortOpen: false,
   arrowDeg: 0
@@ -6200,7 +6331,8 @@ function upgSave() {
     wins: UPG.wins,
     profit: UPG.profit,
     hist: UPG.hist.slice(0, 20),
-    lastCase: UPG.lastCase
+    lastCase: UPG.lastCase,
+    balance: UPG.balance
   });
 }
 
@@ -6212,6 +6344,7 @@ function upgLoad() {
   UPG.wins = 0;
   UPG.profit = 0;
   UPG.lastCase = 0;
+  UPG.balance = 0;
 
   if (!d || !Array.isArray(d.inv)) {
     UPG.inv = UPG_START.slice();
@@ -6225,6 +6358,7 @@ function upgLoad() {
     UPG.lastCase = Number(d.lastCase) || 0;
     if (UPG.lastCase > Date.now() + 5000) UPG.lastCase = 0;
     if (UPG.lastCase && Date.now() - UPG.lastCase > UPG_CASE_MS * 2) UPG.lastCase = 0;
+    UPG.balance = Math.max(0, Number(d.balance) || 0);
     if (Array.isArray(d.hist)) {
       for (var j = 0; j < d.hist.length && UPG.hist.length < 20; j++) {
         var h = d.hist[j];
@@ -6422,6 +6556,12 @@ function upgRenderHud() {
   if (count) count.textContent = UPG.inv.length;
   var value = document.getElementById("upgInvValue");
   if (value) value.textContent = upgMoney(val);
+  var bal = document.getElementById("upgBalance");
+  if (bal) bal.textContent = upgMoney(UPG.balance || 0);
+  var balTop = document.getElementById("siteBalanceTop");
+  if (balTop) balTop.textContent = upgMoney(UPG.balance || 0);
+  var balCart = document.getElementById("cartBalanceVal");
+  if (balCart) balCart.textContent = upgMoney(UPG.balance || 0);
   var rolls = document.getElementById("upgRolls");
   if (rolls) rolls.textContent = UPG.rolls;
   var wins = document.getElementById("upgWins");
@@ -6467,12 +6607,69 @@ function upgRenderFeed() {
 
 function upgFillReel() { /* replaced by wheel */ }
 
+function upgRenderBalanceCases() {
+  var box = document.getElementById("upgBalanceCases");
+  if (!box) return;
+  var html = "";
+  for (var i = 0; i < UPG_BALANCE_CASES.length; i++) {
+    var c = UPG_BALANCE_CASES[i];
+    var can = (Number(UPG.balance) || 0) >= c.price;
+    html += '<div class="upg-bcase">' +
+      '<div class="upg-bcase__name">🎁 ' + c.name + '</div>' +
+      '<div class="upg-bcase__price">' + upgMoney(c.price) + '</div>' +
+      '<div class="upg-bcase__desc">' + c.desc + '</div>' +
+      '<button class="upg-bcase__btn" type="button" data-bcase="' + c.id + '"' + (can ? "" : " disabled") + '>Открыть за ' + upgMoney(c.price) + '</button>' +
+      '</div>';
+  }
+  box.innerHTML = html;
+  var note = document.getElementById("upgBalanceCaseNote");
+  if (note && !note.textContent) note.textContent = "Баланс берётся из вывода инвентаря апгрейдера.";
+}
+
+function upgPickWeighted(pool) {
+  var total = 0;
+  for (var i = 0; i < pool.length; i++) total += Math.max(0, Number(pool[i].w) || 0);
+  if (total <= 0) return pool[0] ? pool[0].id : null;
+  var r = Math.random() * total;
+  var acc = 0;
+  for (var j = 0; j < pool.length; j++) {
+    acc += Math.max(0, Number(pool[j].w) || 0);
+    if (r < acc) return pool[j].id;
+  }
+  return pool[pool.length - 1].id;
+}
+
+function upgOpenBalanceCase(caseId) {
+  if (UPG.spinning) { toast("Дождись конца апгрейда"); return; }
+  var cfg = null;
+  for (var i = 0; i < UPG_BALANCE_CASES.length; i++) {
+    if (UPG_BALANCE_CASES[i].id === caseId) { cfg = UPG_BALANCE_CASES[i]; break; }
+  }
+  if (!cfg) return;
+  var bal = Math.max(0, Number(UPG.balance) || 0);
+  if (bal < cfg.price) { toast("Недостаточно баланса: нужно " + upgMoney(cfg.price)); return; }
+  var dropId = upgPickWeighted(cfg.pool);
+  var item = upgItem(dropId);
+  if (!item) { toast("Ошибка кейса, попробуй ещё раз"); return; }
+  // атомарно: списание + дроп в одном сохранении
+  UPG.balance = bal - cfg.price;
+  UPG.inv.push(item.id);
+  UPG.selected = item.id;
+  upgSave();
+  upgRender();
+  if (typeof upgTopSyncMe === "function") upgTopSyncMe();
+  var note = document.getElementById("upgBalanceCaseNote");
+  if (note) note.textContent = "Из кейса «" + cfg.name + "» выпал: " + item.name + " (" + upgMoney(item.price) + ")";
+  toast("🎁 " + cfg.name + ": выпал «" + item.name + "»");
+}
+
 function upgRender() {
   upgEnsure();
   upgRenderHud();
   upgRenderInv();
   upgRenderTargets();
   upgRenderCore();
+  upgRenderBalanceCases();
   upgRenderFeed();
   upgFillReel();
   upgTickCase();
@@ -6678,6 +6875,38 @@ function upgResetAll() {
   if (typeof upgTickCase === "function") upgTickCase();
   if (typeof upgTopSyncMe === "function") upgTopSyncMe();
   toast("Апгрейдер сброшен");
+}
+
+function upgWithdraw() {
+  if (UPG.spinning) { toast("Дождись конца апгрейда"); return; }
+  upgEnsure();
+  if (!UPG.inv.length) { toast("Инвентарь пуст — выводить нечего"); return; }
+  var total = 0;
+  for (var i = 0; i < UPG.inv.length; i++) {
+    var it = upgItem(UPG.inv[i]);
+    if (it) total += it.price;
+  }
+  if (total <= 0) { toast("Нечего выводить"); return; }
+  if (!window.confirm("Вывести " + upgMoney(total) + " на баланс сайта? Весь инвентарь апгрейдера будет очищен.")) return;
+  // пересчёт после подтверждения (на случай изменений состояния)
+  upgEnsure();
+  if (!UPG.inv.length) { toast("Инвентарь пуст — выводить нечего"); return; }
+  var total2 = 0;
+  for (var j = 0; j < UPG.inv.length; j++) {
+    var it2 = upgItem(UPG.inv[j]);
+    if (it2) total2 += it2.price;
+  }
+  if (total2 <= 0) { toast("Нечего выводить"); return; }
+  // атомарно: начисляем баланс и очищаем инвентарь в одном сохранении
+  UPG.balance = Math.max(0, (Number(UPG.balance) || 0) + total2);
+  UPG.inv = [];
+  UPG.selected = null;
+  UPG.target = null;
+  upgSave();
+  upgRender();
+  if (typeof upgTickCase === "function") upgTickCase();
+  if (typeof upgTopSyncMe === "function") upgTopSyncMe();
+  toast("Выведено " + upgMoney(total2) + " на баланс сайта");
 }
 
 /* ---------- Живая лента апгрейдера (общая для всех, только настоящие имена) ---------- */
@@ -7278,8 +7507,21 @@ function initUpgrader() {
   var caseBtn = document.getElementById("upgCase");
   if (caseBtn) caseBtn.addEventListener("click", upgOpenCase);
 
+  var withdrawBtn = document.getElementById("upgWithdraw");
+  if (withdrawBtn) withdrawBtn.addEventListener("click", upgWithdraw);
+
   var resetBtn = document.getElementById("upgReset");
   if (resetBtn) resetBtn.addEventListener("click", function () { upgResetAll(); if (typeof upgTopSyncMe === "function") upgTopSyncMe(); });
+
+  var bcases = document.getElementById("upgBalanceCases");
+  if (bcases) {
+    bcases.addEventListener("click", function (e) {
+      var btn = upgClosest(e.target, "[data-bcase]");
+      if (!btn || btn.disabled) return;
+      var id = btn.getAttribute("data-bcase");
+      if (id) upgOpenBalanceCase(id);
+    });
+  }
 
   var promoInp = document.getElementById("upgPromo");
   if (promoInp) {
@@ -7428,6 +7670,7 @@ function init() {
   }
   renderCart();
   renderShip();
+  renderPayMode();
   renderSold();
   loadSold();
   startSoldLive();
@@ -7491,12 +7734,23 @@ function init() {
   /* счётчик и список покупателей: локально */
   syncFromServer();
 
-  var buttons = document.querySelectorAll(".ship__btn");
-  for (var i = 0; i < buttons.length; i++) {
-    buttons[i].addEventListener("click", function () {
+  var shipButtons = document.querySelectorAll(".ship__btn[data-ship]");
+  for (var i = 0; i < shipButtons.length; i++) {
+    shipButtons[i].addEventListener("click", function () {
       ship = this.getAttribute("data-ship");
       write(STORE.ship, ship);
       renderShip();
+      renderCart();
+    });
+  }
+
+  var payButtons = document.querySelectorAll(".ship__btn[data-pay]");
+  for (var j = 0; j < payButtons.length; j++) {
+    payButtons[j].addEventListener("click", function () {
+      var mode = this.getAttribute("data-pay");
+      payMode = mode === "balance" ? "balance" : "normal";
+      write(STORE.pay, payMode);
+      renderPayMode();
       renderCart();
     });
   }
