@@ -1551,9 +1551,17 @@ body.light .upg-bcase-peek { background: #fff; border-color: color-mix(in srgb, 
 .cbattle__status.is-win { color: var(--lime); border-color: rgba(47,211,95,.4); }
 .cbattle__status.is-lose { color: #ff8f8f; border-color: rgba(255,77,90,.3); }
 .cbattle__note { margin-top: 8px; color: var(--muted); font-size: 12px; }
+.cbattle__modes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.cbattle__friend[hidden] { display: none !important; }
+.cbattle__room { display: grid; gap: 6px; }
+.cbattle__room-card { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 10px; background: #122319; border: 1px solid var(--line); font-size: 13px; }
+.cbattle__room-card b { color: #fff; }
+.cbattle__room-card span { color: var(--muted); font-weight: 700; }
+.cbattle__room-card.is-ready span { color: var(--lime); }
+.cbattle__online-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #44d16f; margin-right: 6px; vertical-align: middle; }
 body.light .cbattle__opt, body.light .cbattle__pickbtn, body.light .cbattle__btn--ghost { background: #fff; color: #0d2b19; border-color: #bfe4cc; }
-body.light .cbattle__player, body.light .cbattle__drop, body.light .cbattle__status { background: #fff; border-color: #bfe4cc; }
-body.light .cbattle__pname, body.light .cbattle__dropname, body.light .cbattle__status, body.light .cbattle__meta b { color: #0d2b19; }
+body.light .cbattle__player, body.light .cbattle__drop, body.light .cbattle__status, body.light .cbattle__room-card { background: #fff; border-color: #bfe4cc; }
+body.light .cbattle__pname, body.light .cbattle__dropname, body.light .cbattle__status, body.light .cbattle__meta b, body.light .cbattle__room-card b { color: #0d2b19; }
 @media (max-width: 720px) { .cbattle__row--meta { grid-template-columns: 1fr; } }
 
 .casepop { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; padding: 16px; }
@@ -2528,8 +2536,13 @@ body.light .upg-feed__who { color: #0d2b19; }
       </div>
 
       <div class="cbattle" id="cbattle">
-        <div class="upg-feed__head"><b>⚔️ Case Battle</b><span>батл на кейсы: все платят, побеждает самый дорогой дроп</span></div>
-        <div class="cbattle__controls">
+        <div class="upg-feed__head"><b>⚔️ Case Battle</b><span id="cbOnline">онлайн: —</span></div>
+        <div class="cbattle__modes">
+          <button class="cbattle__opt is-active" type="button" data-cb-mode="bots">🤖 С ботами</button>
+          <button class="cbattle__opt" type="button" data-cb-mode="friend">👥 С другом</button>
+        </div>
+
+        <div class="cbattle__controls" id="cbBotsPanel">
           <div class="cbattle__row">
             <label class="cbattle__label">Противники</label>
             <div class="cbattle__opts" id="cbOpponents">
@@ -2538,6 +2551,21 @@ body.light .upg-feed__who { color: #0d2b19; }
               <button class="cbattle__opt" type="button" data-cb-opp="3">3 бота</button>
             </div>
           </div>
+        </div>
+
+        <div class="cbattle__controls cbattle__friend" id="cbFriendPanel" hidden>
+          <div class="cbattle__row cbattle__row--meta">
+            <div class="cbattle__meta" id="cbRoomStatus">Создай комнату или открой ссылку друга</div>
+            <div class="cbattle__actions">
+              <button class="cbattle__btn cbattle__btn--ghost" type="button" id="cbRoomCreate">Создать комнату</button>
+              <button class="cbattle__btn cbattle__btn--ghost" type="button" id="cbRoomCopy" disabled>Скопировать ссылку</button>
+              <button class="cbattle__btn cbattle__btn--ghost" type="button" id="cbRoomLeave" disabled>Выйти</button>
+            </div>
+          </div>
+          <div class="cbattle__room" id="cbRoomInfo"></div>
+        </div>
+
+        <div class="cbattle__controls">
           <div class="cbattle__row">
             <label class="cbattle__label">Кейсы в батле</label>
             <div class="cbattle__pick" id="cbPick"></div>
@@ -2546,6 +2574,7 @@ body.light .upg-feed__who { color: #0d2b19; }
             <div class="cbattle__meta" id="cbMeta">Выбери кейсы для батла</div>
             <div class="cbattle__actions">
               <button class="cbattle__btn cbattle__btn--ghost" type="button" id="cbClear">Очистить</button>
+              <button class="cbattle__btn cbattle__btn--ghost" type="button" id="cbReady" hidden>Готов</button>
               <button class="cbattle__btn" type="button" id="cbStart">Начать батл</button>
             </div>
           </div>
@@ -2766,7 +2795,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261121-cb-1";
+var APP_BUILD = "20261121-cb-room-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7009,7 +7038,28 @@ function upgOpenBalanceCase(caseId) {
   });
 }
 
-var CB = { opp: 1, picks: [], busy: false };
+var CB = {
+  opp: 1, picks: [], busy: false,
+  mode: "bots", // bots | friend
+  online: { count: 0, names: [], seen: {}, lastPost: 0, timer: null, streamAbort: null, streamIdx: 0, streamTimer: null },
+  room: { id: "", host: false, hostName: "", guestName: "", hostReady: false, guestReady: false, started: {}, streamAbort: null, streamIdx: 0, streamTimer: null, pollTimer: null }
+};
+
+var CB_ONLINE_POST = [
+  "https://ntfy.sh/prz-cb-online-k7m2p4",
+  "https://ntfy.envs.net/prz-cb-online-k7m2p4",
+  "https://ntfy.adminforge.de/prz-cb-online-k7m2p4"
+];
+var CB_ONLINE_LIVE = [
+  "https://ntfy.sh/prz-cb-online-k7m2p4/json?poll=1&since=5m",
+  "https://ntfy.envs.net/prz-cb-online-k7m2p4/json?poll=1&since=5m",
+  "https://ntfy.adminforge.de/prz-cb-online-k7m2p4/json?poll=1&since=5m"
+];
+var CB_ONLINE_STREAM = [
+  "https://ntfy.sh/prz-cb-online-k7m2p4/json?since=5m",
+  "https://ntfy.envs.net/prz-cb-online-k7m2p4/json?since=5m",
+  "https://ntfy.adminforge.de/prz-cb-online-k7m2p4/json?since=5m"
+];
 
 function cbCaseById(id) {
   for (var i = 0; i < UPG_BALANCE_CASES.length; i++) if (UPG_BALANCE_CASES[i].id === id) return UPG_BALANCE_CASES[i];
@@ -7022,16 +7072,534 @@ function cbTotalCost() {
   return sum;
 }
 
+function cbUid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
+function cbSeededRng(seed) {
+  var h = 2166136261 >>> 0;
+  var s = String(seed || "");
+  for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+  return function () {
+    h += 0x6D2B79F5;
+    var t = Math.imul(h ^ (h >>> 15), 1 | h);
+    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function cbPickWeightedSeeded(pool, rnd) {
+  var total = 0;
+  for (var i = 0; i < pool.length; i++) total += Math.max(0, Number(pool[i].w) || 0);
+  if (total <= 0) return pool[0] ? pool[0].id : null;
+  var r = rnd() * total;
+  var acc = 0;
+  for (var j = 0; j < pool.length; j++) {
+    acc += Math.max(0, Number(pool[j].w) || 0);
+    if (r <= acc) return pool[j].id;
+  }
+  return pool[pool.length - 1].id;
+}
+function cbMyName() {
+  var n = (typeof upgFeedMyName === "function") ? upgFeedMyName() : "";
+  if (n) return n;
+  try { n = normalizeName(read("prz_upg_top_name", "") || ""); } catch (e) {}
+  if (n && !nameProblem(n)) return n;
+  return "Игрок";
+}
+
+function cbOnlineRender() {
+  var el = document.getElementById("cbOnline");
+  if (!el) return;
+  var now = Date.now();
+  var names = [];
+  var seen = CB.online.seen || {};
+  for (var k in seen) {
+    if (!Object.prototype.hasOwnProperty.call(seen, k)) continue;
+    if (now - (seen[k].ts || 0) <= 2 * 60 * 1000) names.push(seen[k].name);
+  }
+  CB.online.count = names.length;
+  el.innerHTML = '<span class="cbattle__online-dot"></span>онлайн: ' + names.length;
+  el.title = names.slice(0, 20).join(", ");
+}
+
+function cbOnlineHandle(ev) {
+  if (!ev || ev.event !== "message" || !ev.message) return false;
+  var parts = String(ev.message).split("|");
+  if (parts[0] !== "CBO") return false;
+  var name = normalizeName(parts[1] || "");
+  if (nameProblem(name)) return false;
+  var ts = parseInt(parts[2], 10) || 0;
+  if (!ts) return false;
+  var key = name.toLowerCase();
+  var cur = CB.online.seen[key];
+  if (!cur || ts >= cur.ts) CB.online.seen[key] = { name: name, ts: ts };
+  return true;
+}
+
+function cbOnlinePost() {
+  var now = Date.now();
+  if (now - (CB.online.lastPost || 0) < 45000) return Promise.resolve(false);
+  var name = cbMyName();
+  if (!name || nameProblem(name)) return Promise.resolve(false);
+  CB.online.lastPost = now;
+  var body = "CBO|" + name + "|" + now;
+  cbOnlineHandle({ event: "message", message: body });
+  cbOnlineRender();
+  var jobs = CB_ONLINE_POST.map(function (url) {
+    return fetchT(url, { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: body }, 6000)
+      .then(function (r) { return !!r.ok; }).catch(function () { return false; });
+  });
+  return Promise.all(jobs).then(function (res) { for (var i = 0; i < res.length; i++) if (res[i]) return true; return false; });
+}
+
+function cbOnlineFetch() {
+  var jobs = CB_ONLINE_LIVE.map(function (url) {
+    return fetchT(url, { cache: "no-store" }, 8000)
+      .then(function (r) { return r.ok ? r.text() : ""; }).catch(function () { return ""; });
+  });
+  return Promise.all(jobs).then(function (texts) {
+    var changed = false;
+    for (var j = 0; j < texts.length; j++) {
+      var lines = String(texts[j] || "").split("\n");
+      for (var i = 0; i < lines.length; i++) {
+        if (!lines[i]) continue;
+        var ev; try { ev = JSON.parse(lines[i]); } catch (e) { continue; }
+        if (cbOnlineHandle(ev)) changed = true;
+      }
+    }
+    if (changed) cbOnlineRender(); else cbOnlineRender();
+    return changed;
+  });
+}
+
+function cbOnlineStreamStart() {
+  if (typeof fetch !== "function" || typeof AbortController === "undefined") return;
+  if (CB.online.streamAbort) return;
+  var urls = CB_ONLINE_STREAM || [];
+  if (!urls.length) return;
+  var idx = CB.online.streamIdx % urls.length;
+  var url = urls[idx];
+  var ctrl = new AbortController();
+  CB.online.streamAbort = ctrl;
+  fetch(url, { cache: "no-store", signal: ctrl.signal }).then(function (r) {
+    if (!r.ok || !r.body || !r.body.getReader) throw new Error("bad");
+    var reader = r.body.getReader();
+    var decoder = (typeof TextDecoder !== "undefined") ? new TextDecoder() : null;
+    var buf = "";
+    function pump() {
+      return reader.read().then(function (part) {
+        if (part.done) throw new Error("end");
+        buf += decoder ? decoder.decode(part.value, { stream: true }) : String(part.value || "");
+        var lines = buf.split("\n");
+        buf = lines.pop() || "";
+        var changed = false;
+        for (var i = 0; i < lines.length; i++) {
+          if (!lines[i]) continue;
+          var ev; try { ev = JSON.parse(lines[i]); } catch (e) { continue; }
+          if (cbOnlineHandle(ev)) changed = true;
+        }
+        if (changed) cbOnlineRender();
+        return pump();
+      });
+    }
+    return pump();
+  }).catch(function () {}).finally(function () {
+    if (CB.online.streamAbort === ctrl) CB.online.streamAbort = null;
+    CB.online.streamIdx = (idx + 1) % urls.length;
+    if (CB.online.streamTimer) clearTimeout(CB.online.streamTimer);
+    CB.online.streamTimer = setTimeout(function () { cbOnlineStreamStart(); }, 3000);
+  });
+}
+
+function cbOnlineInit() {
+  try { cbOnlineRender(); } catch (e) {}
+  try { cbOnlinePost(); } catch (e) {}
+  try { cbOnlineFetch(); } catch (e) {}
+  try { cbOnlineStreamStart(); } catch (e) {}
+  if (CB.online.timer) clearInterval(CB.online.timer);
+  CB.online.timer = setInterval(function () {
+    if (document.hidden) return;
+    cbOnlinePost();
+    cbOnlineRender();
+  }, 45000);
+}
+
+function cbRoomUrls(id) {
+  var base = "prz-cb-r1-" + String(id || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 24);
+  return {
+    post: ["https://ntfy.sh/" + base, "https://ntfy.envs.net/" + base, "https://ntfy.adminforge.de/" + base],
+    live: ["https://ntfy.sh/" + base + "/json?poll=1&since=30m", "https://ntfy.envs.net/" + base + "/json?poll=1&since=30m", "https://ntfy.adminforge.de/" + base + "/json?poll=1&since=30m"],
+    stream: ["https://ntfy.sh/" + base + "/json?since=30m", "https://ntfy.envs.net/" + base + "/json?since=30m", "https://ntfy.adminforge.de/" + base + "/json?since=30m"]
+  };
+}
+
+function cbRoomPost(type, payload) {
+  var r = CB.room;
+  if (!r.id) return Promise.resolve(false);
+  var body = "CBR|1|" + r.id + "|" + type + "|" + cbMyName() + "|" + Date.now() + "|" + JSON.stringify(payload || {});
+  var urls = cbRoomUrls(r.id).post;
+  var jobs = urls.map(function (url) {
+    return fetchT(url, { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: body }, 6000)
+      .then(function (res) { return !!res.ok; }).catch(function () { return false; });
+  });
+  return Promise.all(jobs).then(function (res) { for (var i = 0; i < res.length; i++) if (res[i]) return true; return false; });
+}
+
+function cbRoomRender() {
+  var info = document.getElementById("cbRoomInfo");
+  var status = document.getElementById("cbRoomStatus");
+  var copyBtn = document.getElementById("cbRoomCopy");
+  var leaveBtn = document.getElementById("cbRoomLeave");
+  var readyBtn = document.getElementById("cbReady");
+  var r = CB.room;
+  if (copyBtn) copyBtn.disabled = !r.id;
+  if (leaveBtn) leaveBtn.disabled = !r.id;
+  if (readyBtn) {
+    readyBtn.hidden = CB.mode !== "friend" || !r.id;
+    var myReady = r.host ? r.hostReady : r.guestReady;
+    readyBtn.textContent = myReady ? "Не готов" : "Готов";
+    readyBtn.disabled = !!CB.busy || !r.id;
+  }
+  if (!r.id) {
+    if (status) status.textContent = "Создай комнату или открой ссылку друга";
+    if (info) info.innerHTML = "";
+    return;
+  }
+  var link = location.origin + location.pathname + "#cbattle=" + encodeURIComponent(r.id);
+  var hostName = r.hostName || (r.host ? cbMyName() : "Хост");
+  var guestName = r.guestName || "Ожидание друга…";
+  if (status) status.textContent = r.host ? "Ты хост. Поделись ссылкой с другом." : "Ты в комнате " + hostName + ".";
+  if (info) {
+    info.innerHTML =
+      '<div class="cbattle__room-card' + (r.hostReady ? ' is-ready' : '') + '"><b>👑 ' + hostName + '</b><span>' + (r.hostReady ? "готов" : "не готов") + '</span></div>' +
+      '<div class="cbattle__room-card' + (r.guestReady ? ' is-ready' : '') + '"><b>👤 ' + guestName + '</b><span>' + (r.guestReady ? "готов" : "ожидание") + '</span></div>' +
+      '<div class="cbattle__meta" style="font-size:12px">Ссылка: <b style="word-break:break-all">' + link + '</b></div>';
+  }
+}
+
+function cbSetMode(mode) {
+  CB.mode = mode === "friend" ? "friend" : "bots";
+  var bots = document.getElementById("cbBotsPanel");
+  var friend = document.getElementById("cbFriendPanel");
+  if (bots) bots.hidden = CB.mode !== "bots";
+  if (friend) friend.hidden = CB.mode !== "friend";
+  var btns = document.querySelectorAll("[data-cb-mode]");
+  for (var i = 0; i < btns.length; i++) btns[i].classList.toggle("is-active", btns[i].getAttribute("data-cb-mode") === CB.mode);
+  cbRenderAll();
+  cbRoomRender();
+}
+
+function cbRoomApplyState(payload, from) {
+  var r = CB.room;
+  if (!r.id) return;
+  if (payload.host) r.hostName = normalizeName(payload.host) || r.hostName;
+  if (payload.guest) r.guestName = normalizeName(payload.guest) || r.guestName;
+  if (Array.isArray(payload.picks)) {
+    // host is authoritative for picks
+    var hostName = normalizeName(payload.host || r.hostName || "");
+    var fromN = normalizeName(from || "");
+    if (r.host || (hostName && fromN && hostName.toLowerCase() === fromN.toLowerCase()) || (!r.host)) {
+      if (!r.host) CB.picks = payload.picks.filter(function (id) { return !!cbCaseById(id); }).slice(0, 10);
+    }
+  }
+  if (typeof payload.hostReady === "boolean") r.hostReady = payload.hostReady;
+  if (typeof payload.guestReady === "boolean") r.guestReady = payload.guestReady;
+  cbRenderAll();
+  cbRoomRender();
+}
+
+function cbProcessStart(payload) {
+  if (!payload || !payload.seed || !Array.isArray(payload.picks)) return;
+  var key = String(payload.seed) + "|" + String(payload.ts || "");
+  if (CB.room.started[key]) return;
+  if (CB.busy) return;
+  var picks = payload.picks.filter(function (id) { return !!cbCaseById(id); }).slice(0, 10);
+  if (!picks.length) return;
+  var players = Array.isArray(payload.players) && payload.players.length >= 2 ? payload.players.slice(0, 2) : [CB.room.hostName || "Хост", CB.room.guestName || "Гость"];
+  players = players.map(function (n, i) { n = normalizeName(n || ""); return n && !nameProblem(n) ? n : (i === 0 ? "Хост" : "Гость"); });
+  var myName = cbMyName();
+  var mySlot = -1;
+  for (var i = 0; i < players.length; i++) if (players[i].toLowerCase() === myName.toLowerCase()) mySlot = i;
+  if (mySlot < 0) mySlot = CB.room.host ? 0 : 1;
+  var totalCost = 0;
+  for (var c = 0; c < picks.length; c++) { var cc = cbCaseById(picks[c]); if (cc) totalCost += cc.price; }
+  var bal = Math.max(0, Number(UPG.balance) || 0);
+  if (bal < totalCost) { toast("Недостаточно баланса для батла"); cbRoomRender(); return; }
+
+  CB.room.started[key] = true;
+  // deterministic drops
+  var allDrops = [];
+  var totals = [];
+  for (var p = 0; p < players.length; p++) {
+    var rnd = cbSeededRng(payload.seed + "|p|" + p);
+    var row = []; var sum = 0;
+    for (var k = 0; k < picks.length; k++) {
+      var cfg = cbCaseById(picks[k]);
+      var did = cfg ? cbPickWeightedSeeded(cfg.pool, rnd) : null;
+      var it = did ? upgItem(did) : null;
+      row.push(it);
+      sum += it ? it.price : 0;
+    }
+    allDrops.push(row);
+    totals.push(sum);
+  }
+  var max = -1;
+  for (var m = 0; m < totals.length; m++) if (totals[m] > max) max = totals[m];
+  var winners = [];
+  for (var w = 0; w < totals.length; w++) if (totals[w] === max) winners.push(w);
+  var winRnd = cbSeededRng(payload.seed + "|winner");
+  var winnerIdx = winners[Math.floor(winRnd() * winners.length)];
+  var totalBank = 0;
+  for (var tb = 0; tb < totals.length; tb++) totalBank += totals[tb];
+
+  // apply outcome atomically
+  UPG.balance = bal - totalCost;
+  var wonItems = [];
+  if (winnerIdx === mySlot) {
+    for (var a = 0; a < allDrops.length; a++) for (var b = 0; b < allDrops[a].length; b++) if (allDrops[a][b]) wonItems.push(allDrops[a][b].id);
+    for (var wi = 0; wi < wonItems.length; wi++) UPG.inv.push(wonItems[wi]);
+    UPG.selected = wonItems[wonItems.length - 1] || UPG.selected;
+  }
+  CB.busy = true;
+  CB.picks = picks.slice();
+  upgSave();
+  upgRender();
+  cbRenderAll();
+  cbRoomRender();
+
+  // animate
+  var view = [];
+  for (var vi = 0; vi < players.length; vi++) view.push({ name: players[vi] + (vi === mySlot ? " (ты)" : ""), drops: [], total: 0, win: false, lose: false });
+  var round = 0;
+  function revealRound() {
+    for (var p2 = 0; p2 < view.length; p2++) {
+      var dr = allDrops[p2][round];
+      view[p2].drops.push(dr);
+      view[p2].total += dr ? dr.price : 0;
+    }
+    cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + "…");
+    round++;
+    if (round < picks.length) { setTimeout(revealRound, 700); return; }
+    setTimeout(finish, 450);
+  }
+  function finish() {
+    for (var t = 0; t < view.length; t++) { view[t].total = totals[t]; view[t].win = t === winnerIdx; view[t].lose = t !== winnerIdx; }
+    if (winnerIdx === mySlot) {
+      cbRenderArena(view, "Ты выиграл батл! Забрал " + wonItems.length + " предметов. Общий банк: " + upgMoney(totalBank) + ".", "is-win");
+      toast("⚔️ Победа! +" + wonItems.length + " предметов");
+    } else {
+      cbRenderArena(view, "Победил " + players[winnerIdx] + ". Ты потерял вход " + upgMoney(totalCost) + ".", "is-lose");
+      toast("⚔️ Батл проигран: победил " + players[winnerIdx]);
+    }
+    CB.busy = false;
+    CB.room.hostReady = false;
+    CB.room.guestReady = false;
+    cbRenderAll();
+    cbRoomRender();
+    if (CB.room.host) cbRoomPost("state", { host: CB.room.hostName, guest: CB.room.guestName, picks: CB.picks, hostReady: false, guestReady: false });
+  }
+  cbRenderArena(view, "Готовим батл…");
+  setTimeout(revealRound, 500);
+}
+
+function cbRoomHandle(ev) {
+  if (!ev || ev.event !== "message" || !ev.message) return false;
+  var msg = String(ev.message);
+  if (msg.indexOf("CBR|1|") !== 0) return false;
+  var parts = msg.split("|");
+  // CBR|1|room|type|from|ts|json
+  if (parts.length < 7) return false;
+  var room = parts[2], type = parts[3], from = normalizeName(parts[4] || ""), ts = parseInt(parts[5], 10) || 0;
+  if (room !== CB.room.id) return false;
+  var payloadRaw = parts.slice(6).join("|");
+  var payload; try { payload = JSON.parse(payloadRaw); } catch (e) { payload = {}; }
+  if (type === "join") {
+    if (CB.room.host && from && from.toLowerCase() !== cbMyName().toLowerCase()) {
+      CB.room.guestName = from;
+      cbRoomRender();
+      cbRoomPost("state", { host: cbMyName(), guest: CB.room.guestName, picks: CB.picks, hostReady: CB.room.hostReady, guestReady: CB.room.guestReady });
+    }
+    return true;
+  }
+  if (type === "state") { cbRoomApplyState(payload, from); return true; }
+  if (type === "ready") {
+    if (CB.room.host && from && from.toLowerCase() === String(CB.room.guestName || "").toLowerCase()) {
+      CB.room.guestReady = !!payload.ready;
+      cbRoomRender(); cbRenderAll();
+    } else if (!CB.room.host && from && from.toLowerCase() === String(CB.room.hostName || "").toLowerCase()) {
+      CB.room.hostReady = !!payload.ready;
+      cbRoomRender(); cbRenderAll();
+    }
+    return true;
+  }
+  if (type === "start") { cbProcessStart(payload); return true; }
+  if (type === "leave") {
+    if (from && from.toLowerCase() === String(CB.room.guestName || "").toLowerCase()) { CB.room.guestName = ""; CB.room.guestReady = false; cbRoomRender(); cbRenderAll(); }
+    return true;
+  }
+  return false;
+}
+
+function cbRoomFetch() {
+  var r = CB.room;
+  if (!r.id) return Promise.resolve(false);
+  var urls = cbRoomUrls(r.id).live;
+  var jobs = urls.map(function (url) {
+    return fetchT(url, { cache: "no-store" }, 8000).then(function (res) { return res.ok ? res.text() : ""; }).catch(function () { return ""; });
+  });
+  return Promise.all(jobs).then(function (texts) {
+    var changed = false;
+    for (var j = 0; j < texts.length; j++) {
+      var lines = String(texts[j] || "").split("\n");
+      for (var i = 0; i < lines.length; i++) {
+        if (!lines[i]) continue;
+        var ev; try { ev = JSON.parse(lines[i]); } catch (e) { continue; }
+        if (cbRoomHandle(ev)) changed = true;
+      }
+    }
+    return changed;
+  });
+}
+
+function cbRoomStreamStart() {
+  if (typeof fetch !== "function" || typeof AbortController === "undefined") return;
+  var r = CB.room;
+  if (!r.id || r.streamAbort) return;
+  var urls = cbRoomUrls(r.id).stream;
+  var idx = r.streamIdx % urls.length;
+  var url = urls[idx];
+  var ctrl = new AbortController();
+  r.streamAbort = ctrl;
+  fetch(url, { cache: "no-store", signal: ctrl.signal }).then(function (res) {
+    if (!res.ok || !res.body || !res.body.getReader) throw new Error("bad");
+    var reader = res.body.getReader();
+    var decoder = (typeof TextDecoder !== "undefined") ? new TextDecoder() : null;
+    var buf = "";
+    function pump() {
+      return reader.read().then(function (part) {
+        if (part.done) throw new Error("end");
+        buf += decoder ? decoder.decode(part.value, { stream: true }) : String(part.value || "");
+        var lines = buf.split("\n");
+        buf = lines.pop() || "";
+        for (var i = 0; i < lines.length; i++) {
+          if (!lines[i]) continue;
+          var ev; try { ev = JSON.parse(lines[i]); } catch (e) { continue; }
+          cbRoomHandle(ev);
+        }
+        return pump();
+      });
+    }
+    return pump();
+  }).catch(function () {}).finally(function () {
+    if (CB.room.streamAbort === ctrl) CB.room.streamAbort = null;
+    CB.room.streamIdx = (idx + 1) % urls.length;
+    if (CB.room.streamTimer) clearTimeout(CB.room.streamTimer);
+    if (CB.room.id) CB.room.streamTimer = setTimeout(function () { cbRoomStreamStart(); }, 3000);
+  });
+}
+
+function cbRoomStop() {
+  var r = CB.room;
+  if (r.streamAbort) { try { r.streamAbort.abort(); } catch (e) {} r.streamAbort = null; }
+  if (r.streamTimer) { clearTimeout(r.streamTimer); r.streamTimer = null; }
+  if (r.pollTimer) { clearInterval(r.pollTimer); r.pollTimer = null; }
+}
+
+function cbRoomStartSync() {
+  cbRoomStop();
+  if (!CB.room.id) return;
+  cbRoomFetch();
+  cbRoomStreamStart();
+  CB.room.pollTimer = setInterval(function () { if (!document.hidden) cbRoomFetch(); }, 5000);
+}
+
+function cbRoomCreate() {
+  if (CB.busy) return;
+  var id = cbUid();
+  CB.room.id = id;
+  CB.room.host = true;
+  CB.room.hostName = cbMyName();
+  CB.room.guestName = "";
+  CB.room.hostReady = false;
+  CB.room.guestReady = false;
+  CB.room.started = {};
+  try { location.hash = "cbattle=" + encodeURIComponent(id); } catch (e) {}
+  cbSetMode("friend");
+  cbRoomRender();
+  cbRoomStartSync();
+  cbRoomPost("join", { name: cbMyName() });
+  cbRoomPost("state", { host: CB.room.hostName, guest: "", picks: CB.picks, hostReady: false, guestReady: false });
+  toast("Комната создана. Скопируй ссылку другу!");
+}
+
+function cbRoomJoin(id) {
+  id = String(id || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 32);
+  if (!id) return;
+  CB.room.id = id;
+  CB.room.host = false;
+  CB.room.hostName = "";
+  CB.room.guestName = cbMyName();
+  CB.room.hostReady = false;
+  CB.room.guestReady = false;
+  CB.room.started = {};
+  cbSetMode("friend");
+  cbRoomRender();
+  cbRoomStartSync();
+  cbRoomPost("join", { name: cbMyName() });
+  toast("Подключаемся к комнате…");
+}
+
+function cbRoomLeave(silent) {
+  if (CB.room.id) cbRoomPost("leave", { name: cbMyName() });
+  cbRoomStop();
+  CB.room.id = ""; CB.room.host = false; CB.room.hostName = ""; CB.room.guestName = "";
+  CB.room.hostReady = false; CB.room.guestReady = false; CB.room.started = {};
+  try { if (location.hash.indexOf("cbattle=") >= 0) history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+  cbRoomRender();
+  cbRenderAll();
+  if (!silent) toast("Ты вышел из комнаты");
+}
+
+function cbRoomCopyLink() {
+  if (!CB.room.id) return;
+  var link = location.origin + location.pathname + "#cbattle=" + encodeURIComponent(CB.room.id);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(function () { toast("Ссылка скопирована!"); }).catch(function () { window.prompt("Скопируй ссылку:", link); });
+  } else {
+    window.prompt("Скопируй ссылку:", link);
+  }
+}
+
+function cbRoomToggleReady() {
+  if (!CB.room.id || CB.busy) return;
+  if (CB.room.host) {
+    CB.room.hostReady = !CB.room.hostReady;
+    cbRoomPost("state", { host: CB.room.hostName || cbMyName(), guest: CB.room.guestName, picks: CB.picks, hostReady: CB.room.hostReady, guestReady: CB.room.guestReady });
+  } else {
+    CB.room.guestReady = !CB.room.guestReady;
+    cbRoomPost("ready", { ready: CB.room.guestReady });
+  }
+  cbRoomRender();
+  cbRenderAll();
+}
+
+function cbMaybeJoinFromHash() {
+  var m = String(location.hash || "").match(/cbattle=([a-zA-Z0-9_-]+)/);
+  if (m && m[1]) {
+    if (CB.room.id === m[1]) return;
+    cbRoomJoin(m[1]);
+  }
+}
+
 function cbRenderPicks() {
   var box = document.getElementById("cbPick");
   if (!box) return;
+  var canEdit = CB.mode !== "friend" || (CB.room.host && !!CB.room.id) || (CB.mode === "friend" && !CB.room.id);
+  if (CB.mode === "friend" && CB.room.id && !CB.room.host) canEdit = false;
   var html = "";
   for (var i = 0; i < UPG_BALANCE_CASES.length; i++) {
     var c = UPG_BALANCE_CASES[i];
     var count = 0;
     for (var j = 0; j < CB.picks.length; j++) if (CB.picks[j] === c.id) count++;
     var style = '--case-color:' + (c.color || '#7ddc8c');
-    html += '<button class="cbattle__pickbtn' + (count ? ' is-active' : '') + '" type="button" data-cb-pick="' + c.id + '" style="' + style + '">' +
+    html += '<button class="cbattle__pickbtn' + (count ? ' is-active' : '') + '" type="button" data-cb-pick="' + c.id + '" style="' + style + '"' + (canEdit ? "" : " disabled") + '>' +
       (c.icon || '🎁') + ' ' + c.name + ' <small>' + upgMoney(c.price) + (count ? ' ×' + count : '') + '</small></button>';
   }
   box.innerHTML = html;
@@ -7040,20 +7608,52 @@ function cbRenderPicks() {
 function cbRenderMeta() {
   var meta = document.getElementById("cbMeta");
   var start = document.getElementById("cbStart");
+  var clear = document.getElementById("cbClear");
+  var readyBtn = document.getElementById("cbReady");
   var total = cbTotalCost();
   var bal = Math.max(0, Number(UPG.balance) || 0);
+  var friend = CB.mode === "friend";
+  var inRoom = friend && !!CB.room.id;
+  var canEdit = !friend || !CB.room.id || CB.room.host;
+
   if (meta) {
-    if (!CB.picks.length) meta.innerHTML = "Выбери кейсы для батла";
+    if (!CB.picks.length) meta.innerHTML = friend ? (inRoom && !CB.room.host ? "Хост выбирает кейсы…" : "Выбери кейсы для батла") : "Выбери кейсы для батла";
     else meta.innerHTML = "Кейсов: <b>" + CB.picks.length + "</b> · Стоимость входа: <b>" + upgMoney(total) + "</b> · Баланс: <b>" + upgMoney(bal) + "</b>";
   }
-  if (start) start.disabled = !!CB.busy || !CB.picks.length || bal < total;
-  var clear = document.getElementById("cbClear");
-  if (clear) clear.disabled = !!CB.busy || !CB.picks.length;
+
+  if (clear) clear.disabled = !!CB.busy || !CB.picks.length || !canEdit;
+  if (readyBtn) readyBtn.hidden = !inRoom;
+
+  if (start) {
+    if (!friend) {
+      start.hidden = false;
+      start.textContent = "Начать батл";
+      start.disabled = !!CB.busy || !CB.picks.length || bal < total;
+    } else if (!inRoom) {
+      start.hidden = false;
+      start.textContent = "Создай комнату";
+      start.disabled = !!CB.busy;
+    } else if (!CB.room.host) {
+      start.hidden = true;
+      start.disabled = true;
+    } else {
+      start.hidden = false;
+      start.textContent = "Начать батл";
+      var guestOk = !!CB.room.guestName;
+      var bothReady = !!CB.room.hostReady && !!CB.room.guestReady;
+      start.disabled = !!CB.busy || !CB.picks.length || bal < total || !guestOk || !bothReady;
+      if (meta && CB.picks.length) {
+        if (!guestOk) meta.innerHTML = "Кейсов: <b>" + CB.picks.length + "</b> · " + upgMoney(total) + " · ждём друга по ссылке";
+        else if (!bothReady) meta.innerHTML = "Кейсов: <b>" + CB.picks.length + "</b> · " + upgMoney(total) + " · оба игрока должны нажать «Готов»";
+      }
+    }
+  }
 }
 
 function cbRenderAll() {
   cbRenderPicks();
   cbRenderMeta();
+  if (typeof cbRoomRender === "function") cbRoomRender();
 }
 
 function cbDropItem(caseId) {
@@ -7092,6 +7692,27 @@ function cbStart() {
   if (CB.busy) return;
   if (UPG.spinning) { toast("Дождись конца апгрейда"); return; }
   if (UPG.pendingCase) { toast("Сначала забери дроп из кейса"); return; }
+
+  // friend mode
+  if (CB.mode === "friend") {
+    if (!CB.room.id) { cbRoomCreate(); return; }
+    if (!CB.room.host) { toast("Стартует хост комнаты"); return; }
+    if (!CB.room.guestName) { toast("Сначала пригласи друга по ссылке"); return; }
+    if (!CB.room.hostReady || !CB.room.guestReady) { toast("Оба игрока должны нажать «Готов»"); return; }
+    if (!CB.picks.length) { toast("Выбери кейсы для батла"); return; }
+    if (CB.picks.length > 10) { toast("Максимум 10 кейсов в батле"); return; }
+    var totalCostF = cbTotalCost();
+    var balF = Math.max(0, Number(UPG.balance) || 0);
+    if (balF < totalCostF) { toast("Недостаточно баланса для батла"); return; }
+    var seed = cbUid() + "-" + Date.now();
+    var players = [CB.room.hostName || cbMyName(), CB.room.guestName].map(function (n) { n = normalizeName(n || ""); return n && !nameProblem(n) ? n : "Игрок"; });
+    var payload = { seed: seed, picks: CB.picks.slice(), players: players, ts: Date.now() };
+    cbRoomPost("start", payload);
+    cbProcessStart(payload); // local, dedupe protects
+    return;
+  }
+
+  // bots mode
   if (!CB.picks.length) { toast("Выбери кейсы для батла"); return; }
   if (CB.picks.length > 10) { toast("Максимум 10 кейсов в батле"); return; }
   var totalCost = cbTotalCost();
@@ -8166,11 +8787,17 @@ function initUpgrader() {
       cbRenderMeta();
     });
   }
+  function cbCanEditPicks() { return !(CB.mode === "friend" && CB.room.id && !CB.room.host); }
+  function cbSyncRoomState() {
+    if (CB.mode === "friend" && CB.room.id && CB.room.host) {
+      cbRoomPost("state", { host: CB.room.hostName || cbMyName(), guest: CB.room.guestName, picks: CB.picks, hostReady: CB.room.hostReady, guestReady: CB.room.guestReady });
+    }
+  }
   var cbPick = document.getElementById("cbPick");
   if (cbPick) {
     cbPick.addEventListener("click", function (e) {
       var btn = upgClosest(e.target, "[data-cb-pick]");
-      if (!btn || CB.busy) return;
+      if (!btn || CB.busy || !cbCanEditPicks()) return;
       var id = btn.getAttribute("data-cb-pick");
       if (!id) return;
       if (e.shiftKey || e.ctrlKey || e.metaKey) {
@@ -8181,30 +8808,51 @@ function initUpgrader() {
         CB.picks.push(id);
       }
       cbRenderAll();
+      cbSyncRoomState();
     });
     cbPick.addEventListener("contextmenu", function (e) {
       var btn = upgClosest(e.target, "[data-cb-pick]");
       if (!btn) return;
       e.preventDefault();
-      if (CB.busy) return;
+      if (CB.busy || !cbCanEditPicks()) return;
       var id = btn.getAttribute("data-cb-pick");
       var idx = CB.picks.lastIndexOf(id);
-      if (idx >= 0) { CB.picks.splice(idx, 1); cbRenderAll(); }
+      if (idx >= 0) { CB.picks.splice(idx, 1); cbRenderAll(); cbSyncRoomState(); }
     });
   }
   var cbStartBtn = document.getElementById("cbStart");
   if (cbStartBtn) cbStartBtn.addEventListener("click", cbStart);
   var cbClearBtn = document.getElementById("cbClear");
   if (cbClearBtn) cbClearBtn.addEventListener("click", function () {
-    if (CB.busy) return;
+    if (CB.busy || !cbCanEditPicks()) return;
     CB.picks = [];
     cbRenderAll();
+    cbSyncRoomState();
     var arena = document.getElementById("cbArena");
     if (arena) arena.innerHTML = "";
     var note = document.getElementById("cbNote");
     if (note) note.textContent = "Все участники открывают одинаковые кейсы. У кого суммарный дроп дороже — забирает всё, остальные уходят ни с чем. Клик по кейсу добавляет, Shift/ПКМ — убирает один.";
   });
+
+  document.querySelectorAll("[data-cb-mode]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      if (CB.busy) return;
+      cbSetMode(btn.getAttribute("data-cb-mode"));
+    });
+  });
+  var cbRoomCreateBtn = document.getElementById("cbRoomCreate");
+  if (cbRoomCreateBtn) cbRoomCreateBtn.addEventListener("click", cbRoomCreate);
+  var cbRoomCopyBtn = document.getElementById("cbRoomCopy");
+  if (cbRoomCopyBtn) cbRoomCopyBtn.addEventListener("click", cbRoomCopyLink);
+  var cbRoomLeaveBtn = document.getElementById("cbRoomLeave");
+  if (cbRoomLeaveBtn) cbRoomLeaveBtn.addEventListener("click", function () { cbRoomLeave(false); });
+  var cbReadyBtn = document.getElementById("cbReady");
+  if (cbReadyBtn) cbReadyBtn.addEventListener("click", cbRoomToggleReady);
+
   cbRenderAll();
+  try { cbOnlineInit(); } catch (e) {}
+  try { cbMaybeJoinFromHash(); } catch (e) {}
+  window.addEventListener("hashchange", function () { try { cbMaybeJoinFromHash(); } catch (e) {} });
 
   setInterval(upgTickCase, 500);
   setInterval(function () {
@@ -8226,6 +8874,9 @@ function initUpgrader() {
     if (typeof upgFeedStreamStart === "function") upgFeedStreamStart();
     if (typeof upgTopFetchLive === "function") upgTopFetchLive();
     if (typeof upgTopFetchStore === "function") upgTopFetchStore(false);
+    if (typeof cbOnlinePost === "function") cbOnlinePost();
+    if (typeof cbOnlineFetch === "function") cbOnlineFetch();
+    if (typeof CB !== "undefined" && CB.room && CB.room.id && typeof cbRoomFetch === "function") cbRoomFetch();
     if (typeof checkAppUpdate === "function") checkAppUpdate();
   });
   if (typeof upgFeedInit === "function") upgFeedInit();
