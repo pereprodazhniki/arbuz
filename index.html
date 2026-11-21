@@ -2596,7 +2596,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers" };
-var APP_BUILD = "20261121-live-2";
+var APP_BUILD = "20261121-live-3";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7354,6 +7354,7 @@ function initUpgrader() {
   setInterval(function () {
     if (document.hidden) return;
     if (typeof upgFeedFetchLive === "function") upgFeedFetchLive();
+    if (typeof upgFeedStreamStart === "function") upgFeedStreamStart();
   }, 15000);
   setInterval(function () {
     if (document.hidden) return;
@@ -7366,6 +7367,7 @@ function initUpgrader() {
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) return;
     if (typeof upgFeedFetchLive === "function") upgFeedFetchLive();
+    if (typeof upgFeedStreamStart === "function") upgFeedStreamStart();
     if (typeof upgTopFetchLive === "function") upgTopFetchLive();
     if (typeof upgTopFetchStore === "function") upgTopFetchStore(false);
     if (typeof checkAppUpdate === "function") checkAppUpdate();
