@@ -2596,7 +2596,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers" };
-var APP_BUILD = "20261121-live-1";
+var APP_BUILD = "20261121-live-2";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7164,7 +7164,6 @@ function upgTopLoad(force) {
   upgTopSyncMe();
   if (UPG_TOP.loaded && !force) { upgTopRender(); return; }
   if (force) {
-    UPG_TOP.scores = [];
     UPG_TOP.seen = {};
     UPG_TOP.lastStoreFetch = 0;
   }
@@ -7363,12 +7362,12 @@ function initUpgrader() {
   setInterval(function () {
     if (document.hidden) return;
     if (typeof upgTopFetchStore === "function") upgTopFetchStore(false);
-  }, 300000);
+  }, 120000);
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) return;
     if (typeof upgFeedFetchLive === "function") upgFeedFetchLive();
     if (typeof upgTopFetchLive === "function") upgTopFetchLive();
-    if (typeof upgTopFetchStore === "function") upgTopFetchStore(true);
+    if (typeof upgTopFetchStore === "function") upgTopFetchStore(false);
     if (typeof checkAppUpdate === "function") checkAppUpdate();
   });
   if (typeof upgFeedInit === "function") upgFeedInit();
