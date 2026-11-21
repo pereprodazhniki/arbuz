@@ -2596,6 +2596,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers" };
+var APP_BUILD = "20261121-live-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -6865,6 +6866,11 @@ var UPG_TOP = {
     "https://ntfy.envs.net/prz-upg-top-7a39c1-v7/json?poll=1&since=12h",
     "https://ntfy.adminforge.de/prz-upg-top-7a39c1-v7/json?poll=1&since=12h"
   ],
+  streamUrls: [
+    "https://ntfy.sh/prz-upg-top-7a39c1-v7/json?since=12h",
+    "https://ntfy.envs.net/prz-upg-top-7a39c1-v7/json?since=12h",
+    "https://ntfy.adminforge.de/prz-upg-top-7a39c1-v7/json?since=12h"
+  ],
   storeReady: false,
   storeScores: null,
   lastStoreFetch: 0,
@@ -6873,7 +6879,10 @@ var UPG_TOP = {
   seen: {},
   lastSent: read("prz_upg_top_last", 0) || 0,
   loaded: false,
-  sending: false
+  sending: false,
+  streamAbort: null,
+  streamIdx: 0,
+  streamTimer: null
 };
 
 function upgTopInvStats() {
@@ -7066,6 +7075,49 @@ function upgTopFetchLive() {
   });
 }
 
+function upgTopStreamStart() {
+  if (typeof fetch !== "function" || typeof AbortController === "undefined") return;
+  if (UPG_TOP.streamAbort) return;
+  var urls = UPG_TOP.streamUrls || [];
+  if (!urls.length) return;
+  var idx = UPG_TOP.streamIdx % urls.length;
+  var url = urls[idx];
+  var ctrl = new AbortController();
+  UPG_TOP.streamAbort = ctrl;
+  fetch(url, { cache: "no-store", signal: ctrl.signal }).then(function (r) {
+    if (!r.ok || !r.body || !r.body.getReader) throw new Error("bad");
+    var reader = r.body.getReader();
+    var decoder = (typeof TextDecoder !== "undefined") ? new TextDecoder() : null;
+    var buf = "";
+    function pump() {
+      return reader.read().then(function (part) {
+        if (part.done) throw new Error("end");
+        var chunk = decoder ? decoder.decode(part.value, { stream: true }) : String(part.value || "");
+        buf += chunk;
+        var lines = buf.split("\n");
+        buf = lines.pop() || "";
+        var changed = false;
+        for (var i = 0; i < lines.length; i++) {
+          if (!lines[i]) continue;
+          var ev; try { ev = JSON.parse(lines[i]); } catch (e) { continue; }
+          if (!ev || ev.event !== "message" || !ev.message) continue;
+          var p = upgTopParse(ev.message);
+          if (p && upgTopAdd(p.name, p.score, p.count, p.ts, "live|topstream" + idx + "|" + (ev.id || ""))) changed = true;
+        }
+        if (changed) upgTopRender();
+        return pump();
+      });
+    }
+    return pump();
+  }).catch(function () {
+  }).finally(function () {
+    if (UPG_TOP.streamAbort === ctrl) UPG_TOP.streamAbort = null;
+    UPG_TOP.streamIdx = (idx + 1) % urls.length;
+    if (UPG_TOP.streamTimer) clearTimeout(UPG_TOP.streamTimer);
+    UPG_TOP.streamTimer = setTimeout(function () { upgTopStreamStart(); }, 3000);
+  });
+}
+
 function upgTopSyncMe() {
   var st = upgTopInvStats();
   var tval = document.getElementById("upgTopMyVal");
@@ -7128,6 +7180,7 @@ function upgTopInit() {
   upgTopRender();
   try { upgTopFetchStore(true).then(function(){ upgTopRender(); }).catch(function(){ upgTopRender(); }); } catch (e) {}
   try { upgTopFetchLive().then(function(){ upgTopRender(); }).catch(function(){ upgTopRender(); }); } catch (e) {}
+  try { upgTopStreamStart(); } catch (e) {}
 }
 
 
@@ -7306,19 +7359,44 @@ function initUpgrader() {
   setInterval(function () {
     if (document.hidden) return;
     if (typeof upgTopFetchLive === "function") upgTopFetchLive();
+  }, 15000);
+  setInterval(function () {
+    if (document.hidden) return;
     if (typeof upgTopFetchStore === "function") upgTopFetchStore(false);
-  }, 45000);
+  }, 300000);
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) return;
     if (typeof upgFeedFetchLive === "function") upgFeedFetchLive();
     if (typeof upgTopFetchLive === "function") upgTopFetchLive();
     if (typeof upgTopFetchStore === "function") upgTopFetchStore(true);
+    if (typeof checkAppUpdate === "function") checkAppUpdate();
   });
   if (typeof upgFeedInit === "function") upgFeedInit();
 }
 
+var APP_UPDATE_CHECKING = false;
+function checkAppUpdate() {
+  if (APP_UPDATE_CHECKING) return;
+  if (typeof fetch !== "function") return;
+  if (typeof UPG !== "undefined" && UPG.spinning) return;
+  APP_UPDATE_CHECKING = true;
+  var url = location.pathname + "?_v=" + Date.now();
+  fetch(url, { cache: "no-store" }).then(function (r) { return r.ok ? r.text() : ""; }).then(function (text) {
+    if (!text) return;
+    var m = text.match(/APP_BUILD\s*=\s*"([^"]+)"/);
+    if (m && m[1] && m[1] !== APP_BUILD) {
+      try { toast("Есть обновление, перезагружаю…"); } catch (e) {}
+      setTimeout(function () {
+        try { location.reload(); } catch (e) { location.href = location.pathname + "?fresh=" + Date.now(); }
+      }, 900);
+    }
+  }).catch(function () {}).finally(function () { APP_UPDATE_CHECKING = false; });
+}
+
 function init() {
   renderCatalog();
+  setInterval(checkAppUpdate, 60000);
+  setTimeout(checkAppUpdate, 5000);
   var catalogToggle = document.getElementById("catalogToggle");
   if (catalogToggle) {
     catalogToggle.addEventListener("click", function () {
