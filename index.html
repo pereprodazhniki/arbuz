@@ -2596,7 +2596,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers" };
-var APP_BUILD = "20261121-live-5";
+var APP_BUILD = "20261121-live-6";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -6670,7 +6670,6 @@ function upgResetAll() {
   UPG.wins = 0;
   UPG.profit = 0;
   UPG.hist = [];
-  UPG.lastCase = 0;
   UPG.spinning = false;
   var res = document.getElementById("upgResult");
   if (res) res.hidden = true;
