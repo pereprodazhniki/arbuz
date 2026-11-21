@@ -6178,7 +6178,7 @@ function upgPct(from, to) {
 
 function upgEffPct(from, to) {
   var c = upgPct(from, to);
-  try { if (c > 0 && localStorage.getItem("prz_upg_plus15") === "1") c += 15; } catch (e) {}
+  try { if (c > 0 && localStorage.getItem("prz_upg_plus15") === "1") c += c * 0.15; } catch (e) {}
   if (c > 100) c = 100;
   return c;
 }
