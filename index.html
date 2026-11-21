@@ -1490,16 +1490,34 @@ body.light .jobform__cooldown { background: #f2fff7; border-color: #12803c; colo
 .upg-feed__row.is-win .upg-feed__sum { color: var(--lime); }
 .upg-feed__row.is-lose .upg-feed__sum { color: #ff8f8f; }
 .upg-bcases { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
-.upg-bcases__list { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
-.upg-bcase { background: #0b1a12; border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 8px; }
+.upg-bcases__top { display: grid; gap: 8px; margin-bottom: 10px; }
+.upg-bcases__toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: #122319; color: #fff; font-weight: 800; cursor: pointer; }
+.upg-bcases__toggle:hover { border-color: rgba(47,211,95,.45); }
+.upg-bcases__chev { transition: transform .2s ease; color: var(--muted); }
+.upg-bcases.is-open .upg-bcases__chev { transform: rotate(180deg); }
+.upg-bcases__peek { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 10px; }
+.upg-bcases.is-open .upg-bcases__peek { display: none; }
+.upg-bcases__body { display: none; }
+.upg-bcases.is-open .upg-bcases__body { display: block; }
+.upg-bcases__list { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+.upg-bcase { --case-color:#7ddc8c; --case-accent:#1f6b3a; position: relative; overflow: hidden; background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.08)), #0b1a12; border: 1px solid color-mix(in srgb, var(--case-color) 35%, var(--line)); border-radius: 14px; padding: 12px; display: grid; gap: 8px; }
+.upg-bcase::before { content:""; position:absolute; inset:-40% auto auto -20%; width:120px; height:120px; background: radial-gradient(circle, color-mix(in srgb, var(--case-color) 35%, transparent), transparent 70%); pointer-events:none; }
+.upg-bcase__icon { font-size: 28px; line-height: 1; }
 .upg-bcase__name { font-weight: 900; color: #fff; font-size: 15px; }
-.upg-bcase__price { color: var(--lime); font-weight: 900; }
+.upg-bcase__price { color: var(--case-color); font-weight: 900; }
 .upg-bcase__desc { color: var(--muted); font-size: 12px; line-height: 1.35; min-height: 32px; }
-.upg-bcase__btn { border: 0; border-radius: 10px; padding: 10px 12px; font-weight: 900; cursor: pointer; background: linear-gradient(180deg, #2fd35f, #1c8f45); color: #072012; }
-.upg-bcase__btn:disabled { opacity: .55; cursor: not-allowed; }
+.upg-bcase__btn { border: 0; border-radius: 10px; padding: 10px 12px; font-weight: 900; cursor: pointer; background: linear-gradient(180deg, color-mix(in srgb, var(--case-color) 85%, white 10%), color-mix(in srgb, var(--case-accent) 75%, black 10%)); color: #07130d; box-shadow: 0 6px 18px color-mix(in srgb, var(--case-color) 18%, transparent); }
+.upg-bcase__btn:hover:not(:disabled) { filter: brightness(1.04); }
+.upg-bcase__btn:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
+.upg-bcase-peek { display: grid; gap: 4px; padding: 10px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--case-color) 28%, var(--line)); background: #0e1d14; color: #fff; text-align: left; cursor: pointer; }
+.upg-bcase-peek__icon { font-size: 20px; }
+.upg-bcase-peek__name { font-size: 12px; font-weight: 800; line-height: 1.2; }
+.upg-bcase-peek__price { font-size: 12px; color: var(--case-color); font-weight: 900; }
 .upg-bcases__note { margin-top: 8px; color: var(--muted); font-size: 12px; min-height: 18px; }
-body.light .upg-bcase { background: #fff; border-color: #bfe4cc; }
-body.light .upg-bcase__name { color: #0d2b19; }
+body.light .upg-bcases__toggle { background: #fff; color: #0d2b19; border-color: #bfe4cc; }
+body.light .upg-bcase { background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(240,255,246,.8)), #fff; border-color: color-mix(in srgb, var(--case-color) 30%, #bfe4cc); }
+body.light .upg-bcase__name, body.light .upg-bcase-peek__name { color: #0d2b19; }
+body.light .upg-bcase-peek { background: #fff; border-color: color-mix(in srgb, var(--case-color) 25%, #bfe4cc); color: #0d2b19; }
 .casepop { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; padding: 16px; }
 .casepop[hidden] { display: none !important; }
 .casepop__overlay { position: absolute; inset: 0; background: rgba(0,0,0,.62); }
@@ -2456,9 +2474,18 @@ body.light .upg-feed__who { color: #0d2b19; }
         <p class="upg-top__note" id="upgTopNote">Рейтинг общий для всех. Считается суммарная стоимость твоего инвентаря в апгрейдере.</p>
       </div>
 
-      <div class="upg-bcases">
-        <div class="upg-feed__head"><b>Кейсы за баланс</b><span>открывай за баланс сайта — дроп в инвентарь апгрейдера</span></div>
-        <div class="upg-bcases__list" id="upgBalanceCases"></div>
+      <div class="upg-bcases" id="upgBcases">
+        <div class="upg-bcases__top">
+          <div class="upg-feed__head"><b>Кейсы за баланс</b><span>открывай за баланс сайта — дроп в инвентарь апгрейдера</span></div>
+          <button class="upg-bcases__toggle" id="upgBcasesToggle" type="button" aria-expanded="false">
+            <span>Показать все кейсы <span id="upgBcasesCount"></span></span>
+            <span class="upg-bcases__chev">▼</span>
+          </button>
+        </div>
+        <div class="upg-bcases__peek" id="upgBcasesPeek"></div>
+        <div class="upg-bcases__body" id="upgBcasesBody">
+          <div class="upg-bcases__list" id="upgBalanceCases"></div>
+        </div>
         <div class="upg-bcases__note" id="upgBalanceCaseNote"></div>
       </div>
 
@@ -2674,7 +2701,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261121-casepop-3";
+var APP_BUILD = "20261121-bcases-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -6287,35 +6314,103 @@ var UPG_START = ["classic", "pig", "seed"];
 
 var UPG_BALANCE_CASES = [
   {
-    id: "bcase_mini",
-    name: "Малый арбуз-кейс",
-    price: 250,
-    desc: "Дешёвый кейс для разгона. Дроп: обычные и редкие арбузы.",
+    id: "bcase_seed",
+    name: "Семечковый кейс",
+    price: 150,
+    desc: "Самый дешёвый старт. Мелочь, но приятная.",
+    icon: "🌱", color: "#7ddc8c", accent: "#1f6b3a",
     pool: [
-      { id: "seed", w: 24 }, { id: "slice", w: 22 }, { id: "mini", w: 16 }, { id: "classic", w: 14 },
-      { id: "salt", w: 10 }, { id: "pig", w: 7 }, { id: "cap", w: 4 }, { id: "cool", w: 2 }, { id: "cat", w: 1 }
+      { id: "seed", w: 30 }, { id: "slice", w: 24 }, { id: "mini", w: 18 }, { id: "classic", w: 14 },
+      { id: "salt", w: 8 }, { id: "smile", w: 4 }, { id: "pig", w: 2 }
     ]
   },
   {
-    id: "bcase_mid",
+    id: "bcase_juice",
     name: "Сочный кейс",
-    price: 1000,
-    desc: "Сбалансированный кейс. Можно словить эпик.",
+    price: 400,
+    desc: "Свежий дроп для разгона баланса.",
+    icon: "🧃", color: "#ff7fa8", accent: "#7a2442",
+    pool: [
+      { id: "classic", w: 20 }, { id: "salt", w: 16 }, { id: "smile", w: 14 }, { id: "pig", w: 12 },
+      { id: "cube", w: 10 }, { id: "grandma", w: 10 }, { id: "cap", w: 8 }, { id: "striped", w: 6 }, { id: "cool", w: 4 }
+    ]
+  },
+  {
+    id: "bcase_farmer",
+    name: "Фермерский кейс",
+    price: 900,
+    desc: "От бабушкиного огорода до редких находок.",
+    icon: "🚜", color: "#f4c542", accent: "#6b4e00",
     pool: [
       { id: "cap", w: 18 }, { id: "striped", w: 16 }, { id: "cool", w: 14 }, { id: "cat", w: 12 },
       { id: "heart", w: 10 }, { id: "disco", w: 8 }, { id: "diamond", w: 7 }, { id: "ninja", w: 6 },
-      { id: "fire", w: 4 }, { id: "gold", w: 3 }, { id: "chest", w: 2 }
+      { id: "fire", w: 5 }, { id: "gold", w: 4 }
     ]
   },
   {
-    id: "bcase_big",
-    name: "Легендарный кейс",
-    price: 5000,
-    desc: "Дорогой кейс с шансом на легендарку.",
+    id: "bcase_neon",
+    name: "Неоновый кейс",
+    price: 1800,
+    desc: "Яркий кейс с шансом на эпик.",
+    icon: "🌈", color: "#7bd3ff", accent: "#1d4f7a",
     pool: [
-      { id: "gold", w: 20 }, { id: "chest", w: 16 }, { id: "rocket", w: 14 }, { id: "mech", w: 12 },
-      { id: "dino", w: 10 }, { id: "robot", w: 9 }, { id: "dragon", w: 8 }, { id: "crown", w: 5 },
-      { id: "ice", w: 3 }, { id: "ghost", w: 2 }, { id: "black", w: 1 }
+      { id: "cat", w: 16 }, { id: "heart", w: 14 }, { id: "disco", w: 13 }, { id: "diamond", w: 12 },
+      { id: "ninja", w: 11 }, { id: "fire", w: 10 }, { id: "gold", w: 9 }, { id: "chest", w: 8 }, { id: "rocket", w: 7 }
+    ]
+  },
+  {
+    id: "bcase_ninja",
+    name: "Ниндзя-кейс",
+    price: 3200,
+    desc: "Тихий, но опасный. Эпики заходят чаще.",
+    icon: "🥷", color: "#aeb8c4", accent: "#39424d",
+    pool: [
+      { id: "diamond", w: 16 }, { id: "ninja", w: 15 }, { id: "fire", w: 14 }, { id: "gold", w: 13 },
+      { id: "chest", w: 12 }, { id: "rocket", w: 10 }, { id: "mech", w: 8 }, { id: "dino", w: 7 }, { id: "robot", w: 5 }
+    ]
+  },
+  {
+    id: "bcase_treasure",
+    name: "Сундук сокровищ",
+    price: 5500,
+    desc: "Тяжёлый кейс с хорошим эпическим пулом.",
+    icon: "💰", color: "#ffcc4d", accent: "#7a5a00",
+    pool: [
+      { id: "gold", w: 18 }, { id: "chest", w: 16 }, { id: "rocket", w: 14 }, { id: "mech", w: 12 },
+      { id: "dino", w: 11 }, { id: "robot", w: 10 }, { id: "dragon", w: 8 }, { id: "crown", w: 6 }, { id: "ice", w: 5 }
+    ]
+  },
+  {
+    id: "bcase_dragon",
+    name: "Драконий кейс",
+    price: 9000,
+    desc: "Горячий кейс для охотников за легендарками.",
+    icon: "🐲", color: "#ff7a59", accent: "#7a2313",
+    pool: [
+      { id: "rocket", w: 16 }, { id: "mech", w: 14 }, { id: "dino", w: 13 }, { id: "robot", w: 12 },
+      { id: "dragon", w: 11 }, { id: "crown", w: 10 }, { id: "ice", w: 9 }, { id: "ghost", w: 8 }, { id: "black", w: 7 }
+    ]
+  },
+  {
+    id: "bcase_cosmic",
+    name: "Космический кейс",
+    price: 15000,
+    desc: "Далёкий космос, близкие легендарки.",
+    icon: "🪐", color: "#b58cff", accent: "#4b2a7a",
+    pool: [
+      { id: "dino", w: 15 }, { id: "robot", w: 14 }, { id: "dragon", w: 13 }, { id: "crown", w: 12 },
+      { id: "ice", w: 11 }, { id: "ghost", w: 10 }, { id: "black", w: 9 }, { id: "space", w: 8 }, { id: "portal", w: 8 }
+    ]
+  },
+  {
+    id: "bcase_divine",
+    name: "Божественный кейс",
+    price: 30000,
+    desc: "Очень дорогой кейс. Легендарки и редкий шанс на мифик.",
+    icon: "✨", color: "#ffe08a", accent: "#7a5b00",
+    pool: [
+      { id: "crown", w: 18 }, { id: "ice", w: 16 }, { id: "ghost", w: 14 }, { id: "black", w: 12 },
+      { id: "space", w: 11 }, { id: "portal", w: 10 }, { id: "saint", w: 8 }, { id: "galaxy", w: 6 }, { id: "planet", w: 5 }
     ]
   }
 ];
@@ -6333,6 +6428,7 @@ var UPG = {
   pendingCase: null,
   spinning: false,
   assortOpen: false,
+  bcasesOpen: false,
   arrowDeg: 0
 };
 
@@ -6437,6 +6533,7 @@ function upgLoad() {
   }
   UPG.target = d && upgItem(d.target) ? d.target : null;
   UPG.assortOpen = false; /* по умолчанию скрыт при заходе */
+  UPG.bcasesOpen = false;
   if (recoveredPending) upgSave();
 }
 
@@ -6675,18 +6772,47 @@ function upgFillReel() { /* replaced by wheel */ }
 function upgRenderBalanceCases() {
   var box = document.getElementById("upgBalanceCases");
   if (!box) return;
+  var wrap = document.getElementById("upgBcases");
+  var peek = document.getElementById("upgBcasesPeek");
+  var toggle = document.getElementById("upgBcasesToggle");
+  var countEl = document.getElementById("upgBcasesCount");
+  var open = !!UPG.bcasesOpen;
+  if (wrap) wrap.classList.toggle("is-open", open);
+  if (toggle) {
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    toggle.innerHTML = '<span>' + (open ? "Скрыть кейсы " : "Показать все кейсы ") + '<span id="upgBcasesCount">(' + UPG_BALANCE_CASES.length + ')</span></span><span class="upg-bcases__chev">▼</span>';
+  }
+
   var html = "";
   for (var i = 0; i < UPG_BALANCE_CASES.length; i++) {
     var c = UPG_BALANCE_CASES[i];
     var can = (Number(UPG.balance) || 0) >= c.price;
-    html += '<div class="upg-bcase">' +
-      '<div class="upg-bcase__name">🎁 ' + c.name + '</div>' +
+    var style = '--case-color:' + (c.color || '#7ddc8c') + ';--case-accent:' + (c.accent || '#1f6b3a');
+    html += '<div class="upg-bcase" style="' + style + '">' +
+      '<div class="upg-bcase__icon">' + (c.icon || '🎁') + '</div>' +
+      '<div class="upg-bcase__name">' + c.name + '</div>' +
       '<div class="upg-bcase__price">' + upgMoney(c.price) + '</div>' +
       '<div class="upg-bcase__desc">' + c.desc + '</div>' +
       '<button class="upg-bcase__btn" type="button" data-bcase="' + c.id + '"' + (can ? "" : " disabled") + '>Открыть за ' + upgMoney(c.price) + '</button>' +
       '</div>';
   }
   box.innerHTML = html;
+
+  if (peek) {
+    var peekHtml = "";
+    var peekCount = Math.min(3, UPG_BALANCE_CASES.length);
+    for (var p = 0; p < peekCount; p++) {
+      var pc = UPG_BALANCE_CASES[p];
+      var pstyle = '--case-color:' + (pc.color || '#7ddc8c') + ';--case-accent:' + (pc.accent || '#1f6b3a');
+      peekHtml += '<button class="upg-bcase-peek" type="button" data-bcase="' + pc.id + '" style="' + pstyle + '">' +
+        '<span class="upg-bcase-peek__icon">' + (pc.icon || '🎁') + '</span>' +
+        '<span class="upg-bcase-peek__name">' + pc.name + '</span>' +
+        '<span class="upg-bcase-peek__price">' + upgMoney(pc.price) + '</span>' +
+        '</button>';
+    }
+    peek.innerHTML = peekHtml;
+  }
+
   var note = document.getElementById("upgBalanceCaseNote");
   if (note && !note.textContent) note.textContent = "Баланс берётся из вывода инвентаря апгрейдера.";
 }
@@ -7685,9 +7811,15 @@ function initUpgrader() {
   var resetBtn = document.getElementById("upgReset");
   if (resetBtn) resetBtn.addEventListener("click", function () { upgResetAll(); if (typeof upgTopSyncMe === "function") upgTopSyncMe(); });
 
-  var bcases = document.getElementById("upgBalanceCases");
-  if (bcases) {
-    bcases.addEventListener("click", function (e) {
+  var bcasesWrap = document.getElementById("upgBcases");
+  if (bcasesWrap) {
+    bcasesWrap.addEventListener("click", function (e) {
+      var toggle = upgClosest(e.target, "#upgBcasesToggle");
+      if (toggle) {
+        UPG.bcasesOpen = !UPG.bcasesOpen;
+        upgRenderBalanceCases();
+        return;
+      }
       var btn = upgClosest(e.target, "[data-bcase]");
       if (!btn || btn.disabled) return;
       var id = btn.getAttribute("data-bcase");
