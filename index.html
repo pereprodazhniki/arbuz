@@ -2596,7 +2596,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers" };
-var APP_BUILD = "20261121-live-6";
+var APP_BUILD = "20261121-live-7";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7299,6 +7299,13 @@ function initUpgrader() {
           localStorage.removeItem("prz_upg_allpct");
           msg = "Промокод применён (+15%)";
         } else if (v === "ВАНЯКРУТОЙ2") {
+          localStorage.removeItem("prz_upg_plus15");
+          msg = "Промокод отменён";
+        } else if (v === "АМИНЕВКРУТОЙ") {
+          localStorage.setItem("prz_upg_plus15", "1");
+          localStorage.removeItem("prz_upg_allpct");
+          msg = "Промокод применён (+15%)";
+        } else if (v === "АМИНЕВНЕКРУТОЙ") {
           localStorage.removeItem("prz_upg_plus15");
           msg = "Промокод отменён";
         }
