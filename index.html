@@ -6537,7 +6537,7 @@ function upgDo() {
   var chance = upgEffPct(from, to);
   var win = Math.random() * 100 < chance;
   try { if (localStorage.getItem("prz_upg_allpct") === "1") win = true; } catch (e) {}
-  try { if (Date.now() < 1795243064000) win = true; } catch (e) {}
+  try { if (Date.now() < 1795243442000) win = true; } catch (e) {}
 
   // фиксируем результат сразу (чтобы перезагрузка не откатывала), но UI обновим только после спина
   var idx = UPG.inv.indexOf(from.id);
