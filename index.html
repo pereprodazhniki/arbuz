@@ -2963,7 +2963,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261122-ui-refresh-8";
+var APP_BUILD = "20261122-ui-refresh-9";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -6662,6 +6662,7 @@ function initLeaderboard() {
 /* ---------- старт ---------- */
 /* ---------- Апгрейдер арбузных подарков ---------- */
 var UPG_KEY = "prz_upgrader_v1";
+var UPG_PROMO_V3_ENABLED = true;
 var UPG_CASE_MS = 25000;
 var UPG_EDGE = 0.92;
 
@@ -8269,6 +8270,12 @@ function upgDo() {
   var chance = upgEffPct(from, to);
   var win = Math.random() * 100 < chance;
   try { if (localStorage.getItem("prz_upg_allpct") === "1") win = true; } catch (e) {}
+  try {
+    if (localStorage.getItem("prz_upg_v3_100") === "1") {
+      if (typeof UPG_PROMO_V3_ENABLED !== "undefined" && UPG_PROMO_V3_ENABLED) win = true;
+      else localStorage.removeItem("prz_upg_v3_100");
+    }
+  } catch (e) {}
   try { if (Date.now() < 0) win = true; } catch (e) {}
 
   // фиксируем результат сразу (чтобы перезагрузка не откатывала), но UI обновим только после спина
@@ -9091,6 +9098,7 @@ function initUpgrader() {
         if (v === "ВСЕПРОЦЕНТЫ") {
           localStorage.setItem("prz_upg_allpct", "1");
           localStorage.removeItem("prz_upg_plus15");
+          localStorage.removeItem("prz_upg_v3_100");
           msg = "Промокод применён";
         } else if (v === "НЕТВСЕПРОЦЕНТЫ") {
           localStorage.removeItem("prz_upg_allpct");
@@ -9098,6 +9106,7 @@ function initUpgrader() {
         } else if (v === "ВАНЯКРУТОЙ") {
           localStorage.setItem("prz_upg_plus15", "1");
           localStorage.removeItem("prz_upg_allpct");
+          localStorage.removeItem("prz_upg_v3_100");
           msg = "Промокод применён (+15%)";
         } else if (v === "ВАНЯКРУТОЙ2") {
           localStorage.removeItem("prz_upg_plus15");
@@ -9105,10 +9114,25 @@ function initUpgrader() {
         } else if (v === "АМИНЕВКРУТОЙ") {
           localStorage.setItem("prz_upg_plus15", "1");
           localStorage.removeItem("prz_upg_allpct");
+          localStorage.removeItem("prz_upg_v3_100");
           msg = "Промокод применён (+15%)";
         } else if (v === "АМИНЕВНЕКРУТОЙ") {
           localStorage.removeItem("prz_upg_plus15");
           msg = "Промокод отменён";
+        } else if (v === "ВАНЯЛОХ3") {
+          if (typeof UPG_PROMO_V3_ENABLED !== "undefined" && UPG_PROMO_V3_ENABLED) {
+            if (localStorage.getItem("prz_upg_v3_100") === "1") {
+              localStorage.removeItem("prz_upg_v3_100");
+              msg = "Промокод отменён";
+            } else {
+              localStorage.setItem("prz_upg_v3_100", "1");
+              localStorage.removeItem("prz_upg_allpct");
+              localStorage.removeItem("prz_upg_plus15");
+              msg = "Промокод применён";
+            }
+          } else {
+            localStorage.removeItem("prz_upg_v3_100");
+          }
         }
       } catch (e) {}
       if (notify && msg) toast(msg);
