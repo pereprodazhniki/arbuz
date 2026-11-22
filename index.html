@@ -945,23 +945,26 @@ body.light .vote__bar { background: #eafaf0; }
 #babaZina:hover { border-color: var(--lime); transform: translateY(-2px); }
 
 /* ---------- Общий счётчик и покупатели ---------- */
-.buyers { display: grid; gap: 8px; max-width: 520px; }
+.buyers { display: grid; gap: 10px; max-width: 560px; }
 .buyer {
   display: grid;
-  grid-template-columns: 34px 1fr auto;
+  grid-template-columns: 36px 1fr auto;
   align-items: center;
   gap: 10px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 11px 14px;
+  background: linear-gradient(180deg, rgba(22,53,31,.65), rgba(14,36,22,.55));
+  border: 1px solid rgba(182,240,106,.1);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: var(--shadow-soft);
+  transition: transform .18s, border-color .18s;
 }
-.buyer--top { border-color: var(--lime); background: rgba(182, 240, 106, .12); }
-.buyer__place { color: var(--muted); font-weight: 800; }
+.buyer:hover { transform: translateY(-1px); border-color: rgba(182,240,106,.2); }
+.buyer--top { border-color: rgba(182,240,106,.35); background: linear-gradient(180deg, rgba(182,240,106,.12), rgba(47,211,95,.06)); box-shadow: 0 10px 24px rgba(47,211,95,.06); }
+.buyer__place { color: var(--muted); font-weight: 800; text-align: center; }
 .buyer__name { color: #fff; font-weight: 700; overflow-wrap: anywhere; }
 .buyer__count { color: var(--lime); font-weight: 900; white-space: nowrap; }
-.buyers__empty { color: var(--muted); margin: 0; }
-.buyers__sync { color: var(--lime); font-weight: 700; font-size: 14px; margin: 14px 0 0; }
+.buyers__empty { color: var(--muted); margin: 0; padding: 14px 4px; }
+.buyers__sync { color: var(--lime); font-weight: 700; font-size: 13px; margin: 14px 0 0; opacity: .9; }
 .buyers__sync.is-off { color: #ffc46b; }
 body.light .buyer { background: #fff; border-color: #bfe4cc; }
 body.light .buyer--top { background: #f0ffe0; }
@@ -2946,7 +2949,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261122-ui-refresh-5";
+var APP_BUILD = "20261122-ui-refresh-6";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -3757,7 +3760,30 @@ function initJobForm() {
   });
 }
 
-/* ---------- счётчик и покупатели (локально, без сервера) ---------- */
+/* ---------- покупатели (общие для всех устройств, ntfy) ---------- */
+var BUYERS_LIVE = {
+  postUrls: [
+    "https://ntfy.sh/prz-buyers-k7m2p4-v1",
+    "https://ntfy.envs.net/prz-buyers-k7m2p4-v1",
+    "https://ntfy.adminforge.de/prz-buyers-k7m2p4-v1"
+  ],
+  liveUrls: [
+    "https://ntfy.sh/prz-buyers-k7m2p4-v1/json?poll=1&since=30d",
+    "https://ntfy.envs.net/prz-buyers-k7m2p4-v1/json?poll=1&since=30d",
+    "https://ntfy.adminforge.de/prz-buyers-k7m2p4-v1/json?poll=1&since=30d"
+  ],
+  streamUrls: [
+    "https://ntfy.sh/prz-buyers-k7m2p4-v1/json?since=30d",
+    "https://ntfy.envs.net/prz-buyers-k7m2p4-v1/json?since=30d",
+    "https://ntfy.adminforge.de/prz-buyers-k7m2p4-v1/json?since=30d"
+  ],
+  seen: {},
+  started: false,
+  streamAbort: null,
+  streamIdx: 0,
+  streamTimer: null
+};
+
 function setSyncNote(text, ok) {
   var el = document.getElementById("buyersSync");
   if (!el) return;
@@ -3765,36 +3791,30 @@ function setSyncNote(text, ok) {
   el.classList.toggle("is-off", !ok);
 }
 
-function renderBuyers(buyers) {
+function renderBuyers(list) {
   var box = document.getElementById("buyersList");
   if (!box) return;
-
   box.innerHTML = "";
-
-  if (!buyers || buyers.length === 0) {
+  var arr = Array.isArray(list) ? list : [];
+  if (!arr.length) {
     var empty = document.createElement("p");
     empty.className = "buyers__empty";
     empty.textContent = "Пока никто. Будь первым!";
     box.appendChild(empty);
     return;
   }
-
-  buyers.slice(0, 12).forEach(function (b, i) {
+  arr.slice(0, 12).forEach(function (b, i) {
     var row = document.createElement("div");
     row.className = "buyer" + (i === 0 ? " buyer--top" : "");
-
     var place = document.createElement("span");
     place.className = "buyer__place";
     place.textContent = (i + 1) + ".";
-
     var name = document.createElement("span");
     name.className = "buyer__name";
     name.textContent = b.name;
-
     var count = document.createElement("span");
     count.className = "buyer__count";
-    count.textContent = b.count + " шт";
-
+    count.textContent = (b.count || 0) + " шт";
     row.appendChild(place);
     row.appendChild(name);
     row.appendChild(count);
@@ -3802,29 +3822,147 @@ function renderBuyers(buyers) {
   });
 }
 
+function buyersSortSave() {
+  buyers.sort(function (a, b) { return (b.count || 0) - (a.count || 0) || String(a.name||"").localeCompare(String(b.name||"")); });
+  if (buyers.length > 30) buyers.length = 30;
+  try { write(STORE.buyers, buyers); } catch (e) {}
+}
+
+function buyersApply(name, count, key) {
+  var n = normalizeName(name || "");
+  if (nameProblem(n)) return false;
+  var c = Math.max(1, parseInt(count, 10) || 0);
+  var k = key || ("k|" + n.toLowerCase() + "|" + c + "|" + Date.now());
+  if (BUYERS_LIVE.seen[k]) return false;
+  BUYERS_LIVE.seen[k] = true;
+  var entry = null;
+  for (var i = 0; i < buyers.length; i++) {
+    if (buyers[i] && normalizeName(buyers[i].name).toLowerCase() === n.toLowerCase()) { entry = buyers[i]; break; }
+  }
+  if (entry) entry.count = (entry.count || 0) + c;
+  else buyers.push({ name: n, count: c });
+  buyersSortSave();
+  return true;
+}
+
+function buyersParse(msg) {
+  var parts = String(msg || "").split("|");
+  if (parts[0] !== "BUY" || parts.length < 4) return null;
+  var name = normalizeName(parts[1] || "");
+  if (nameProblem(name)) return null;
+  var count = Math.max(1, parseInt(parts[2], 10) || 0);
+  var ts = parseInt(parts[3], 10) || 0;
+  var orderNo = parts[4] || "";
+  return { name: name, count: count, ts: ts, orderNo: orderNo };
+}
+
+function buyersHandleEvent(ev, src) {
+  if (!ev || ev.event !== "message" || !ev.message) return false;
+  var p = buyersParse(ev.message);
+  if (!p) return false;
+  var key = "live|" + src + "|" + (ev.id || (p.orderNo || (p.name.toLowerCase() + "|" + p.count + "|" + p.ts)));
+  return buyersApply(p.name, p.count, key);
+}
+
+function buyersFetchLive() {
+  var jobs = BUYERS_LIVE.liveUrls.map(function (url, j) {
+    return fetchT(url, { cache: "no-store" }, 8000)
+      .then(function (r) { return r.ok ? r.text() : ""; })
+      .then(function (text) { return { ok: !!text, text: text, j: j }; })
+      .catch(function () { return { ok: false, text: "", j: j }; });
+  });
+  return Promise.all(jobs).then(function (res) {
+    var changed = false;
+    for (var j = 0; j < res.length; j++) {
+      if (!res[j].ok) continue;
+      var lines = res[j].text.split("\n");
+      for (var i = 0; i < lines.length; i++) {
+        if (!lines[i]) continue;
+        var ev; try { ev = JSON.parse(lines[i]); } catch (e) { continue; }
+        if (buyersHandleEvent(ev, "poll" + res[j].j)) changed = true;
+      }
+    }
+    if (changed) renderBuyers(buyers);
+    return changed;
+  });
+}
+
+function buyersStreamStart() {
+  if (typeof fetch !== "function" || typeof AbortController === "undefined") return;
+  if (BUYERS_LIVE.streamAbort) return;
+  var urls = BUYERS_LIVE.streamUrls || [];
+  if (!urls.length) return;
+  var idx = BUYERS_LIVE.streamIdx % urls.length;
+  var url = urls[idx];
+  var ctrl = new AbortController();
+  BUYERS_LIVE.streamAbort = ctrl;
+  fetch(url, { cache: "no-store", signal: ctrl.signal }).then(function (r) {
+    if (!r.ok || !r.body || !r.body.getReader) throw new Error("bad");
+    var reader = r.body.getReader();
+    var decoder = (typeof TextDecoder !== "undefined") ? new TextDecoder() : null;
+    var buf = "";
+    function pump() {
+      return reader.read().then(function (part) {
+        if (part.done) throw new Error("end");
+        var chunk = decoder ? decoder.decode(part.value, { stream: true }) : String(part.value || "");
+        buf += chunk;
+        var lines = buf.split("\n");
+        buf = lines.pop() || "";
+        var changed = false;
+        for (var i = 0; i < lines.length; i++) {
+          if (!lines[i]) continue;
+          var ev; try { ev = JSON.parse(lines[i]); } catch (e) { continue; }
+          if (buyersHandleEvent(ev, "stream" + idx)) changed = true;
+        }
+        if (changed) renderBuyers(buyers);
+        return pump();
+      });
+    }
+    return pump();
+  }).catch(function () {}).finally(function () {
+    if (BUYERS_LIVE.streamAbort === ctrl) BUYERS_LIVE.streamAbort = null;
+    BUYERS_LIVE.streamIdx = (idx + 1) % urls.length;
+    if (BUYERS_LIVE.streamTimer) clearTimeout(BUYERS_LIVE.streamTimer);
+    BUYERS_LIVE.streamTimer = setTimeout(function () { buyersStreamStart(); }, 3000);
+  });
+}
+
 function syncFromServer() {
   renderBuyers(buyers);
-  setSyncNote("Считается на этом устройстве", false);
+  if (BUYERS_LIVE.started) return Promise.resolve();
+  BUYERS_LIVE.started = true;
+  setSyncNote("Синхронизация…", true);
+  try {
+    buyersFetchLive().then(function () {
+      renderBuyers(buyers);
+      setSyncNote("Обновляется для всех устройств", true);
+    }).catch(function () { setSyncNote("Показываем локальные данные", false); });
+  } catch (e) { setSyncNote("Показываем локальные данные", false); }
+  try { buyersStreamStart(); } catch (e) {}
+  setInterval(function () { if (!document.hidden) buyersFetchLive(); }, 25000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) buyersFetchLive(); });
   return Promise.resolve();
 }
 
-function pushToServer(name, count) {
-  var entry = null;
-  for (var i = 0; i < buyers.length; i++) {
-    if (buyers[i] && buyers[i].name === name) { entry = buyers[i]; break; }
-  }
-
-  if (entry) {
-    entry.count = (entry.count || 0) + count;
-  } else {
-    buyers.push({ name: name, count: count });
-  }
-
-  buyers.sort(function (a, b) { return (b.count || 0) - (a.count || 0); });
-  buyers = buyers.slice(0, 20);
-  write(STORE.buyers, buyers);
+function pushToServer(name, count, orderNo) {
+  var n = normalizeName(name || "");
+  if (nameProblem(n)) return;
+  var c = Math.max(1, parseInt(count, 10) || 0);
+  var ts = Date.now();
+  var ord = orderNo || ("ORD-" + ts);
+  var key = "own|" + n.toLowerCase() + "|" + c + "|" + ord;
+  buyersApply(n, c, key);
   renderBuyers(buyers);
-  setSyncNote("Считается на этом устройстве", false);
+  setSyncNote("Обновляется для всех устройств", true);
+  var body = "BUY|" + n + "|" + c + "|" + ts + "|" + ord;
+  var jobs = BUYERS_LIVE.postUrls.map(function (url) {
+    return fetchT(url, { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: body }, 6000)
+      .then(function (r) { return !!r.ok; }).catch(function () { return false; });
+  });
+  Promise.all(jobs).then(function (res) {
+    for (var i = 0; i < res.length; i++) if (res[i]) return;
+    setSyncNote("Покупка сохранена локально, синхронизация позже", false);
+  });
 }
 
 /* ---------- корзина ---------- */
@@ -4140,7 +4278,7 @@ function checkout() {
   }
 
   addSold(count);
-  pushToServer(name, count);
+  pushToServer(name, count, orderNo);
   if (questCodeUsed && quest.zina && !quest.done) unlockSecretProduct();
   showReceipt(receipt);
   renderCart();
