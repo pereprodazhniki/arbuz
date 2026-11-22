@@ -624,30 +624,32 @@ body.light .cert p { color: #3d6b52; }
   margin-bottom: 22px;
 }
 .search, .select, .input {
-  background: var(--surface-2);
-  border: 2px solid var(--line);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(182,240,106,.12);
   color: var(--text);
   border-radius: 14px;
   padding: 12px 14px;
   font-size: 15px;
   font-family: inherit;
+  transition: border-color .2s, box-shadow .2s, background .2s;
 }
 .search { flex: 1 1 240px; min-width: 0; }
-.search:focus, .select:focus, .input:focus { outline: none; border-color: var(--green); }
+.search:focus, .select:focus, .input:focus { outline: none; border-color: rgba(182,240,106,.35); box-shadow: 0 0 0 3px rgba(182,240,106,.08); background: rgba(255,255,255,.06); }
 .select { cursor: pointer; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
-  border: 2px solid var(--line);
-  background: transparent;
+  border: 1px solid rgba(182,240,106,.12);
+  background: rgba(255,255,255,.02);
   color: var(--muted);
   border-radius: 999px;
   padding: 8px 14px;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
+  transition: all .18s;
 }
-.chip:hover { color: var(--text); border-color: var(--green); }
-.chip.is-active { background: var(--green); border-color: var(--green); color: #06210f; }
+.chip:hover { color: var(--text); border-color: rgba(182,240,106,.28); background: rgba(255,255,255,.05); }
+.chip.is-active { background: linear-gradient(180deg, #dfff9a, var(--lime)); border-color: transparent; color: #06210f; box-shadow: 0 6px 16px rgba(182,240,106,.2); }
 .empty { color: var(--muted); text-align: center; padding: 30px 0; }
 .empty[hidden] { display: none !important; }
 
@@ -973,28 +975,37 @@ body.light .buyers__sync.is-off { color: #b06a00; }
 
 /* ---------- Форма заявки ---------- */
 .jobform {
-  background: linear-gradient(180deg, var(--surface-2), var(--surface));
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 22px;
+  background: linear-gradient(180deg, rgba(22,53,31,.78), rgba(14,36,22,.72));
+  border: 1px solid rgba(182,240,106,.1);
+  border-radius: 24px;
+  padding: 24px;
   display: grid;
-  gap: 14px;
+  gap: 16px;
   max-width: 720px;
+  box-shadow: var(--shadow-soft);
 }
 .jobform__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
 .jobrow { display: grid; gap: 6px; }
-.jobrow > span { font-weight: 700; font-size: 14.5px; color: var(--text); }
+.jobrow > span { font-weight: 700; font-size: 14px; color: var(--muted); }
 .jobrow i { color: var(--red); font-style: normal; }
-.check { display: flex; gap: 10px; align-items: flex-start; font-weight: 600; cursor: pointer; }
+.jobrow input, .jobrow select, .jobrow textarea {
+  width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(182,240,106,.12);
+  background: rgba(255,255,255,.04); color: var(--text); font: inherit;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+.jobrow input:focus, .jobrow select:focus, .jobrow textarea:focus {
+  outline: none; border-color: rgba(182,240,106,.35); box-shadow: 0 0 0 3px rgba(182,240,106,.08); background: rgba(255,255,255,.06);
+}
+.check { display: flex; gap: 10px; align-items: flex-start; font-weight: 600; cursor: pointer; color: var(--muted); font-size: 14px; }
 .check input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--green); }
 .jobform__note { margin: 0; font-weight: 700; color: var(--lime); min-height: 20px; }
 .jobform__note.is-bad { color: var(--red); }
 .jobform__cooldown {
   margin: 0;
-  background: #000;
-  border: 1px solid var(--green);
-  border-radius: 14px;
-  padding: 12px 16px;
+  background: rgba(47,211,95,.08);
+  border: 1px solid rgba(47,211,95,.25);
+  border-radius: 16px;
+  padding: 13px 16px;
   color: var(--text);
   font-weight: 700;
 }
@@ -1025,15 +1036,16 @@ body.light .jobform__cooldown { background: #f2fff7; border-color: #12803c; colo
 .cart__head { display: flex; justify-content: space-between; align-items: center; }
 .cart__head h3 { margin: 0; color: #fff; }
 .cart__close {
-  background: var(--surface-2);
+  background: rgba(255,255,255,.05);
   color: var(--text);
-  border: 1px solid var(--line);
-  width: 34px; height: 34px;
-  border-radius: 10px;
+  border: 1px solid rgba(182,240,106,.12);
+  width: 36px; height: 36px;
+  border-radius: 12px;
   font-size: 17px;
   cursor: pointer;
+  transition: all .18s;
 }
-.cart__close:hover { background: var(--red); color: #fff; border-color: var(--red); }
+.cart__close:hover { background: rgba(255,77,90,.15); color: #ff8f99; border-color: rgba(255,77,90,.35); }
 .cart__items { margin: 16px 0; display: grid; gap: 10px; }
 .cart__item {
   display: grid;
@@ -2949,7 +2961,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261122-ui-refresh-6";
+var APP_BUILD = "20261122-ui-refresh-7";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
