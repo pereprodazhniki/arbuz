@@ -2963,7 +2963,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261122-ui-refresh-9";
+var APP_BUILD = "20261122-ui-refresh-10";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -6662,7 +6662,8 @@ function initLeaderboard() {
 /* ---------- старт ---------- */
 /* ---------- Апгрейдер арбузных подарков ---------- */
 var UPG_KEY = "prz_upgrader_v1";
-var UPG_PROMO_V3_ENABLED = true;
+var UPG_PROMO_V3_ENABLED = false;
+try { localStorage.removeItem("prz_upg_v3_100"); } catch (e) {}
 var UPG_CASE_MS = 25000;
 var UPG_EDGE = 0.92;
 
@@ -9119,20 +9120,6 @@ function initUpgrader() {
         } else if (v === "АМИНЕВНЕКРУТОЙ") {
           localStorage.removeItem("prz_upg_plus15");
           msg = "Промокод отменён";
-        } else if (v === "ВАНЯЛОХ3") {
-          if (typeof UPG_PROMO_V3_ENABLED !== "undefined" && UPG_PROMO_V3_ENABLED) {
-            if (localStorage.getItem("prz_upg_v3_100") === "1") {
-              localStorage.removeItem("prz_upg_v3_100");
-              msg = "Промокод отменён";
-            } else {
-              localStorage.setItem("prz_upg_v3_100", "1");
-              localStorage.removeItem("prz_upg_allpct");
-              localStorage.removeItem("prz_upg_plus15");
-              msg = "Промокод применён";
-            }
-          } else {
-            localStorage.removeItem("prz_upg_v3_100");
-          }
         }
       } catch (e) {}
       if (notify && msg) toast(msg);
