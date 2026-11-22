@@ -3012,7 +3012,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261122-music-bazoviy-1";
+var APP_BUILD = "20261122-music-bazoviy-2";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -4883,6 +4883,7 @@ var TRACKS = [
   {
     name: "Базовый минимум",
     artist: "Sabi, MIA BOYKA",
+    src: "https://wave3.audset.ru/4476567ac4ac5650/sabi%2C%20MIA%20BOYKA%2C%20SABI%20%E2%80%94%20%D0%91%D0%B0%D0%B7%D0%BE%D0%B2%D1%8B%D0%B9%20%D0%BC%D0%B8%D0%BD%D0%B8%D0%BC%D1%83%D0%BC.mp3",
     youtubeId: "bOupGVM9Uvc"
   }
 ];
@@ -5231,17 +5232,23 @@ function playCurrentMusicTrack() {
   var tr = TRACKS[MUSIC.track];
   if (musicTrackIsExternal(tr)) {
     stopSynthMusic();
+    if (tr.src) {
+      stopYouTubeMusic();
+      var a = ensureMusicAudio();
+      if (a.src !== tr.src) a.src = tr.src;
+      a.volume = Math.max(0, Math.min(1, MUSIC.vol / 100));
+      var p = a.play();
+      if (p && p.catch) p.catch(function () {
+        if (tr.youtubeId) { playYouTubeTrack(tr.youtubeId); }
+        else { toast("Нажми ещё раз, чтобы запустить трек"); }
+      });
+      return;
+    }
     if (tr.youtubeId) {
       if (MUSIC.audio) try { MUSIC.audio.pause(); } catch (e) {}
       playYouTubeTrack(tr.youtubeId);
       return;
     }
-    stopYouTubeMusic();
-    var a = ensureMusicAudio();
-    if (a.src !== tr.src) a.src = tr.src;
-    a.volume = Math.max(0, Math.min(1, MUSIC.vol / 100));
-    var p = a.play();
-    if (p && p.catch) p.catch(function () { toast("Нажми ещё раз, чтобы запустить трек"); });
     return;
   }
   stopExternalMusic();
