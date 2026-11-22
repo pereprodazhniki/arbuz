@@ -1690,6 +1690,26 @@ body.light .upg-bcase-peek { background: #fff; border-color: color-mix(in srgb, 
 .cbattle__status { padding: 14px 16px; border-radius: 16px; background: rgba(18,45,28,.6); border: 1px solid rgba(182,240,106,.1); font-weight: 800; color: #fff; font-size: 14px; }
 .cbattle__status.is-win { color: var(--lime); border-color: rgba(47,211,95,.35); background: linear-gradient(180deg, rgba(47,211,95,.12), rgba(47,211,95,.05)); box-shadow: 0 0 30px rgba(47,211,95,.08); }
 .cbattle__status.is-lose { color: #ff8f8f; border-color: rgba(255,77,90,.25); background: linear-gradient(180deg, rgba(255,77,90,.08), rgba(255,77,90,.03)); }
+.cbattle__reel-wrap{padding:12px;border-radius:18px;background:linear-gradient(180deg,rgba(16,40,25,.8),rgba(10,26,17,.75));border:1px solid rgba(182,240,106,.1);display:grid;gap:10px}
+.cbattle__reel-label{font-size:13px;font-weight:800;color:#dff7e6}.cbattle__reel-label b{color:var(--lime)}
+.cbattle__reel{height:118px;border:1px solid rgba(182,240,106,.12);border-radius:16px;background:radial-gradient(ellipse at center,rgba(20,50,30,.9),rgba(6,16,10,.96));overflow:hidden;position:relative}
+.cbattle__reel::before,.cbattle__reel::after{content:"";position:absolute;top:0;bottom:0;width:56px;pointer-events:none;z-index:4}
+.cbattle__reel::before{left:0;background:linear-gradient(90deg,rgba(6,16,10,.98) 10%,rgba(6,16,10,0))}
+.cbattle__reel::after{right:0;background:linear-gradient(270deg,rgba(6,16,10,.98) 10%,rgba(6,16,10,0))}
+.cbattle__reel-pointer{position:absolute;top:8px;bottom:8px;left:50%;width:2px;margin-left:-1px;background:linear-gradient(180deg,transparent,#ffe07a 20%,#ffb020 50%,#ffe07a 80%,transparent);z-index:5;border-radius:2px;box-shadow:0 0 10px rgba(255,176,32,.7)}
+.cbattle__reel-track{display:flex;align-items:center;height:100%;will-change:transform;position:relative;z-index:1}
+.cbattle__reel-card{flex:0 0 84px;width:84px;height:92px;margin:0 4px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative;overflow:hidden}
+.cbattle__reel-card::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,var(--rc,rgba(182,240,106,.15)),transparent 60%);opacity:.35}
+.cbattle__reel-icon{font-size:30px;line-height:1;filter:drop-shadow(0 6px 12px rgba(0,0,0,.35));position:relative}
+.cbattle__reel-name{font-size:10px;font-weight:800;color:#fff;text-align:center;padding:0 4px;line-height:1.2;max-height:2.4em;overflow:hidden;position:relative}
+.cbattle__reel-val{font-size:10px;color:var(--lime);font-weight:800;position:relative}
+body.light .cbattle__reel-wrap{background:#fff;border-color:#bfe4cc}
+body.light .cbattle__reel-label{color:#0d2b19}
+body.light .cbattle__reel{background:radial-gradient(ellipse at center,#f6fff9,#e8f5ec);border-color:#bfe4cc}
+body.light .cbattle__reel::before{background:linear-gradient(90deg,#f0fff5 10%,rgba(240,255,245,0))}
+body.light .cbattle__reel::after{background:linear-gradient(270deg,#f0fff5 10%,rgba(240,255,245,0))}
+body.light .cbattle__reel-card{background:linear-gradient(180deg,#fff,#f4fff8);border-color:#cfe8d7}
+body.light .cbattle__reel-name{color:#0d2b19}
 .cbattle__note { margin-top: 10px; color: var(--muted); font-size: 12px; line-height: 1.45; }
 .cbattle__modes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .cbattle__friend[hidden] { display: none !important; }
@@ -2991,7 +3011,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261122-case-anim-6";
+var APP_BUILD = "20261122-cb-reel-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7430,7 +7450,7 @@ function upgOpenBalanceCase(caseId) {
 }
 
 var CB = {
-  opp: 1, picks: [], busy: false,
+  opp: 1, picks: [], busy: false, reel: null,
   mode: "bots", // bots | friend
   clientId: Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4),
   online: { count: 0, names: [], seen: {}, lastPost: 0, timer: null, streamAbort: null, streamIdx: 0, streamTimer: null },
@@ -7768,6 +7788,7 @@ function cbProcessStart(payload) {
     UPG.balance += totalBank;
   }
   CB.busy = true;
+  CB.reel = null;
   CB.picks = picks.slice();
   upgSave();
   upgRender();
@@ -7781,52 +7802,38 @@ function cbProcessStart(payload) {
   function revealRound() {
     var caseId = picks[round];
     var caseCfg = cbCaseById(caseId);
-    var spinIcon = caseCfg ? (caseCfg.icon || "🎁") : "🎁";
     var spinName = caseCfg ? caseCfg.name : "Кейс";
-    var pool = [];
-    if (caseCfg && caseCfg.pool) {
-      for (var pi = 0; pi < caseCfg.pool.length; pi++) { var pit = upgItem(caseCfg.pool[pi].id); if (pit) pool.push(pit); }
-    }
-    if (!pool.length) pool = [{ icon: "🍉", name: "Арбуз", price: 0 }];
     for (var p2 = 0; p2 < view.length; p2++) {
-      view[p2].drops.push({ spinning: true, icon: spinIcon, name: spinName });
+      view[p2].drops.push({ spinning: true, icon: caseCfg ? caseCfg.icon || "🎁" : "🎁", name: spinName });
     }
-    cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + ": открываем " + spinName + "…");
-    var spinTicks = 0;
-    var spinMax = 14;
-    var spinTimer = setInterval(function () {
-      spinTicks++;
-      for (var sp = 0; sp < view.length; sp++) {
-        var last = view[sp].drops.length - 1;
-        if (last >= 0 && view[sp].drops[last] && view[sp].drops[last].spinning) {
-          var rp = pool[Math.floor(Math.random() * pool.length)];
-          view[sp].drops[last] = { spinning: true, icon: rp.icon || "🍉", name: rp.name };
-        }
+    var revealIdx = 0;
+    function revealNext() {
+      if (revealIdx >= view.length) {
+        CB.reel = null;
+        cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + " завершён");
+        round++;
+        if (round < picks.length) { setTimeout(revealRound, 650); return; }
+        setTimeout(finish, 800);
+        return;
       }
-      cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + ": открываем " + spinName + "…");
-      if (spinTicks >= spinMax) {
-        clearInterval(spinTimer);
-        var revealIdx = 0;
-        function revealNext() {
-          if (revealIdx < view.length) {
-            var dr = allDrops[revealIdx][round];
-            view[revealIdx].drops[view[revealIdx].drops.length - 1] = dr;
-            view[revealIdx].total += dr ? dr.price : 0;
-            cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + ": " + view[revealIdx].name.replace(" (ты)", "") + " получил " + (dr ? (dr.icon + " " + dr.name) : "ничего"));
-            revealIdx++;
-            setTimeout(revealNext, 220);
-            return;
-          }
-          cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + " завершён");
-          round++;
-          if (round < picks.length) { setTimeout(revealRound, 700); return; }
-          setTimeout(finish, 900);
-        }
-        setTimeout(revealNext, 180);
-      }
-    }, 90);
+      var dr = allDrops[revealIdx][round];
+      var pName = view[revealIdx].name.replace(" (ты)", "");
+      var isMe = revealIdx === mySlot;
+      var dur = cbPrepareReel(caseCfg, dr, pName, isMe);
+      cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + ": " + (isMe ? "твой кейс" : "кейс " + pName));
+      setTimeout(function () {
+        CB.reel = null;
+        view[revealIdx].drops[view[revealIdx].drops.length - 1] = dr;
+        view[revealIdx].total += dr ? dr.price : 0;
+        cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + ": " + (isMe ? "Ты получил" : pName + " получил") + " " + (dr ? (dr.icon + " " + dr.name) : "ничего"));
+        revealIdx++;
+        setTimeout(revealNext, 450);
+      }, dur + 350);
+    }
+    revealNext();
   }
   function finish() {
+    CB.reel = null;
     for (var t = 0; t < view.length; t++) { view[t].total = totals[t]; view[t].win = t === winnerIdx; view[t].lose = t !== winnerIdx; }
     if (winnerIdx === mySlot) {
       cbRenderArena(view, "Ты выиграл батл! Получил " + upgMoney(totalBank) + " на баланс сайта.", "is-win");
@@ -8195,8 +8202,67 @@ function cbRenderArena(players, statusText, statusCls) {
     html += '</div></div>';
   }
   html += '</div>';
+  if (CB.reel && CB.reel.trackHtml) {
+    html += '<div class="cbattle__reel-wrap"><div class="cbattle__reel-label">' + (CB.reel.label || 'Открываем кейс...') + '</div>' +
+      '<div class="cbattle__reel" id="cbReel"><div class="cbattle__reel-pointer"></div><div class="cbattle__reel-track" id="cbReelTrack">' + CB.reel.trackHtml + '</div></div></div>';
+  }
   if (statusText) html += '<div class="cbattle__status ' + (statusCls || '') + '">' + statusText + '</div>';
   arena.innerHTML = html;
+  if (CB.reel && CB.reel.trackHtml && CB.reel.animate) {
+    var rTrack = document.getElementById("cbReelTrack");
+    var rRoll = document.getElementById("cbReel");
+    var reelDur = CB.reel.duration || 3000;
+    var reelEase = CB.reel.easing || "cubic-bezier(.12,.82,.08,1)";
+    var reelWin = CB.reel.winIndex || 28;
+    CB.reel.animate = false;
+    requestAnimationFrame(function () {
+      var rw = rRoll ? (rRoll.clientWidth || rRoll.offsetWidth || 300) : 300;
+      if (rw < 80) rw = 300;
+      var cW = 92; // 84 + 8
+      var cardInner = 84;
+      var jitter = (Math.random() - 0.5) * (cardInner * 0.72);
+      var tx = -(reelWin * cW + cW / 2 - rw / 2) + jitter;
+      if (rTrack) { rTrack.style.transition = "none"; rTrack.style.transform = "translateX(0px)"; }
+      requestAnimationFrame(function () {
+        if (rTrack) {
+          rTrack.style.transition = "transform " + (reelDur / 1000).toFixed(2) + "s " + reelEase;
+          rTrack.style.transform = "translateX(" + tx + "px)";
+        }
+      });
+    });
+  }
+}
+
+function cbPrepareReel(caseCfg, dropItem, playerName, isMe) {
+  var pool = [];
+  if (caseCfg && caseCfg.pool) {
+    for (var i = 0; i < caseCfg.pool.length; i++) { var it = upgItem(caseCfg.pool[i].id); if (it) pool.push(it); }
+  }
+  if (!pool.length) pool = [dropItem || { icon: "🍉", name: "Арбуз", price: 0, rarity: "common" }];
+  var winIndex = 28;
+  var totalCards = winIndex + 6;
+  var html = "";
+  for (var c = 0; c < totalCards; c++) {
+    var pick = (c === winIndex) ? (dropItem || pool[0]) : pool[Math.floor(Math.random() * pool.length)];
+    var rr = UPG_RARITY[pick.rarity] || UPG_RARITY.common;
+    html += '<div class="cbattle__reel-card" style="--rc:' + rr.color + '">' +
+      '<div class="cbattle__reel-icon">' + (pick.icon || "🍉") + '</div>' +
+      '<div class="cbattle__reel-name">' + pick.name + '</div>' +
+      '<div class="cbattle__reel-val">' + upgMoney(pick.price) + '</div></div>';
+  }
+  var who = isMe ? "Твой кейс" : ("Кейс " + playerName);
+  var caseName = caseCfg ? caseCfg.name : "Кейс";
+  var dur = 2200 + Math.floor(Math.random() * 1600);
+  var easings = ["cubic-bezier(.12,.82,.08,1)","cubic-bezier(.08,.72,.04,1)","cubic-bezier(.16,.88,.12,1)","cubic-bezier(.1,.78,.02,1)"];
+  CB.reel = {
+    label: who + ": <b>" + caseName + "</b>",
+    trackHtml: html,
+    winIndex: winIndex,
+    duration: dur,
+    easing: easings[Math.floor(Math.random() * easings.length)],
+    animate: true
+  };
+  return dur;
 }
 
 function cbStart() {
@@ -8268,6 +8334,7 @@ function cbStart() {
     UPG.balance += totalBank;
   }
   CB.busy = true;
+  CB.reel = null;
   upgSave();
   upgRender();
   cbRenderAll();
@@ -8279,53 +8346,39 @@ function cbStart() {
   function revealRound() {
     var caseId = CB.picks[round];
     var caseCfg = cbCaseById(caseId);
-    var spinIcon = caseCfg ? (caseCfg.icon || "🎁") : "🎁";
     var spinName = caseCfg ? caseCfg.name : "Кейс";
-    var pool = [];
-    if (caseCfg && caseCfg.pool) {
-      for (var pi = 0; pi < caseCfg.pool.length; pi++) { var pit = upgItem(caseCfg.pool[pi].id); if (pit) pool.push(pit); }
-    }
-    if (!pool.length) pool = [{ icon: "🍉", name: "Арбуз", price: 0 }];
     for (var p2 = 0; p2 < view.length; p2++) {
-      view[p2].drops.push({ spinning: true, icon: spinIcon, name: spinName });
+      view[p2].drops.push({ spinning: true, icon: caseCfg ? caseCfg.icon || "🎁" : "🎁", name: spinName });
     }
-    cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + ": открываем " + spinName + "…");
-    var spinTicks = 0;
-    var spinMax = 14;
-    var spinTimer = setInterval(function () {
-      spinTicks++;
-      for (var sp = 0; sp < view.length; sp++) {
-        var last = view[sp].drops.length - 1;
-        if (last >= 0 && view[sp].drops[last] && view[sp].drops[last].spinning) {
-          var rp = pool[Math.floor(Math.random() * pool.length)];
-          view[sp].drops[last] = { spinning: true, icon: rp.icon || "🍉", name: rp.name };
-        }
+    var revealIdx = 0;
+    function revealNext() {
+      if (revealIdx >= view.length) {
+        CB.reel = null;
+        cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + " завершён");
+        round++;
+        if (round < CB.picks.length) { setTimeout(revealRound, 650); return; }
+        setTimeout(finishBattle, 800);
+        return;
       }
-      cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + ": открываем " + spinName + "…");
-      if (spinTicks >= spinMax) {
-        clearInterval(spinTimer);
-        var revealIdx = 0;
-        function revealNext() {
-          if (revealIdx < view.length) {
-            var dr = allDrops[revealIdx][round];
-            view[revealIdx].drops[view[revealIdx].drops.length - 1] = dr;
-            view[revealIdx].total += dr ? dr.price : 0;
-            cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + ": " + view[revealIdx].name.replace(" (ты)", "") + " получил " + (dr ? (dr.icon + " " + dr.name) : "ничего"));
-            revealIdx++;
-            setTimeout(revealNext, 220);
-            return;
-          }
-          cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + " завершён");
-          round++;
-          if (round < CB.picks.length) { setTimeout(revealRound, 700); return; }
-          setTimeout(finishBattle, 900);
-        }
-        setTimeout(revealNext, 180);
-      }
-    }, 90);
+      var dr = allDrops[revealIdx][round];
+      var pName = view[revealIdx].name.replace(" (ты)", "");
+      var isMe = revealIdx === 0;
+      var dur = cbPrepareReel(caseCfg, dr, pName, isMe);
+      cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + ": " + (isMe ? "твой кейс" : "кейс " + pName));
+      setTimeout(function () {
+        CB.reel = null;
+        view[revealIdx].drops[view[revealIdx].drops.length - 1] = dr;
+        view[revealIdx].total += dr ? dr.price : 0;
+        cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + ": " + (isMe ? "Ты получил" : pName + " получил") + " " + (dr ? (dr.icon + " " + dr.name) : "ничего"));
+        revealIdx++;
+        setTimeout(revealNext, 450);
+      }, dur + 350);
+    }
+    revealNext();
   }
 
   function finishBattle() {
+    CB.reel = null;
     for (var t = 0; t < view.length; t++) {
       view[t].total = totals[t];
       view[t].win = t === winnerIdx;
