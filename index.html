@@ -446,17 +446,20 @@ body.light .live-sold { background: #fff; color: #0d2b19; border-color: #12803c;
 .step p { margin: 0; color: var(--muted); }
 
 /* ---------- Отзывы ---------- */
-.reviews { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+.reviews { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
 .review {
   margin: 0;
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 20px;
-  border: 1px solid var(--line);
-  border-left: 5px solid var(--green);
+  background: linear-gradient(180deg, rgba(22,53,31,.72), rgba(14,36,22,.62));
+  border-radius: 22px;
+  padding: 22px;
+  border: 1px solid rgba(182,240,106,.1);
+  border-left: 4px solid var(--green);
+  box-shadow: var(--shadow-soft);
+  transition: transform .22s, box-shadow .22s;
 }
-.review p { margin: 0 0 12px; color: var(--text); }
-.review footer { font-weight: 800; color: var(--lime); }
+.review:hover { transform: translateY(-3px); box-shadow: 0 16px 36px rgba(0,0,0,.18); }
+.review p { margin: 0 0 14px; color: var(--text); line-height: 1.55; font-size: 15px; }
+.review footer { font-weight: 800; color: var(--lime); font-size: 14px; }
 
 /* ---------- Подвал ---------- */
 .footer { background: linear-gradient(180deg, rgba(8,24,14,.6), #030904 30%); color: var(--muted); padding: 48px 22px 28px; margin-top: 40px; border-top: 1px solid rgba(182,240,106,.08); position: relative; }
@@ -662,6 +665,10 @@ body.light .cert p { color: #3d6b52; }
 /* ---------- Поделиться ---------- */
 .share { display: flex; flex-wrap: wrap; gap: 10px; }
 .share .btn { padding: 10px 16px; font-size: 15px; }
+.btn--tg { background: linear-gradient(180deg, #37aee2, #229ED9); color: #fff; box-shadow: 0 8px 20px rgba(34,158,217,.28); border: 0; }
+.btn--tg:hover { filter: brightness(1.05); box-shadow: 0 12px 26px rgba(34,158,217,.36); }
+.btn--vk { background: linear-gradient(180deg, #2787F5, #0077FF); color: #fff; box-shadow: 0 8px 20px rgba(0,119,255,.28); border: 0; }
+.btn--vk:hover { filter: brightness(1.05); box-shadow: 0 12px 26px rgba(0,119,255,.36); }
 
 /* ---------- Правая часть строки корзины ---------- */
 .cart__right { display: grid; gap: 2px; justify-items: end; }
@@ -690,38 +697,41 @@ body.light .cert p { color: #3d6b52; }
 
 /* ---------- Калькулятор ---------- */
 .calc {
-  background: linear-gradient(180deg, var(--surface-2), var(--surface));
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 22px;
+  background: linear-gradient(180deg, rgba(22,53,31,.78), rgba(14,36,22,.72));
+  border: 1px solid rgba(182,240,106,.1);
+  border-radius: 24px;
+  padding: 24px;
   display: grid;
-  gap: 18px;
+  gap: 20px;
+  box-shadow: var(--shadow-soft);
 }
 .calc__row { display: grid; gap: 10px; font-weight: 700; }
 .calc__row b { color: var(--lime); }
-.range { width: 100%; accent-color: var(--green); }
+.range { width: 100%; accent-color: var(--green); height: 6px; cursor: pointer; }
 .calc__out { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
 .calc__out div {
-  background: #000;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 14px;
+  background: rgba(0,0,0,.2);
+  border: 1px solid rgba(182,240,106,.08);
+  border-radius: 18px;
+  padding: 16px;
   text-align: center;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.02);
 }
-.calc__out b { display: block; font-size: 26px; color: var(--lime); }
-.calc__out span { color: var(--muted); font-size: 13px; }
+.calc__out b { display: block; font-size: 28px; color: var(--lime); text-shadow: 0 0 20px rgba(182,240,106,.1); }
+.calc__out span { color: var(--muted); font-size: 13px; margin-top: 2px; display: block; }
 .calc__note { margin: 0; color: var(--muted); font-weight: 700; }
 .calc__note.is-warn { color: var(--red); }
 
 /* ---------- Розыгрыш ---------- */
 .lottery {
-  background: linear-gradient(180deg, var(--surface-2), var(--surface));
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 22px;
+  background: linear-gradient(180deg, rgba(22,53,31,.78), rgba(14,36,22,.72));
+  border: 1px solid rgba(182,240,106,.1);
+  border-radius: 24px;
+  padding: 24px;
   display: grid;
   gap: 14px;
   max-width: 560px;
+  box-shadow: var(--shadow-soft);
 }
 .lottery__result { margin: 0; font-weight: 700; color: var(--text); }
 .lottery__log { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; color: var(--muted); font-size: 14px; }
@@ -732,12 +742,13 @@ body.light .cert p { color: #3d6b52; }
   display: inline-flex;
   align-items: baseline;
   gap: 10px;
-  background: #000;
-  border: 1px solid var(--line);
-  border-radius: 16px;
+  background: rgba(0,0,0,.2);
+  border: 1px solid rgba(182,240,106,.1);
+  border-radius: 18px;
   padding: 14px 20px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.02);
 }
-.season b { font-size: 30px; color: var(--lime); }
+.season b { font-size: 30px; color: var(--lime); text-shadow: 0 0 20px rgba(182,240,106,.1); }
 .season span { color: var(--muted); }
 
 /* ---------- Промокод ---------- */
@@ -2065,6 +2076,16 @@ body.light .upg-result.is-win { color: #12803c; }
 body.light .upg-feed__row { background: #fff; border-color: #bfe4cc; }
 body.light .upg-feed__who { color: #0d2b19; }
 
+/* ---------- Наверх ---------- */
+.to-top {
+  position: fixed; right: 18px; bottom: 18px; width: 46px; height: 46px; border-radius: 14px;
+  border: 1px solid rgba(182,240,106,.18); background: linear-gradient(180deg, rgba(22,53,31,.92), rgba(10,28,17,.92));
+  color: var(--lime); font-size: 20px; font-weight: 900; cursor: pointer; z-index: 60;
+  box-shadow: 0 12px 28px rgba(0,0,0,.28); backdrop-filter: blur(8px);
+  opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity .2s, transform .2s, border-color .2s;
+}
+.to-top.is-show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.to-top:hover { border-color: rgba(182,240,106,.35); transform: translateY(-1px); }
 </style>
 </head>
 <body>
@@ -2726,8 +2747,8 @@ body.light .upg-feed__who { color: #0d2b19; }
       <b>Рассказать друзьям</b>
       <div class="share">
         <button class="btn btn--ghost" id="copyLink" type="button">Скопировать ссылку</button>
-        <a class="btn btn--ghost" id="shareTg" href="#" target="_blank" rel="noopener">Telegram</a>
-        <a class="btn btn--ghost" id="shareVk" href="#" target="_blank" rel="noopener">ВКонтакте</a>
+        <a class="btn btn--tg" id="shareTg" href="#" target="_blank" rel="noopener">Telegram</a>
+        <a class="btn btn--vk" id="shareVk" href="#" target="_blank" rel="noopener">ВКонтакте</a>
       </div>
     </div>
   </div>
@@ -2914,7 +2935,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261122-ui-refresh-3";
+var APP_BUILD = "20261122-ui-refresh-4";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -9238,6 +9259,16 @@ if (document.readyState === "loading") {
 } else {
   init();
 }
+</script>
+<button class="to-top" id="toTopBtn" type="button" aria-label="Наверх">↑</button>
+<script>
+(function(){
+  var b=document.getElementById('toTopBtn'); if(!b) return;
+  var onScroll=function(){ b.classList.toggle('is-show', window.scrollY>500); };
+  window.addEventListener('scroll', onScroll, {passive:true});
+  b.addEventListener('click', function(){ window.scrollTo({top:0, behavior:'smooth'}); });
+  onScroll();
+})();
 </script>
 </body>
 </html>
