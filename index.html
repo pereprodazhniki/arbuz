@@ -968,6 +968,8 @@ body.light .vote__bar { background: #eafaf0; }
 .buyers__empty { color: var(--muted); margin: 0; padding: 14px 4px; }
 .buyers__sync { color: var(--lime); font-weight: 700; font-size: 13px; margin: 14px 0 0; opacity: .9; }
 .buyers__sync.is-off { color: #ffc46b; }
+.buyers.is-bump .buyer { animation: buyersBump .45s ease; }
+@keyframes buyersBump { 0%{transform:translateY(0)} 35%{transform:translateY(-2px)} 100%{transform:translateY(0)} }
 body.light .buyer { background: #fff; border-color: #bfe4cc; }
 body.light .buyer--top { background: #f0ffe0; }
 body.light .buyer__name { color: #0d2b19; }
@@ -2961,7 +2963,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261122-ui-refresh-7";
+var APP_BUILD = "20261122-ui-refresh-8";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -3815,7 +3817,7 @@ function renderBuyers(list) {
     box.appendChild(empty);
     return;
   }
-  arr.slice(0, 12).forEach(function (b, i) {
+  arr.slice(0, 5).forEach(function (b, i) {
     var row = document.createElement("div");
     row.className = "buyer" + (i === 0 ? " buyer--top" : "");
     var place = document.createElement("span");
@@ -3832,6 +3834,11 @@ function renderBuyers(list) {
     row.appendChild(count);
     box.appendChild(row);
   });
+  box.classList.remove("is-bump");
+  // restart animation
+  void box.offsetWidth;
+  box.classList.add("is-bump");
+  setTimeout(function(){ box.classList.remove("is-bump"); }, 500);
 }
 
 function buyersSortSave() {
