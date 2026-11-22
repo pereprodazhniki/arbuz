@@ -2966,7 +2966,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261122-cb-friend-fix-2";
+var APP_BUILD = "20261122-cb-friend-fix-3";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7686,11 +7686,8 @@ function cbProcessStart(payload) {
 
   // apply outcome atomically
   UPG.balance = bal - totalCost;
-  var wonItems = [];
   if (winnerIdx === mySlot) {
-    for (var a = 0; a < allDrops.length; a++) for (var b = 0; b < allDrops[a].length; b++) if (allDrops[a][b]) wonItems.push(allDrops[a][b].id);
-    for (var wi = 0; wi < wonItems.length; wi++) UPG.inv.push(wonItems[wi]);
-    UPG.selected = wonItems[wonItems.length - 1] || UPG.selected;
+    UPG.balance += totalBank;
   }
   CB.busy = true;
   CB.picks = picks.slice();
@@ -7727,8 +7724,8 @@ function cbProcessStart(payload) {
   function finish() {
     for (var t = 0; t < view.length; t++) { view[t].total = totals[t]; view[t].win = t === winnerIdx; view[t].lose = t !== winnerIdx; }
     if (winnerIdx === mySlot) {
-      cbRenderArena(view, "Ты выиграл батл! Забрал " + wonItems.length + " предметов. Общий банк: " + upgMoney(totalBank) + ".", "is-win");
-      toast("⚔️ Победа! +" + wonItems.length + " предметов");
+      cbRenderArena(view, "Ты выиграл батл! Получил " + upgMoney(totalBank) + " на баланс сайта.", "is-win");
+      toast("⚔️ Победа! +" + upgMoney(totalBank));
     } else {
       cbRenderArena(view, "Победил " + players[winnerIdx] + ". Ты потерял вход " + upgMoney(totalCost) + ".", "is-lose");
       toast("⚔️ Батл проигран: победил " + players[winnerIdx]);
@@ -7965,11 +7962,14 @@ function cbRoomMaybeAutoStart() {
 function cbRoomToggleReady() {
   if (!CB.room.id || CB.busy) return;
   var bal = Math.max(0, Number(UPG.balance) || 0);
+  var total = cbTotalCost();
   if (CB.room.host) {
+    if (!CB.room.hostReady && total > 0 && bal < total) { toast("Недостаточно баланса для батла"); return; }
     CB.room.hostReady = !CB.room.hostReady;
     CB.room.hostBalance = bal;
     cbRoomPost("state", { host: CB.room.hostName || cbMyName(), guest: CB.room.guestName, picks: CB.picks, hostReady: CB.room.hostReady, guestReady: CB.room.guestReady, hostBalance: CB.room.hostBalance, guestBalance: CB.room.guestBalance });
   } else {
+    if (!CB.room.guestReady && total > 0 && bal < total) { toast("Недостаточно баланса для батла"); return; }
     CB.room.guestReady = !CB.room.guestReady;
     CB.room.guestBalance = bal;
     cbRoomPost("ready", { ready: CB.room.guestReady, balance: bal });
@@ -8040,9 +8040,11 @@ function cbRenderMeta() {
       start.textContent = "Начать батл";
       var guestOk = !!CB.room.guestName;
       var bothReady = !!CB.room.hostReady && !!CB.room.guestReady;
-      start.disabled = !!CB.busy || !CB.picks.length || bal < total || !guestOk || !bothReady;
+      var guestBalOk = Math.max(0, Number(CB.room.guestBalance) || 0) >= total;
+      start.disabled = !!CB.busy || !CB.picks.length || bal < total || !guestOk || !bothReady || !guestBalOk;
       if (meta && CB.picks.length) {
         if (!guestOk) meta.innerHTML = "Кейсов: <b>" + CB.picks.length + "</b> · " + upgMoney(total) + " · ждём друга по ссылке";
+        else if (!guestBalOk) meta.innerHTML = "Кейсов: <b>" + CB.picks.length + "</b> · " + upgMoney(total) + " · у друга недостаточно баланса";
         else if (!bothReady) meta.innerHTML = "Кейсов: <b>" + CB.picks.length + "</b> · " + upgMoney(total) + " · оба игрока должны нажать «Готов»";
       }
     }
@@ -8109,7 +8111,7 @@ function cbStart() {
     var balF = Math.max(0, Number(UPG.balance) || 0);
     if (balF < totalCostF) { toast("Недостаточно баланса для батла"); return; }
     var guestBalF = Math.max(0, Number(CB.room.guestBalance) || 0);
-    if (guestBalF > 0 && guestBalF < totalCostF) { toast("У друга недостаточно баланса для батла"); return; }
+    if (guestBalF < totalCostF) { toast("У друга недостаточно баланса для батла (" + upgMoney(totalCostF) + ")"); return; }
     var seed = cbUid() + "-" + Date.now();
     var players = [CB.room.hostName || cbMyName(), CB.room.guestName].map(function (n) { n = normalizeName(n || ""); return n && !nameProblem(n) ? n : "Игрок"; });
     var payload = { seed: seed, picks: CB.picks.slice(), players: players, ts: Date.now() };
@@ -8157,16 +8159,8 @@ function cbStart() {
 
   // apply outcome atomically (reload-safe)
   UPG.balance = bal - totalCost;
-  var wonItems = [];
   if (winnerIdx === 0) {
-    for (var a = 0; a < allDrops.length; a++) {
-      for (var b = 0; b < allDrops[a].length; b++) {
-        var it2 = allDrops[a][b];
-        if (it2) wonItems.push(it2.id);
-      }
-    }
-    for (var wi = 0; wi < wonItems.length; wi++) UPG.inv.push(wonItems[wi]);
-    UPG.selected = wonItems[wonItems.length - 1] || UPG.selected;
+    UPG.balance += totalBank;
   }
   CB.busy = true;
   upgSave();
@@ -8209,8 +8203,8 @@ function cbStart() {
       view[t].lose = t !== winnerIdx;
     }
     if (winnerIdx === 0) {
-      cbRenderArena(view, "Ты выиграл батл! Забрал " + wonItems.length + " предметов. Твой дроп: " + upgMoney(totals[0]) + ", общий банк дропа: " + upgMoney(totalBank) + ".", "is-win");
-      toast("⚔️ Победа в Case Battle! +" + wonItems.length + " предметов в инвентарь");
+      cbRenderArena(view, "Ты выиграл батл! Получил " + upgMoney(totalBank) + " на баланс сайта.", "is-win");
+      toast("⚔️ Победа в Case Battle! +" + upgMoney(totalBank));
     } else {
       cbRenderArena(view, "Победил " + names[winnerIdx] + " с дропом " + upgMoney(totals[winnerIdx]) + ". Ты потерял вход " + upgMoney(totalCost) + ". Твой дроп был " + upgMoney(totals[0]) + ".", "is-lose");
       toast("⚔️ Батл проигран: победил " + names[winnerIdx]);
