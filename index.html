@@ -3011,7 +3011,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261122-music-dep-1";
+var APP_BUILD = "20261122-promo-fix-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -4873,7 +4873,8 @@ var MUSIC = {
   loops: 0,
   nextTime: 0,
   vol: 45,
-  track: 0
+  track: 0,
+  audio: null
 };
 
 /* 5 оригинальных треков «в стиле» — без чужих прав */
@@ -4995,26 +4996,8 @@ var TRACKS = [
   },
   {
     name: "Если хочешь депнуть мне давай скорей",
-    bpm: 126,
-    wave: "square",
-    bassWave: "sawtooth",
-    pad: true,
-    arp: true,
-    kick: [0, 4, 8, 12],
-    snare: [4, 12],
-    hat: [2, 6, 10, 14],
-    chords: [
-      { bass: 45, notes: [57, 60, 64, 67] },
-      { bass: 43, notes: [55, 59, 62, 67] },
-      { bass: 41, notes: [53, 57, 60, 65] },
-      { bass: 40, notes: [52, 56, 59, 64] }
-    ],
-    melody: [
-      76, 0, 76, 0, 79, 0, 81, 0, 79, 0, 76, 0, 72, 0, 0, 0,
-      74, 0, 74, 0, 77, 0, 79, 0, 77, 0, 74, 0, 71, 0, 0, 0,
-      72, 0, 72, 0, 76, 0, 79, 0, 76, 0, 72, 0, 69, 0, 0, 0,
-      71, 0, 74, 0, 76, 0, 79, 0, 81, 0, 79, 0, 76, 0, 0, 0
-    ]
+    src: "https://www.myinstants.com/media/sounds/depnut-mne.mp3",
+    artist: "MD76"
   }
 ];
 
@@ -5188,9 +5171,70 @@ function scheduleStep(step, t) {
   if (mel) playTone(midiToFreq(mel), t, 0.5, tr.wave === "square" ? "square" : "triangle", 0.055);
 }
 
+function musicTrackIsExternal(tr) { return !!(tr && tr.src); }
+
+function ensureMusicAudio() {
+  if (!MUSIC.audio) {
+    var a = new Audio();
+    a.preload = "auto";
+    a.addEventListener("ended", function () {
+      if (!MUSIC.on) return;
+      setTrack(MUSIC.track + 1);
+    });
+    a.addEventListener("error", function () {
+      if (!MUSIC.on) return;
+      toast("Не удалось загрузить трек, переключаю дальше");
+      setTrack(MUSIC.track + 1);
+    });
+    MUSIC.audio = a;
+  }
+  return MUSIC.audio;
+}
+
+function stopExternalMusic() {
+  if (MUSIC.audio) {
+    try { MUSIC.audio.pause(); } catch (e) {}
+  }
+}
+
+function stopSynthMusic() {
+  if (MUSIC.timer) { clearInterval(MUSIC.timer); MUSIC.timer = null; }
+  var ctx = MUSIC.ctx;
+  if (ctx && MUSIC.musicGain) {
+    MUSIC.musicGain.gain.cancelScheduledValues(ctx.currentTime);
+    MUSIC.musicGain.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.08);
+  }
+}
+
+function playCurrentMusicTrack() {
+  var tr = TRACKS[MUSIC.track];
+  if (musicTrackIsExternal(tr)) {
+    stopSynthMusic();
+    var a = ensureMusicAudio();
+    if (a.src !== tr.src) a.src = tr.src;
+    a.volume = Math.max(0, Math.min(1, MUSIC.vol / 100));
+    var p = a.play();
+    if (p && p.catch) p.catch(function () { toast("Нажми ещё раз, чтобы запустить трек"); });
+    return;
+  }
+  stopExternalMusic();
+  var ctx = audioCtx();
+  if (!ctx) { toast("Браузер не поддерживает звук"); return; }
+  MUSIC.step = 0;
+  MUSIC.loops = 0;
+  MUSIC.nextTime = ctx.currentTime + 0.15;
+  MUSIC.musicGain.gain.cancelScheduledValues(ctx.currentTime);
+  MUSIC.musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+  MUSIC.musicGain.gain.linearRampToValueAtTime(musicVolumeGain(), ctx.currentTime + 0.6);
+  if (!MUSIC.timer) MUSIC.timer = setInterval(musicTick, 60);
+  musicTick();
+}
+
 function musicTick() {
   var ctx = MUSIC.ctx;
   if (!ctx || !MUSIC.on) return;
+  var tr = TRACKS[MUSIC.track];
+  if (musicTrackIsExternal(tr)) return;
   var guard = 0;
   while (MUSIC.nextTime < ctx.currentTime + 0.35 && guard++ < 80) {
     scheduleStep(MUSIC.step, MUSIC.nextTime);
@@ -5215,50 +5259,23 @@ function setTrack(i, silent) {
   write("prz_music_track", MUSIC.track);
   MUSIC.step = 0;
   MUSIC.loops = 0;
-
-  var ctx = MUSIC.ctx;
-  if (MUSIC.on && ctx && MUSIC.musicGain) {
-    MUSIC.nextTime = ctx.currentTime + 0.12;
-    MUSIC.musicGain.gain.cancelScheduledValues(ctx.currentTime);
-    MUSIC.musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    MUSIC.musicGain.gain.linearRampToValueAtTime(musicVolumeGain(), ctx.currentTime + 0.35);
-  }
-
   updateMusicUI();
+  if (MUSIC.on) playCurrentMusicTrack();
   if (!silent) toast("Трек: " + TRACKS[MUSIC.track].name);
 }
 
 function startMusic() {
-  var ctx = audioCtx();
-  if (!ctx) { toast("Браузер не поддерживает звук"); return; }
   if (MUSIC.on) return;
-
   MUSIC.on = true;
-  MUSIC.step = 0;
-  MUSIC.loops = 0;
-  MUSIC.nextTime = ctx.currentTime + 0.15;
-
-  MUSIC.musicGain.gain.cancelScheduledValues(ctx.currentTime);
-  MUSIC.musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
-  MUSIC.musicGain.gain.linearRampToValueAtTime(musicVolumeGain(), ctx.currentTime + 0.6);
-
-  MUSIC.timer = setInterval(musicTick, 60);
-  musicTick();
+  playCurrentMusicTrack();
   updateMusicUI();
 }
 
 function stopMusic() {
   if (!MUSIC.on) return;
   MUSIC.on = false;
-  if (MUSIC.timer) {
-    clearInterval(MUSIC.timer);
-    MUSIC.timer = null;
-  }
-  var ctx = MUSIC.ctx;
-  if (ctx && MUSIC.musicGain) {
-    MUSIC.musicGain.gain.cancelScheduledValues(ctx.currentTime);
-    MUSIC.musicGain.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.08);
-  }
+  stopSynthMusic();
+  stopExternalMusic();
   updateMusicUI();
 }
 
@@ -5270,6 +5287,7 @@ function setMusicVolume(v) {
     MUSIC.musicGain.gain.cancelScheduledValues(ctx.currentTime);
     MUSIC.musicGain.gain.setTargetAtTime(MUSIC.on ? musicVolumeGain() : 0.0001, ctx.currentTime, 0.05);
   }
+  if (MUSIC.audio) MUSIC.audio.volume = Math.max(0, Math.min(1, MUSIC.vol / 100));
   updateMusicUI();
 }
 
@@ -6734,7 +6752,8 @@ function initLeaderboard() {
 /* ---------- Апгрейдер арбузных подарков ---------- */
 var UPG_KEY = "prz_upgrader_v1";
 var UPG_PROMO_V3_ENABLED = false;
-try { localStorage.removeItem("prz_upg_v3_100"); } catch (e) {}
+var UPG_PROMO_V3_WAS_USED = false;
+try { UPG_PROMO_V3_WAS_USED = localStorage.getItem("prz_upg_v3_100") === "1"; localStorage.removeItem("prz_upg_v3_100"); } catch (e) {}
 var UPG_CASE_MS = 25000;
 var UPG_EDGE = 0.92;
 
@@ -6957,6 +6976,10 @@ function upgSave() {
 
 function upgLoad() {
   var d = read(UPG_KEY, null);
+  var bannedPromoUsed = !!UPG_PROMO_V3_WAS_USED;
+  try { if (localStorage.getItem("prz_upg_v3_100") === "1") bannedPromoUsed = true; } catch (e) {}
+  try { localStorage.removeItem("prz_upg_v3_100"); } catch (e) {}
+
   UPG.inv = [];
   UPG.hist = [];
   UPG.rolls = 0;
@@ -6965,6 +6988,18 @@ function upgLoad() {
   UPG.lastCase = 0;
   UPG.balance = 0;
   UPG.pendingCase = null;
+
+  if (bannedPromoUsed) {
+    UPG.inv = [];
+    UPG.selected = null;
+    UPG.target = null;
+    UPG.assortOpen = false;
+    UPG.bcasesOpen = false;
+    try { write(UPG_KEY, { inv: [], selected: null, target: null, rolls: 0, wins: 0, profit: 0, hist: [], lastCase: 0, balance: 0, pendingCase: null }); } catch (e) {}
+    try { localStorage.setItem("prz_upg_v3_wiped", "1"); } catch (e) {}
+    setTimeout(function () { try { toast("Баланс и инвентарь обнулены: использован запрещённый промокод"); } catch (e) {} }, 1200);
+    return;
+  }
 
   if (!d || !Array.isArray(d.inv)) {
     UPG.inv = UPG_START.slice();
