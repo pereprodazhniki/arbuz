@@ -3011,7 +3011,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261122-promo-fix-1";
+var APP_BUILD = "20261122-music-dep-3";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -4996,8 +4996,8 @@ var TRACKS = [
   },
   {
     name: "Если хочешь депнуть мне давай скорей",
-    src: "https://www.myinstants.com/media/sounds/depnut-mne.mp3",
-    artist: "MD76"
+    artist: "MD76",
+    youtubeId: "CLAevlu0o60"
   }
 ];
 
@@ -5171,7 +5171,7 @@ function scheduleStep(step, t) {
   if (mel) playTone(midiToFreq(mel), t, 0.5, tr.wave === "square" ? "square" : "triangle", 0.055);
 }
 
-function musicTrackIsExternal(tr) { return !!(tr && tr.src); }
+function musicTrackIsExternal(tr) { return !!(tr && (tr.src || tr.youtubeId)); }
 
 function ensureMusicAudio() {
   if (!MUSIC.audio) {
@@ -5191,10 +5191,69 @@ function ensureMusicAudio() {
   return MUSIC.audio;
 }
 
+var MUSIC_YT = { api: false, ready: false, player: null, pending: null, box: null };
+
+function ensureMusicYTApi(cb) {
+  if (MUSIC_YT.ready && MUSIC_YT.player) { if (cb) cb(); return; }
+  if (cb) MUSIC_YT.pending = cb;
+  if (MUSIC_YT.api) return;
+  MUSIC_YT.api = true;
+  var prev = window.onYouTubeIframeAPIReady;
+  window.onYouTubeIframeAPIReady = function () {
+    if (typeof prev === "function") try { prev(); } catch (e) {}
+    var box = document.createElement("div");
+    box.id = "musicYtBox";
+    box.style.cssText = "position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none";
+    document.body.appendChild(box);
+    MUSIC_YT.box = box;
+    MUSIC_YT.player = new YT.Player("musicYtBox", {
+      width: 1, height: 1,
+      playerVars: { autoplay: 0, controls: 0, rel: 0, modestbranding: 1 },
+      events: {
+        onReady: function () {
+          MUSIC_YT.ready = true;
+          var p = MUSIC_YT.pending; MUSIC_YT.pending = null;
+          if (p) p();
+        },
+        onStateChange: function (e) {
+          if (e && e.data === 0 && MUSIC.on) setTrack(MUSIC.track + 1);
+        },
+        onError: function () {
+          if (!MUSIC.on) return;
+          toast("Не удалось загрузить трек, переключаю дальше");
+          setTrack(MUSIC.track + 1);
+        }
+      }
+    });
+  };
+  var s = document.createElement("script");
+  s.src = "https://www.youtube.com/iframe_api";
+  s.async = true;
+  document.head.appendChild(s);
+}
+
+function playYouTubeTrack(id) {
+  ensureMusicYTApi(function () {
+    try {
+      var tr = TRACKS[MUSIC.track];
+      if (!MUSIC.on || !tr || tr.youtubeId !== id) return;
+      if (MUSIC_YT.player && typeof MUSIC_YT.player.loadVideoById === "function") {
+        MUSIC_YT.player.setVolume(Math.max(0, Math.min(100, MUSIC.vol)));
+        MUSIC_YT.player.loadVideoById(id);
+      }
+    } catch (e) { toast("Не удалось запустить трек"); }
+  });
+}
+
+function stopYouTubeMusic() {
+  try {
+    if (MUSIC_YT.player && typeof MUSIC_YT.player.pauseVideo === "function") MUSIC_YT.player.pauseVideo();
+  } catch (e) {}
+}
+
 function stopExternalMusic() {
-  if (MUSIC.audio) {
-    try { MUSIC.audio.pause(); } catch (e) {}
-  }
+  if (MUSIC.audio) { try { MUSIC.audio.pause(); } catch (e) {} }
+  stopYouTubeMusic();
 }
 
 function stopSynthMusic() {
@@ -5210,6 +5269,12 @@ function playCurrentMusicTrack() {
   var tr = TRACKS[MUSIC.track];
   if (musicTrackIsExternal(tr)) {
     stopSynthMusic();
+    if (tr.youtubeId) {
+      if (MUSIC.audio) try { MUSIC.audio.pause(); } catch (e) {}
+      playYouTubeTrack(tr.youtubeId);
+      return;
+    }
+    stopYouTubeMusic();
     var a = ensureMusicAudio();
     if (a.src !== tr.src) a.src = tr.src;
     a.volume = Math.max(0, Math.min(1, MUSIC.vol / 100));
@@ -5288,6 +5353,7 @@ function setMusicVolume(v) {
     MUSIC.musicGain.gain.setTargetAtTime(MUSIC.on ? musicVolumeGain() : 0.0001, ctx.currentTime, 0.05);
   }
   if (MUSIC.audio) MUSIC.audio.volume = Math.max(0, Math.min(1, MUSIC.vol / 100));
+  try { if (MUSIC_YT.player && typeof MUSIC_YT.player.setVolume === "function") MUSIC_YT.player.setVolume(Math.max(0, Math.min(100, MUSIC.vol))); } catch (e) {}
   updateMusicUI();
 }
 
