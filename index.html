@@ -3012,7 +3012,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261122-music-eksponat-1";
+var APP_BUILD = "20261122-music-tracks-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -4881,124 +4881,14 @@ var MUSIC = {
 /* 5 оригинальных треков «в стиле» — без чужих прав */
 var TRACKS = [
   {
-    name: "Арбузный шансон",
-    bpm: 92,
-    wave: "triangle",
-    bassWave: "sine",
-    pad: true,
-    arp: true,
-    kick: [0, 8],
-    snare: [4, 12],
-    hat: [2, 6, 10, 14],
-    chords: [
-      { bass: 45, notes: [57, 60, 64] },
-      { bass: 38, notes: [50, 53, 57] },
-      { bass: 40, notes: [52, 56, 59] },
-      { bass: 45, notes: [57, 60, 64] }
-    ],
-    melody: [
-      69, 0, 72, 0, 76, 0, 72, 0, 69, 0, 0, 72, 0, 76, 0, 0,
-      74, 0, 0, 72, 0, 69, 0, 0, 65, 0, 69, 0, 72, 0, 0, 0,
-      68, 0, 71, 0, 76, 0, 71, 0, 68, 0, 0, 64, 0, 68, 0, 0,
-      69, 0, 72, 0, 76, 0, 81, 0, 76, 0, 72, 0, 69, 0, 0, 0
-    ]
-  },
-  {
-    name: "Дискотека у бабушки",
-    bpm: 118,
-    wave: "square",
-    bassWave: "sawtooth",
-    pad: true,
-    arp: true,
-    kick: [0, 4, 8, 12],
-    snare: [4, 12],
-    hat: [2, 6, 10, 14],
-    chords: [
-      { bass: 45, notes: [57, 60, 64, 67] },
-      { bass: 41, notes: [53, 57, 60, 64] },
-      { bass: 36, notes: [52, 55, 59, 64] },
-      { bass: 43, notes: [55, 59, 62, 65] }
-    ],
-    melody: [
-      76, 0, 79, 0, 81, 0, 79, 0, 76, 0, 72, 0, 76, 0, 79, 0,
-      72, 0, 76, 0, 79, 0, 76, 0, 72, 0, 69, 0, 72, 0, 76, 0,
-      79, 0, 76, 0, 72, 0, 76, 0, 79, 0, 81, 0, 79, 0, 76, 0,
-      74, 0, 79, 0, 83, 0, 79, 0, 74, 0, 71, 0, 74, 0, 79, 0
-    ]
-  },
-  {
-    name: "Ночной перекуп",
-    bpm: 100,
-    wave: "sawtooth",
-    bassWave: "square",
-    pad: true,
-    arp: true,
-    kick: [0, 8],
-    snare: [4, 12],
-    hat: [2, 6, 10, 14],
-    chords: [
-      { bass: 45, notes: [57, 60, 64] },
-      { bass: 41, notes: [53, 57, 60] },
-      { bass: 36, notes: [52, 55, 59] },
-      { bass: 43, notes: [55, 59, 62] }
-    ],
-    melody: [
-      69, 0, 0, 0, 72, 0, 0, 0, 76, 0, 0, 0, 72, 0, 0, 0,
-      65, 0, 0, 0, 69, 0, 0, 0, 72, 0, 0, 0, 69, 0, 0, 0,
-      67, 0, 0, 0, 72, 0, 0, 0, 76, 0, 0, 0, 72, 0, 0, 0,
-      67, 0, 0, 0, 71, 0, 0, 0, 74, 0, 0, 0, 71, 0, 0, 0
-    ]
-  },
-  {
-    name: "Колхозный рэп",
-    bpm: 88,
-    wave: "triangle",
-    bassWave: "sine",
-    pad: false,
-    arp: false,
-    kick: [0, 6, 10],
-    snare: [4, 12],
-    hat: [0, 2, 4, 6, 8, 10, 12, 14],
-    chords: [
-      { bass: 45, notes: [57, 60, 64] },
-      { bass: 43, notes: [55, 59, 62] },
-      { bass: 41, notes: [53, 57, 60] },
-      { bass: 40, notes: [52, 56, 59] }
-    ],
-    melody: [
-      57, 0, 0, 60, 0, 0, 64, 0, 0, 0, 60, 0, 57, 0, 0, 0,
-      55, 0, 0, 59, 0, 0, 62, 0, 0, 0, 59, 0, 55, 0, 0, 0,
-      53, 0, 0, 57, 0, 0, 60, 0, 0, 0, 57, 0, 53, 0, 0, 0,
-      52, 0, 0, 56, 0, 0, 59, 0, 0, 0, 56, 0, 52, 0, 0, 0
-    ]
-  },
-  {
-    name: "Лоу-фай на балконе",
-    bpm: 76,
-    wave: "sine",
-    bassWave: "triangle",
-    pad: true,
-    arp: false,
-    kick: [0, 10],
-    snare: [8],
-    hat: [2, 6, 10, 14],
-    chords: [
-      { bass: 45, notes: [57, 60, 64, 67] },
-      { bass: 38, notes: [50, 53, 57, 60] },
-      { bass: 41, notes: [53, 57, 60, 64] },
-      { bass: 40, notes: [52, 56, 59, 62] }
-    ],
-    melody: [
-      76, 0, 0, 74, 0, 72, 0, 0, 69, 0, 0, 72, 0, 74, 0, 0,
-      74, 0, 0, 72, 0, 69, 0, 0, 65, 0, 0, 69, 0, 72, 0, 0,
-      72, 0, 0, 69, 0, 67, 0, 0, 64, 0, 0, 67, 0, 69, 0, 0,
-      71, 0, 0, 68, 0, 64, 0, 0, 59, 0, 0, 64, 0, 68, 0, 0
-    ]
-  },
-  {
     name: "ЭКСПОНАТ — MIA BOYKA (HARDTEKK) | TikTok Homelander Edit",
     artist: "Sunset",
     youtubeId: "OlvMcXB2Iyo"
+  },
+  {
+    name: "perfect face - mighty eagle (super slowed)",
+    artist: "Mighty Eagle",
+    youtubeId: "QPx-U3AY4Qs"
   }
 ];
 
