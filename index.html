@@ -1690,6 +1690,7 @@ body.light .upg-bcase-peek { background: #fff; border-color: color-mix(in srgb, 
 .cbattle__status { padding: 14px 16px; border-radius: 16px; background: rgba(18,45,28,.6); border: 1px solid rgba(182,240,106,.1); font-weight: 800; color: #fff; font-size: 14px; }
 .cbattle__status.is-win { color: var(--lime); border-color: rgba(47,211,95,.35); background: linear-gradient(180deg, rgba(47,211,95,.12), rgba(47,211,95,.05)); box-shadow: 0 0 30px rgba(47,211,95,.08); }
 .cbattle__status.is-lose { color: #ff8f8f; border-color: rgba(255,77,90,.25); background: linear-gradient(180deg, rgba(255,77,90,.08), rgba(255,77,90,.03)); }
+.cbattle__reels-grid{display:grid;gap:10px}.cbattle__reels-grid--1{grid-template-columns:1fr}.cbattle__reels-grid--2{grid-template-columns:repeat(2,minmax(0,1fr))}.cbattle__reels-grid--3{grid-template-columns:repeat(3,minmax(0,1fr))}.cbattle__reels-grid--4{grid-template-columns:repeat(2,minmax(0,1fr))}@media (max-width:900px){.cbattle__reels-grid--3,.cbattle__reels-grid--4{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:640px){.cbattle__reels-grid--2,.cbattle__reels-grid--3,.cbattle__reels-grid--4{grid-template-columns:1fr}}
 .cbattle__reel-wrap{padding:12px;border-radius:18px;background:linear-gradient(180deg,rgba(16,40,25,.8),rgba(10,26,17,.75));border:1px solid rgba(182,240,106,.1);display:grid;gap:10px}
 .cbattle__reel-label{font-size:13px;font-weight:800;color:#dff7e6}.cbattle__reel-label b{color:var(--lime)}
 .cbattle__reel{height:118px;border:1px solid rgba(182,240,106,.12);border-radius:16px;background:radial-gradient(ellipse at center,rgba(20,50,30,.9),rgba(6,16,10,.96));overflow:hidden;position:relative}
@@ -3011,7 +3012,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261122-music-dep-3";
+var APP_BUILD = "20261122-cb-multi-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7574,7 +7575,7 @@ function upgOpenBalanceCase(caseId) {
 }
 
 var CB = {
-  opp: 1, picks: [], busy: false, reel: null,
+  opp: 1, picks: [], busy: false, reel: null, reels: null,
   mode: "bots", // bots | friend
   clientId: Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4),
   online: { count: 0, names: [], seen: {}, lastPost: 0, timer: null, streamAbort: null, streamIdx: 0, streamTimer: null },
@@ -7620,14 +7621,31 @@ function cbSeededRng(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-function cbPickWeightedSeeded(pool, rnd) {
+function cbPickWeightedSeeded(pool, rnd, boostBest) {
   var total = 0;
-  for (var i = 0; i < pool.length; i++) total += Math.max(0, Number(pool[i].w) || 0);
+  var maxPrice = 0;
+  if (boostBest) {
+    for (var b = 0; b < pool.length; b++) {
+      var bi = upgItem(pool[b].id);
+      var bp = bi ? (Number(bi.price) || 0) : 0;
+      if (bp > maxPrice) maxPrice = bp;
+    }
+  }
+  for (var i = 0; i < pool.length; i++) {
+    var w = Math.max(0, Number(pool[i].w) || 0);
+    if (boostBest && maxPrice > 0) {
+      var it = upgItem(pool[i].id);
+      var p = it ? (Number(it.price) || 0) : 0;
+      w = w * (1 + 0.45 * (p / maxPrice));
+    }
+    pool[i]._cbw = w;
+    total += w;
+  }
   if (total <= 0) return pool[0] ? pool[0].id : null;
   var r = rnd() * total;
   var acc = 0;
   for (var j = 0; j < pool.length; j++) {
-    acc += Math.max(0, Number(pool[j].w) || 0);
+    acc += pool[j]._cbw || 0;
     if (r <= acc) return pool[j].id;
   }
   return pool[pool.length - 1].id;
@@ -7912,7 +7930,7 @@ function cbProcessStart(payload) {
     UPG.balance += totalBank;
   }
   CB.busy = true;
-  CB.reel = null;
+  CB.reels = null; CB.reel = null;
   CB.picks = picks.slice();
   upgSave();
   upgRender();
@@ -7930,34 +7948,31 @@ function cbProcessStart(payload) {
     for (var p2 = 0; p2 < view.length; p2++) {
       view[p2].drops.push({ spinning: true, icon: caseCfg ? caseCfg.icon || "🎁" : "🎁", name: spinName });
     }
-    var revealIdx = 0;
-    function revealNext() {
-      if (revealIdx >= view.length) {
-        CB.reel = null;
-        cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + " завершён");
-        round++;
-        if (round < picks.length) { setTimeout(revealRound, 650); return; }
-        setTimeout(finish, 800);
-        return;
-      }
-      var dr = allDrops[revealIdx][round];
-      var pName = view[revealIdx].name.replace(" (ты)", "");
-      var isMe = revealIdx === mySlot;
-      var dur = cbPrepareReel(caseCfg, dr, pName, isMe);
-      cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + ": " + (isMe ? "твой кейс" : "кейс " + pName));
-      setTimeout(function () {
-        CB.reel = null;
-        view[revealIdx].drops[view[revealIdx].drops.length - 1] = dr;
-        view[revealIdx].total += dr ? dr.price : 0;
-        cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + ": " + (isMe ? "Ты получил" : pName + " получил") + " " + (dr ? (dr.icon + " " + dr.name) : "ничего"));
-        revealIdx++;
-        setTimeout(revealNext, 450);
-      }, dur + 350);
+    var reels = [];
+    for (var ri = 0; ri < view.length; ri++) {
+      var dr0 = allDrops[ri][round];
+      var pName0 = view[ri].name.replace(" (ты)", "");
+      reels.push(cbBuildReel(caseCfg, dr0, pName0, ri === mySlot));
     }
-    revealNext();
+    var dur = cbPrepareReels(reels);
+    cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + ": открываем кейсы...");
+    setTimeout(function () {
+      CB.reels = null; CB.reel = null;
+      var got = [];
+      for (var ri2 = 0; ri2 < view.length; ri2++) {
+        var dr = allDrops[ri2][round];
+        view[ri2].drops[view[ri2].drops.length - 1] = dr;
+        view[ri2].total += dr ? dr.price : 0;
+        if (ri2 === mySlot) got.push("Ты: " + (dr ? (dr.icon + " " + dr.name) : "ничего"));
+      }
+      cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + " завершён" + (got.length ? " · " + got[0] : ""));
+      round++;
+      if (round < picks.length) { setTimeout(revealRound, 900); return; }
+      setTimeout(finish, 900);
+    }, dur + 450);
   }
   function finish() {
-    CB.reel = null;
+    CB.reels = null; CB.reel = null;
     for (var t = 0; t < view.length; t++) { view[t].total = totals[t]; view[t].win = t === winnerIdx; view[t].lose = t !== winnerIdx; }
     if (winnerIdx === mySlot) {
       cbRenderArena(view, "Ты выиграл батл! Получил " + upgMoney(totalBank) + " на баланс сайта.", "is-win");
@@ -8326,38 +8341,51 @@ function cbRenderArena(players, statusText, statusCls) {
     html += '</div></div>';
   }
   html += '</div>';
-  if (CB.reel && CB.reel.trackHtml) {
-    html += '<div class="cbattle__reel-wrap"><div class="cbattle__reel-label">' + (CB.reel.label || 'Открываем кейс...') + '</div>' +
-      '<div class="cbattle__reel" id="cbReel"><div class="cbattle__reel-pointer"></div><div class="cbattle__reel-track" id="cbReelTrack">' + CB.reel.trackHtml + '</div></div></div>';
+  var reels = CB.reels && CB.reels.length ? CB.reels : ((CB.reel && CB.reel.trackHtml) ? [CB.reel] : null);
+  if (reels && reels.length) {
+    var gridCls = "cbattle__reels-grid cbattle__reels-grid--" + Math.min(4, Math.max(1, reels.length));
+    html += '<div class="' + gridCls + '">';
+    for (var ri = 0; ri < reels.length; ri++) {
+      var rl = reels[ri];
+      html += '<div class="cbattle__reel-wrap"><div class="cbattle__reel-label">' + (rl.label || 'Открываем кейс...') + '</div>' +
+        '<div class="cbattle__reel" id="cbReel-' + ri + '"><div class="cbattle__reel-pointer"></div><div class="cbattle__reel-track" id="cbReelTrack-' + ri + '">' + (rl.trackHtml || '') + '</div></div></div>';
+    }
+    html += '</div>';
   }
   if (statusText) html += '<div class="cbattle__status ' + (statusCls || '') + '">' + statusText + '</div>';
   arena.innerHTML = html;
-  if (CB.reel && CB.reel.trackHtml && CB.reel.animate) {
-    var rTrack = document.getElementById("cbReelTrack");
-    var rRoll = document.getElementById("cbReel");
-    var reelDur = CB.reel.duration || 3000;
-    var reelEase = CB.reel.easing || "cubic-bezier(.12,.82,.08,1)";
-    var reelWin = CB.reel.winIndex || 28;
-    CB.reel.animate = false;
+  if (reels && reels.length) {
     requestAnimationFrame(function () {
-      var rw = rRoll ? (rRoll.clientWidth || rRoll.offsetWidth || 300) : 300;
-      if (rw < 80) rw = 300;
-      var cW = 92; // 84 + 8
-      var cardInner = 84;
-      var jitter = (Math.random() - 0.5) * (cardInner * 0.72);
-      var tx = -(reelWin * cW + cW / 2 - rw / 2) + jitter;
-      if (rTrack) { rTrack.style.transition = "none"; rTrack.style.transform = "translateX(0px)"; }
-      requestAnimationFrame(function () {
-        if (rTrack) {
-          rTrack.style.transition = "transform " + (reelDur / 1000).toFixed(2) + "s " + reelEase;
-          rTrack.style.transform = "translateX(" + tx + "px)";
-        }
-      });
+      for (var ri2 = 0; ri2 < reels.length; ri2++) {
+        (function (rIdx) {
+          var rl2 = reels[rIdx];
+          if (!rl2 || !rl2.animate) return;
+          var rTrack = document.getElementById("cbReelTrack-" + rIdx);
+          var rRoll = document.getElementById("cbReel-" + rIdx);
+          var reelDur = rl2.duration || 3000;
+          var reelEase = rl2.easing || "cubic-bezier(.12,.82,.08,1)";
+          var reelWin = rl2.winIndex || 28;
+          rl2.animate = false;
+          var rw = rRoll ? (rRoll.clientWidth || rRoll.offsetWidth || 300) : 300;
+          if (rw < 80) rw = 300;
+          var cW = 92; // 84 + 8
+          var cardInner = 84;
+          var jitter = (Math.random() - 0.5) * (cardInner * 0.72);
+          var tx = -(reelWin * cW + cW / 2 - rw / 2) + jitter;
+          if (rTrack) { rTrack.style.transition = "none"; rTrack.style.transform = "translateX(0px)"; }
+          requestAnimationFrame(function () {
+            if (rTrack) {
+              rTrack.style.transition = "transform " + (reelDur / 1000).toFixed(2) + "s " + reelEase;
+              rTrack.style.transform = "translateX(" + tx + "px)";
+            }
+          });
+        })(ri2);
+      }
     });
   }
 }
 
-function cbPrepareReel(caseCfg, dropItem, playerName, isMe) {
+function cbBuildReel(caseCfg, dropItem, playerName, isMe) {
   var pool = [];
   if (caseCfg && caseCfg.pool) {
     for (var i = 0; i < caseCfg.pool.length; i++) { var it = upgItem(caseCfg.pool[i].id); if (it) pool.push(it); }
@@ -8378,7 +8406,7 @@ function cbPrepareReel(caseCfg, dropItem, playerName, isMe) {
   var caseName = caseCfg ? caseCfg.name : "Кейс";
   var dur = 2200 + Math.floor(Math.random() * 1600);
   var easings = ["cubic-bezier(.12,.82,.08,1)","cubic-bezier(.08,.72,.04,1)","cubic-bezier(.16,.88,.12,1)","cubic-bezier(.1,.78,.02,1)"];
-  CB.reel = {
+  return {
     label: who + ": <b>" + caseName + "</b>",
     trackHtml: html,
     winIndex: winIndex,
@@ -8386,7 +8414,16 @@ function cbPrepareReel(caseCfg, dropItem, playerName, isMe) {
     easing: easings[Math.floor(Math.random() * easings.length)],
     animate: true
   };
-  return dur;
+}
+
+function cbPrepareReels(reels) {
+  CB.reels = reels && reels.length ? reels : null;
+  CB.reel = null;
+  var maxDur = 0;
+  if (CB.reels) {
+    for (var i = 0; i < CB.reels.length; i++) if ((CB.reels[i].duration || 0) > maxDur) maxDur = CB.reels[i].duration;
+  }
+  return maxDur || 2600;
 }
 
 function cbStart() {
@@ -8435,7 +8472,7 @@ function cbStart() {
     var sum = 0;
     for (var k = 0; k < CB.picks.length; k++) {
       var cfg = cbCaseById(CB.picks[k]);
-      var did = cfg ? cbPickWeightedSeeded(cfg.pool, rnd) : null;
+      var did = cfg ? cbPickWeightedSeeded(cfg.pool, rnd, p > 0) : null;
       var it = did ? upgItem(did) : null;
       row.push(it);
       sum += it ? it.price : 0;
@@ -8458,7 +8495,7 @@ function cbStart() {
     UPG.balance += totalBank;
   }
   CB.busy = true;
-  CB.reel = null;
+  CB.reels = null; CB.reel = null;
   upgSave();
   upgRender();
   cbRenderAll();
@@ -8474,35 +8511,31 @@ function cbStart() {
     for (var p2 = 0; p2 < view.length; p2++) {
       view[p2].drops.push({ spinning: true, icon: caseCfg ? caseCfg.icon || "🎁" : "🎁", name: spinName });
     }
-    var revealIdx = 0;
-    function revealNext() {
-      if (revealIdx >= view.length) {
-        CB.reel = null;
-        cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + " завершён");
-        round++;
-        if (round < CB.picks.length) { setTimeout(revealRound, 650); return; }
-        setTimeout(finishBattle, 800);
-        return;
-      }
-      var dr = allDrops[revealIdx][round];
-      var pName = view[revealIdx].name.replace(" (ты)", "");
-      var isMe = revealIdx === 0;
-      var dur = cbPrepareReel(caseCfg, dr, pName, isMe);
-      cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + ": " + (isMe ? "твой кейс" : "кейс " + pName));
-      setTimeout(function () {
-        CB.reel = null;
-        view[revealIdx].drops[view[revealIdx].drops.length - 1] = dr;
-        view[revealIdx].total += dr ? dr.price : 0;
-        cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + ": " + (isMe ? "Ты получил" : pName + " получил") + " " + (dr ? (dr.icon + " " + dr.name) : "ничего"));
-        revealIdx++;
-        setTimeout(revealNext, 450);
-      }, dur + 350);
+    var reels = [];
+    for (var ri = 0; ri < view.length; ri++) {
+      var dr0 = allDrops[ri][round];
+      var pName0 = view[ri].name.replace(" (ты)", "");
+      reels.push(cbBuildReel(caseCfg, dr0, pName0, ri === 0));
     }
-    revealNext();
+    var dur = cbPrepareReels(reels);
+    cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + ": открываем кейсы...");
+    setTimeout(function () {
+      CB.reels = null; CB.reel = null;
+      for (var ri2 = 0; ri2 < view.length; ri2++) {
+        var dr = allDrops[ri2][round];
+        view[ri2].drops[view[ri2].drops.length - 1] = dr;
+        view[ri2].total += dr ? dr.price : 0;
+      }
+      var myDrop = allDrops[0][round];
+      cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + " завершён · Ты: " + (myDrop ? (myDrop.icon + " " + myDrop.name) : "ничего"));
+      round++;
+      if (round < CB.picks.length) { setTimeout(revealRound, 900); return; }
+      setTimeout(finishBattle, 900);
+    }, dur + 450);
   }
 
   function finishBattle() {
-    CB.reel = null;
+    CB.reels = null; CB.reel = null;
     for (var t = 0; t < view.length; t++) {
       view[t].total = totals[t];
       view[t].win = t === winnerIdx;
@@ -8967,8 +9000,8 @@ function upgFeedStreamStart() {
 function upgFeedInit() {
   upgRenderFeed();
   try {
-    upgFeedFetchLive().then(function () { upgRenderFeed(); }).catch(function () { upgRenderFeed(); });
-  } catch (e) { upgRenderFeed(); }
+    upgFeedFetchLive().then(function () { UPG_FEED.loaded = true; upgRenderFeed(); }).catch(function () { UPG_FEED.loaded = true; upgRenderFeed(); });
+  } catch (e) { UPG_FEED.loaded = true; upgRenderFeed(); }
   try { upgFeedStreamStart(); } catch (e) {}
 }
 
@@ -9297,8 +9330,8 @@ function upgTopInit() {
   var inp = document.getElementById("upgTopName");
   if (inp && n && !inp.value && !nameProblem(n)) inp.value = n;
   upgTopRender();
-  try { upgTopFetchStore(true).then(function(){ upgTopRender(); }).catch(function(){ upgTopRender(); }); } catch (e) {}
-  try { upgTopFetchLive().then(function(){ upgTopRender(); }).catch(function(){ upgTopRender(); }); } catch (e) {}
+  var done = function(){ UPG_TOP.loaded = true; upgTopRender(); };
+  try { Promise.all([upgTopFetchStore(true), upgTopFetchLive()]).then(done).catch(done); } catch (e) { done(); }
   try { upgTopStreamStart(); } catch (e) {}
 }
 
