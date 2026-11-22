@@ -2963,7 +2963,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261122-ui-refresh-10";
+var APP_BUILD = "20261122-cb-friend-fix-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7353,7 +7353,7 @@ var CB = {
   mode: "bots", // bots | friend
   clientId: Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4),
   online: { count: 0, names: [], seen: {}, lastPost: 0, timer: null, streamAbort: null, streamIdx: 0, streamTimer: null },
-  room: { id: "", host: false, hostName: "", guestName: "", hostCid: "", guestCid: "", hostReady: false, guestReady: false, started: {}, streamAbort: null, streamIdx: 0, streamTimer: null, pollTimer: null }
+  room: { id: "", host: false, hostName: "", guestName: "", hostCid: "", guestCid: "", hostReady: false, guestReady: false, hostBalance: 0, guestBalance: 0, started: {}, streamAbort: null, streamIdx: 0, streamTimer: null, pollTimer: null }
 };
 
 var CB_ONLINE_POST = [
@@ -7612,16 +7612,14 @@ function cbRoomApplyState(payload, from) {
   if (!r.id) return;
   if (payload.host) r.hostName = normalizeName(payload.host) || r.hostName;
   if (payload.guest) r.guestName = normalizeName(payload.guest) || r.guestName;
-  if (Array.isArray(payload.picks)) {
+  if (Array.isArray(payload.picks) && !r.host) {
     // host is authoritative for picks
-    var hostName = normalizeName(payload.host || r.hostName || "");
-    var fromN = normalizeName(from || "");
-    if (r.host || (hostName && fromN && hostName.toLowerCase() === fromN.toLowerCase()) || (!r.host)) {
-      if (!r.host) CB.picks = payload.picks.filter(function (id) { return !!cbCaseById(id); }).slice(0, 10);
-    }
+    CB.picks = payload.picks.filter(function (id) { return !!cbCaseById(id); }).slice(0, 10);
   }
   if (typeof payload.hostReady === "boolean") r.hostReady = payload.hostReady;
   if (typeof payload.guestReady === "boolean") r.guestReady = payload.guestReady;
+  if (payload.hostBalance !== undefined) r.hostBalance = Math.max(0, Number(payload.hostBalance) || 0);
+  if (payload.guestBalance !== undefined) r.guestBalance = Math.max(0, Number(payload.guestBalance) || 0);
   cbRenderAll();
   cbRoomRender();
 }
@@ -7644,9 +7642,14 @@ function cbProcessStart(payload) {
   var bal = Math.max(0, Number(UPG.balance) || 0);
   if (bal < totalCost) {
     toast("Недостаточно баланса для батла");
+    CB.room.started[key] = true;
     CB.room.hostReady = false; CB.room.guestReady = false;
     cbRenderAll(); cbRoomRender();
-    if (CB.room.host) cbRoomPost("state", { host: CB.room.hostName, guest: CB.room.guestName, picks: CB.picks, hostReady: false, guestReady: false });
+    if (CB.room.host) {
+      cbRoomPost("state", { host: CB.room.hostName, guest: CB.room.guestName, picks: CB.picks, hostReady: false, guestReady: false, hostBalance: Math.max(0, Number(UPG.balance) || 0), guestBalance: CB.room.guestBalance });
+    } else {
+      cbRoomPost("ready", { ready: false, balance: bal });
+    }
     return;
   }
 
@@ -7730,7 +7733,7 @@ function cbProcessStart(payload) {
     CB.room.guestReady = false;
     cbRenderAll();
     cbRoomRender();
-    if (CB.room.host) cbRoomPost("state", { host: CB.room.hostName, guest: CB.room.guestName, picks: CB.picks, hostReady: false, guestReady: false });
+    if (CB.room.host) cbRoomPost("state", { host: CB.room.hostName, guest: CB.room.guestName, picks: CB.picks, hostReady: false, guestReady: false, hostBalance: Math.max(0, Number(UPG.balance) || 0), guestBalance: CB.room.guestBalance });
   }
   cbRenderArena(view, "Готовим батл…");
   setTimeout(revealRound, 500);
@@ -7754,9 +7757,10 @@ function cbRoomHandle(ev) {
     if (CB.room.host) {
       if (from) CB.room.guestName = from;
       if (msgCid) CB.room.guestCid = msgCid;
+      if (payload.balance !== undefined) CB.room.guestBalance = Math.max(0, Number(payload.balance) || 0);
       cbRoomRender();
       cbRenderAll();
-      cbRoomPost("state", { host: CB.room.hostName || cbMyName(), guest: CB.room.guestName, picks: CB.picks, hostReady: CB.room.hostReady, guestReady: CB.room.guestReady });
+      cbRoomPost("state", { host: CB.room.hostName || cbMyName(), guest: CB.room.guestName, picks: CB.picks, hostReady: CB.room.hostReady, guestReady: CB.room.guestReady, hostBalance: Math.max(0, Number(UPG.balance) || 0), guestBalance: CB.room.guestBalance });
     } else {
       if (from) CB.room.hostName = from;
       if (msgCid && !CB.room.hostCid) CB.room.hostCid = msgCid;
@@ -7777,15 +7781,31 @@ function cbRoomHandle(ev) {
     if (isSelf) return true;
     var fromGuest = CB.room.host && (msgCid ? (CB.room.guestCid && msgCid === CB.room.guestCid) : (from && from.toLowerCase() === String(CB.room.guestName || "").toLowerCase()));
     var fromHost = !CB.room.host && (msgCid ? (CB.room.hostCid && msgCid === CB.room.hostCid) : (from && from.toLowerCase() === String(CB.room.hostName || "").toLowerCase()));
-    if (fromGuest) { CB.room.guestReady = !!payload.ready; if (msgCid) CB.room.guestCid = msgCid; cbRoomRender(); cbRenderAll(); cbRoomMaybeAutoStart(); }
-    else if (fromHost) { CB.room.hostReady = !!payload.ready; if (msgCid) CB.room.hostCid = msgCid; cbRoomRender(); cbRenderAll(); }
+    if (fromGuest) {
+      CB.room.guestReady = !!payload.ready;
+      if (payload.balance !== undefined) CB.room.guestBalance = Math.max(0, Number(payload.balance) || 0);
+      if (msgCid) CB.room.guestCid = msgCid;
+      cbRoomRender(); cbRenderAll(); cbRoomMaybeAutoStart();
+    } else if (fromHost) {
+      CB.room.hostReady = !!payload.ready;
+      if (payload.balance !== undefined) CB.room.hostBalance = Math.max(0, Number(payload.balance) || 0);
+      if (msgCid) CB.room.hostCid = msgCid;
+      cbRoomRender(); cbRenderAll();
+    }
     return true;
   }
   if (type === "start") { cbProcessStart(payload); return true; }
   if (type === "leave") {
     if (isSelf) return true;
     var leftGuest = CB.room.host && (msgCid ? (CB.room.guestCid && msgCid === CB.room.guestCid) : (from && from.toLowerCase() === String(CB.room.guestName || "").toLowerCase()));
-    if (leftGuest) { CB.room.guestName = ""; CB.room.guestCid = ""; CB.room.guestReady = false; cbRoomRender(); cbRenderAll(); }
+    var leftHost = !CB.room.host && (msgCid ? (CB.room.hostCid && msgCid === CB.room.hostCid) : (from && from.toLowerCase() === String(CB.room.hostName || "").toLowerCase()));
+    if (leftGuest) {
+      CB.room.guestName = ""; CB.room.guestCid = ""; CB.room.guestReady = false; CB.room.guestBalance = 0;
+      cbRoomRender(); cbRenderAll();
+    } else if (leftHost) {
+      toast("Хост вышел из комнаты");
+      cbRoomLeave(true);
+    }
     return true;
   }
   return false;
@@ -7875,13 +7895,15 @@ function cbRoomCreate() {
   CB.room.guestCid = "";
   CB.room.hostReady = false;
   CB.room.guestReady = false;
+  CB.room.hostBalance = Math.max(0, Number(UPG.balance) || 0);
+  CB.room.guestBalance = 0;
   CB.room.started = {};
   try { location.hash = "cbattle=" + encodeURIComponent(id); } catch (e) {}
   cbSetMode("friend");
   cbRoomRender();
   cbRoomStartSync();
   cbRoomPost("join", { name: cbMyName() });
-  cbRoomPost("state", { host: CB.room.hostName, guest: "", picks: CB.picks, hostReady: false, guestReady: false });
+  cbRoomPost("state", { host: CB.room.hostName, guest: "", picks: CB.picks, hostReady: false, guestReady: false, hostBalance: CB.room.hostBalance, guestBalance: CB.room.guestBalance });
   toast("Комната создана. Скопируй ссылку другу!");
 }
 
@@ -7896,11 +7918,13 @@ function cbRoomJoin(id) {
   CB.room.guestCid = CB.clientId;
   CB.room.hostReady = false;
   CB.room.guestReady = false;
+  CB.room.hostBalance = 0;
+  CB.room.guestBalance = Math.max(0, Number(UPG.balance) || 0);
   CB.room.started = {};
   cbSetMode("friend");
   cbRoomRender();
   cbRoomStartSync();
-  cbRoomPost("join", { name: cbMyName() });
+  cbRoomPost("join", { name: cbMyName(), balance: Math.max(0, Number(UPG.balance) || 0) });
   toast("Подключаемся к комнате…");
 }
 
@@ -7909,7 +7933,7 @@ function cbRoomLeave(silent) {
   cbRoomStop();
   CB.room.id = ""; CB.room.host = false; CB.room.hostName = ""; CB.room.guestName = "";
   CB.room.hostCid = ""; CB.room.guestCid = "";
-  CB.room.hostReady = false; CB.room.guestReady = false; CB.room.started = {};
+  CB.room.hostReady = false; CB.room.guestReady = false; CB.room.hostBalance = 0; CB.room.guestBalance = 0; CB.room.started = {};
   try { if (location.hash.indexOf("cbattle=") >= 0) history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
   cbRoomRender();
   cbRenderAll();
@@ -7935,12 +7959,15 @@ function cbRoomMaybeAutoStart() {
 
 function cbRoomToggleReady() {
   if (!CB.room.id || CB.busy) return;
+  var bal = Math.max(0, Number(UPG.balance) || 0);
   if (CB.room.host) {
     CB.room.hostReady = !CB.room.hostReady;
-    cbRoomPost("state", { host: CB.room.hostName || cbMyName(), guest: CB.room.guestName, picks: CB.picks, hostReady: CB.room.hostReady, guestReady: CB.room.guestReady });
+    CB.room.hostBalance = bal;
+    cbRoomPost("state", { host: CB.room.hostName || cbMyName(), guest: CB.room.guestName, picks: CB.picks, hostReady: CB.room.hostReady, guestReady: CB.room.guestReady, hostBalance: CB.room.hostBalance, guestBalance: CB.room.guestBalance });
   } else {
     CB.room.guestReady = !CB.room.guestReady;
-    cbRoomPost("ready", { ready: CB.room.guestReady });
+    CB.room.guestBalance = bal;
+    cbRoomPost("ready", { ready: CB.room.guestReady, balance: bal });
   }
   cbRoomRender();
   cbRenderAll();
@@ -8076,6 +8103,8 @@ function cbStart() {
     var totalCostF = cbTotalCost();
     var balF = Math.max(0, Number(UPG.balance) || 0);
     if (balF < totalCostF) { toast("Недостаточно баланса для батла"); return; }
+    var guestBalF = Math.max(0, Number(CB.room.guestBalance) || 0);
+    if (guestBalF > 0 && guestBalF < totalCostF) { toast("У друга недостаточно баланса для батла"); return; }
     var seed = cbUid() + "-" + Date.now();
     var players = [CB.room.hostName || cbMyName(), CB.room.guestName].map(function (n) { n = normalizeName(n || ""); return n && !nameProblem(n) ? n : "Игрок"; });
     var payload = { seed: seed, picks: CB.picks.slice(), players: players, ts: Date.now() };
@@ -9186,7 +9215,7 @@ function initUpgrader() {
   function cbCanEditPicks() { return !(CB.mode === "friend" && CB.room.id && !CB.room.host); }
   function cbSyncRoomState() {
     if (CB.mode === "friend" && CB.room.id && CB.room.host) {
-      cbRoomPost("state", { host: CB.room.hostName || cbMyName(), guest: CB.room.guestName, picks: CB.picks, hostReady: CB.room.hostReady, guestReady: CB.room.guestReady });
+      cbRoomPost("state", { host: CB.room.hostName || cbMyName(), guest: CB.room.guestName, picks: CB.picks, hostReady: CB.room.hostReady, guestReady: CB.room.guestReady, hostBalance: Math.max(0, Number(UPG.balance) || 0), guestBalance: CB.room.guestBalance });
     }
   }
   var cbPick = document.getElementById("cbPick");
