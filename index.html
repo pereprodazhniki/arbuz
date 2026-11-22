@@ -2991,7 +2991,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261122-case-anim-5";
+var APP_BUILD = "20261122-case-anim-6";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7331,7 +7331,7 @@ function casePopShow(cfg, dropItem, onGrant) {
       var ci = cards[j];
       var rr = UPG_RARITY[ci.rarity] || UPG_RARITY.common;
       var isWinCard = j === winIndex;
-      html += '<div class="casepop__card' + (isWinCard ? ' is-winner' : '') + '" style="--rc:' + rr.color + '">' +
+      html += '<div class="casepop__card" data-win="' + (isWinCard ? '1' : '') + '" style="--rc:' + rr.color + '">' +
         '<div class="casepop__card-icon">' + (ci.icon || "🍉") + '</div>' +
         '<div class="casepop__card-name">' + ci.name + '</div>' +
         '<div class="casepop__card-rarity" style="color:' + rr.color + '">' + rr.name + '</div>' +
@@ -7343,13 +7343,24 @@ function casePopShow(cfg, dropItem, onGrant) {
 
   pop.hidden = false;
 
+  var rollDuration = 4500 + Math.floor(Math.random() * 2600);
+  var easings = [
+    "cubic-bezier(.12,.82,.08,1)",
+    "cubic-bezier(.08,.72,.04,1)",
+    "cubic-bezier(.16,.88,.12,1)",
+    "cubic-bezier(.1,.78,.02,1)",
+    "cubic-bezier(.06,.9,.1,1)"
+  ];
+  var rollEasing = easings[Math.floor(Math.random() * easings.length)];
+
   requestAnimationFrame(function () {
     var rollW = roll ? (roll.clientWidth || roll.offsetWidth || 520) : 520;
     if (rollW < 100) rollW = 520;
     var centerOffset = rollW / 2;
-    var targetX = -(winIndex * cardW + cardW / 2 - centerOffset);
-    var jitter = (Math.random() - 0.5) * 30;
-    targetX += jitter;
+    // Land anywhere within the winning card (edges/sides/center) for suspense
+    var cardInner = 118;
+    var jitter = (Math.random() - 0.5) * (cardInner * 0.72);
+    var targetX = -(winIndex * cardW + cardW / 2 - centerOffset) + jitter;
 
     if (track) {
       track.style.transition = "none";
@@ -7357,7 +7368,7 @@ function casePopShow(cfg, dropItem, onGrant) {
     }
     requestAnimationFrame(function () {
       if (track) {
-        track.style.transition = "transform 5.2s cubic-bezier(.08,.72,.04,1)";
+        track.style.transition = "transform " + (rollDuration / 1000).toFixed(2) + "s " + rollEasing;
         track.style.transform = "translateX(" + targetX + "px)";
       }
     });
@@ -7381,7 +7392,7 @@ function casePopShow(cfg, dropItem, onGrant) {
     if (close) { close.disabled = false; close.textContent = "Забрать в инвентарь"; }
   }
 
-  CASE_POP.timer = setTimeout(finish, 5600);
+  CASE_POP.timer = setTimeout(finish, rollDuration + 450);
 }
 
 function upgOpenBalanceCase(caseId) {
