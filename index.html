@@ -3012,7 +3012,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261122-music-tracks-1";
+var APP_BUILD = "20261122-music-fallback-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -5082,7 +5082,7 @@ function ensureMusicAudio() {
   return MUSIC.audio;
 }
 
-var MUSIC_YT = { api: false, ready: false, player: null, pending: null, box: null };
+var MUSIC_YT = { api: false, ready: false, player: null, pending: null, box: null, iframe: null };
 
 function ensureMusicYTApi(cb) {
   if (MUSIC_YT.ready && MUSIC_YT.player) { if (cb) cb(); return; }
@@ -5095,7 +5095,21 @@ function ensureMusicYTApi(cb) {
     done = true;
     MUSIC_YT.api = false;
     MUSIC_YT.pending = null;
-    if (MUSIC.on) { toast("YouTube-плеер недоступен (возможно блокировщик), переключаю дальше"); setTrack(MUSIC.track + 1); }
+    if (!MUSIC.on) return;
+    var tr = TRACKS[MUSIC.track];
+    if (tr && tr.src) {
+      try { stopYouTubeMusic(); } catch (e) {}
+      var a = ensureMusicAudio();
+      if (a.src !== tr.src) a.src = tr.src;
+      a.volume = Math.max(0, Math.min(1, MUSIC.vol / 100));
+      var p = a.play(); if (p && p.catch) p.catch(function(){});
+      return;
+    }
+    if (tr && tr.youtubeId) {
+      try { playYouTubeIframeFallback(tr.youtubeId); return; } catch (e) {}
+    }
+    toast("YouTube-плеер недоступен, переключаю дальше");
+    setTrack(MUSIC.track + 1);
   };
   var timer = setTimeout(fail, 8000);
   var prevReady = window.onYouTubeIframeAPIReady;
@@ -5124,6 +5138,18 @@ function ensureMusicYTApi(cb) {
         },
         onError: function () {
           if (!MUSIC.on) return;
+          var tr = TRACKS[MUSIC.track];
+          if (tr && tr.src) {
+            try { stopYouTubeMusic(); } catch (e) {}
+            var a = ensureMusicAudio();
+            if (a.src !== tr.src) a.src = tr.src;
+            a.volume = Math.max(0, Math.min(1, MUSIC.vol / 100));
+            var p = a.play(); if (p && p.catch) p.catch(function(){});
+            return;
+          }
+          if (tr && tr.youtubeId) {
+            try { playYouTubeIframeFallback(tr.youtubeId); return; } catch (e) {}
+          }
           toast("Не удалось загрузить трек, переключаю дальше");
           setTrack(MUSIC.track + 1);
         }
@@ -5154,6 +5180,42 @@ function stopYouTubeMusic() {
   try {
     if (MUSIC_YT.player && typeof MUSIC_YT.player.pauseVideo === "function") MUSIC_YT.player.pauseVideo();
   } catch (e) {}
+  try {
+    if (MUSIC_YT.iframe) { MUSIC_YT.iframe.remove(); MUSIC_YT.iframe = null; }
+  } catch (e) {}
+}
+
+function playYouTubeIframeFallback(id) {
+  try {
+    if (MUSIC_YT.iframe) { MUSIC_YT.iframe.remove(); MUSIC_YT.iframe = null; }
+  } catch (e) {}
+  try {
+    if (MUSIC_YT.player && typeof MUSIC_YT.player.pauseVideo === "function") MUSIC_YT.player.pauseVideo();
+  } catch (e) {}
+  var iframe = document.createElement("iframe");
+  iframe.style.cssText = "position:fixed;left:-9999px;top:-9999px;width:200px;height:200px;opacity:0.01;pointer-events:none;border:0";
+  iframe.allow = "autoplay; encrypted-media";
+  iframe.src = "https://www.youtube.com/embed/" + encodeURIComponent(id) + "?autoplay=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
+  document.body.appendChild(iframe);
+  MUSIC_YT.iframe = iframe;
+  if (!MUSIC_YT._msgBound) {
+    MUSIC_YT._msgBound = true;
+    window.addEventListener("message", function (ev) {
+      if (!MUSIC_YT.iframe || !MUSIC.on) return;
+      var d = ev.data;
+      if (typeof d === "string") { try { d = JSON.parse(d); } catch (e) { return; } }
+      if (!d || d.event !== "onStateChange") return;
+      if (d.info === 0) setTrack(MUSIC.track + 1);
+    });
+  }
+  setTimeout(function () {
+    try {
+      if (MUSIC_YT.iframe && MUSIC_YT.iframe.contentWindow) {
+        MUSIC_YT.iframe.contentWindow.postMessage(JSON.stringify({ event: "listening", id: 1 }), "*");
+        MUSIC_YT.iframe.contentWindow.postMessage(JSON.stringify({ event: "command", func: "addEventListener", args: ["onStateChange"] }), "*");
+      }
+    } catch (e) {}
+  }, 1000);
 }
 
 function stopExternalMusic() {
