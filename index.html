@@ -1674,18 +1674,22 @@ body.light .upg-bcase-peek { background: #fff; border-color: color-mix(in srgb, 
 .cbattle__ptotal { font-weight: 900; color: var(--lime); }
 .cbattle__player.is-lose .cbattle__ptotal { color: #ff8f8f; }
 .cbattle__drops { display: grid; gap: 6px; }
-.cbattle__drop { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 12px; background: rgba(18,45,28,.55); border: 1px solid rgba(255,255,255,.04); font-size: 13px; }
-.cbattle__drop.is-spinning { border-color: rgba(255,204,87,.45); background: linear-gradient(180deg, rgba(40,70,45,.7), rgba(20,37,25,.7)); }
-.cbattle__drop.is-spinning .cb-spin { display:inline-block; animation: cbSpin .55s linear infinite; transform-origin: 50% 50%; }
-.cbattle__drop.is-reveal { animation: cbReveal .28s ease-out; }
-@keyframes cbSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes cbReveal { from { opacity: .35; transform: translateY(4px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.cbattle__drop { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 11px; border-radius: 12px; background: rgba(18,45,28,.55); border: 1px solid rgba(255,255,255,.04); font-size: 13px; transition: border-color .2s, background .2s, transform .2s; }
+.cbattle__drop.is-spinning { border-color: rgba(255,204,87,.55); background: linear-gradient(135deg, rgba(55,80,40,.75), rgba(20,37,25,.8)); box-shadow: 0 0 0 1px rgba(255,204,87,.12), 0 8px 20px rgba(255,176,32,.08); }
+.cbattle__drop.is-spinning .cb-spin { display:inline-block; animation: cbSpin .35s linear infinite; transform-origin: 50% 50%; filter: drop-shadow(0 0 8px rgba(255,204,87,.35)); }
+.cbattle__drop.is-spinning .cbattle__dropname span { animation: cbFlicker .18s linear infinite alternate; }
+.cbattle__drop.is-reveal { animation: cbReveal .4s cubic-bezier(.2,1.1,.3,1); border-color: rgba(182,240,106,.18); background: linear-gradient(180deg, rgba(30,60,38,.7), rgba(18,45,28,.6)); }
+@keyframes cbSpin { from { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.12); } to { transform: rotate(360deg) scale(1); } }
+@keyframes cbReveal { 0% { opacity: 0; transform: translateY(8px) scale(.96); filter: brightness(1.5); } 60% { opacity: 1; transform: translateY(-2px) scale(1.02); } 100% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1); } }
+@keyframes cbFlicker { from { opacity: .65; } to { opacity: 1; } }
 .cbattle__dropname { display: flex; align-items: center; gap: 6px; color: #fff; font-weight: 700; min-width: 0; }
 .cbattle__dropname span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cbattle__dropval { color: var(--muted); font-weight: 800; white-space: nowrap; }
-.cbattle__status { padding: 12px 14px; border-radius: 16px; background: rgba(18,45,28,.6); border: 1px solid rgba(182,240,106,.1); font-weight: 800; color: #fff; }
-.cbattle__status.is-win { color: var(--lime); border-color: rgba(47,211,95,.35); background: rgba(47,211,95,.08); }
-.cbattle__status.is-lose { color: #ff8f8f; border-color: rgba(255,77,90,.25); background: rgba(255,77,90,.06); }
+.cbattle__dropval { color: var(--lime); font-weight: 800; white-space: nowrap; }
+.cbattle__player.is-win { animation: cbWinner .8s ease; }
+@keyframes cbWinner { 0%{box-shadow:0 0 0 1px rgba(47,211,95,.15),0 16px 40px rgba(47,211,95,.1)} 40%{box-shadow:0 0 0 2px rgba(47,211,95,.35),0 0 50px rgba(47,211,95,.2),0 16px 40px rgba(47,211,95,.15)} 100%{box-shadow:0 0 0 1px rgba(47,211,95,.15),0 16px 40px rgba(47,211,95,.1)} }
+.cbattle__status { padding: 14px 16px; border-radius: 16px; background: rgba(18,45,28,.6); border: 1px solid rgba(182,240,106,.1); font-weight: 800; color: #fff; font-size: 14px; }
+.cbattle__status.is-win { color: var(--lime); border-color: rgba(47,211,95,.35); background: linear-gradient(180deg, rgba(47,211,95,.12), rgba(47,211,95,.05)); box-shadow: 0 0 30px rgba(47,211,95,.08); }
+.cbattle__status.is-lose { color: #ff8f8f; border-color: rgba(255,77,90,.25); background: linear-gradient(180deg, rgba(255,77,90,.08), rgba(255,77,90,.03)); }
 .cbattle__note { margin-top: 10px; color: var(--muted); font-size: 12px; line-height: 1.45; }
 .cbattle__modes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .cbattle__friend[hidden] { display: none !important; }
@@ -1707,28 +1711,44 @@ body.light .cbattle__pname, body.light .cbattle__dropname, body.light .cbattle__
 .casepop__panel { position: relative; width: min(560px, 100%); background: linear-gradient(180deg, rgba(22,53,31,.96), rgba(10,28,17,.96)); border: 1px solid rgba(182,240,106,.14); border-radius: 28px; padding: 22px; box-shadow: 0 30px 80px rgba(0,0,0,.5), 0 0 0 1px rgba(182,240,106,.04); backdrop-filter: blur(12px); }
 .casepop__title { margin: 0 0 4px; font-size: 26px; color: #fff; letter-spacing: -.3px; }
 .casepop__sub { margin: 0 0 16px; color: var(--muted); font-size: 14px; line-height: 1.45; }
-.casepop__roll { height: 140px; border: 1px solid rgba(182,240,106,.1); border-radius: 20px; background: linear-gradient(180deg, rgba(8,20,13,.9), rgba(5,14,9,.95)); display: grid; place-items: center; overflow: hidden; position: relative; box-shadow: inset 0 2px 20px rgba(0,0,0,.2); }
-.casepop__roll::before,.casepop__roll::after{content:"";position:absolute;top:0;bottom:0;width:60px;pointer-events:none;z-index:2}
-.casepop__roll::before{left:0;background:linear-gradient(90deg,rgba(8,20,13,.95),transparent)}
-.casepop__roll::after{right:0;background:linear-gradient(270deg,rgba(8,20,13,.95),transparent)}
-.casepop__item { text-align: center; transition: transform .12s ease, opacity .12s ease; }
-.casepop__icon { font-size: 60px; line-height: 1; filter: drop-shadow(0 10px 24px rgba(0,0,0,.35)); }
-.casepop__name { margin-top: 10px; font-weight: 900; color: #fff; font-size: 20px; }
-.casepop__rarity { margin-top: 4px; font-size: 13px; font-weight: 800; }
-.casepop__price { margin-top: 4px; color: var(--muted); font-size: 13px; }
-.casepop__item.is-blur .casepop__icon { transform: scale(.92); opacity: .7; }
-.casepop__item.is-win .casepop__icon { animation: casepop-pop .45s ease; }
-@keyframes casepop-pop { 0%{transform:scale(.7);opacity:.5} 60%{transform:scale(1.12);opacity:1} 100%{transform:scale(1)} }
+.casepop__roll { height: 190px; border: 1px solid rgba(182,240,106,.12); border-radius: 22px; background: radial-gradient(ellipse at center, rgba(20,50,30,.9), rgba(6,16,10,.96)); overflow: hidden; position: relative; box-shadow: inset 0 2px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(182,240,106,.04); }
+.casepop__roll::before,.casepop__roll::after{content:"";position:absolute;top:0;bottom:0;width:90px;pointer-events:none;z-index:4}
+.casepop__roll::before{left:0;background:linear-gradient(90deg,rgba(6,16,10,.98) 10%,rgba(6,16,10,0))}
+.casepop__roll::after{right:0;background:linear-gradient(270deg,rgba(6,16,10,.98) 10%,rgba(6,16,10,0))}
+.casepop__pointer{position:absolute;top:10px;bottom:10px;left:50%;width:3px;margin-left:-1.5px;background:linear-gradient(180deg,transparent,#ffe07a 20%,#ffb020 50%,#ffe07a 80%,transparent);z-index:5;border-radius:3px;box-shadow:0 0 12px rgba(255,176,32,.7),0 0 30px rgba(255,176,32,.25)}
+.casepop__pointer::before,.casepop__pointer::after{content:"";position:absolute;left:50%;margin-left:-7px;width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent}
+.casepop__pointer::before{top:-2px;border-top:10px solid #ffcc57;filter:drop-shadow(0 2px 4px rgba(255,176,32,.6))}
+.casepop__pointer::after{bottom:-2px;border-bottom:10px solid #ffcc57;filter:drop-shadow(0 -2px 4px rgba(255,176,32,.6))}
+.casepop__track{display:flex;align-items:center;height:100%;will-change:transform;position:relative;z-index:1;padding:0 50%}
+.casepop__card{flex:0 0 118px;width:118px;height:148px;margin:0 6px;border-radius:18px;border:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;position:relative;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.casepop__card::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,var(--rc,rgba(182,240,106,.15)),transparent 60%);opacity:.35}
+.casepop__card-icon{font-size:44px;line-height:1;filter:drop-shadow(0 8px 18px rgba(0,0,0,.35));position:relative}
+.casepop__card-name{font-size:11px;font-weight:800;color:#fff;text-align:center;padding:0 8px;line-height:1.2;max-height:2.4em;overflow:hidden;position:relative}
+.casepop__card-rarity{font-size:10px;font-weight:800;position:relative;text-transform:uppercase;letter-spacing:.03em}
+.casepop__card-price{font-size:10px;color:var(--muted);font-weight:700;position:relative}
+.casepop__card.is-winner{border-color:var(--rc,rgba(255,204,87,.7));box-shadow:0 0 0 1px var(--rc,rgba(255,204,87,.4)),0 0 30px color-mix(in srgb,var(--rc,#ffcc57) 30%,transparent)}
+.casepop__win{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:6;padding:16px;animation:casepopWinIn .45s cubic-bezier(.2,.9,.2,1)}
+.casepop__win[hidden]{display:none!important}
+.casepop__win-glow{position:absolute;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,var(--win-glow,rgba(255,204,87,.35)),transparent 70%);filter:blur(2px);animation:casepopGlow 1.8s ease-in-out infinite alternate}
+.casepop__win .casepop__icon{font-size:72px;line-height:1;filter:drop-shadow(0 12px 30px rgba(0,0,0,.4));animation:casepopIconPop .6s cubic-bezier(.2,1.2,.3,1);position:relative}
+.casepop__win .casepop__name{margin-top:10px;font-weight:900;color:#fff;font-size:24px;position:relative;text-shadow:0 4px 20px rgba(0,0,0,.4)}
+.casepop__win .casepop__rarity{margin-top:4px;font-size:14px;font-weight:900;position:relative;text-transform:uppercase;letter-spacing:.04em}
+.casepop__win .casepop__price{margin-top:4px;color:#dff7e6;font-size:14px;font-weight:700;position:relative}
+@keyframes casepopWinIn{0%{opacity:0;transform:scale(.85)}100%{opacity:1;transform:scale(1)}}
+@keyframes casepopIconPop{0%{transform:scale(.3) rotate(-10deg);opacity:0}60%{transform:scale(1.15) rotate(4deg);opacity:1}100%{transform:scale(1) rotate(0)}}
+@keyframes casepopGlow{0%{transform:scale(.9);opacity:.6}100%{transform:scale(1.15);opacity:1}}
 .casepop__actions { display: flex; justify-content: flex-end; margin-top: 16px; gap: 8px; }
-.casepop__close { border: 1px solid rgba(182,240,106,.14); border-radius: 14px; padding: 11px 18px; font-weight: 800; cursor: pointer; background: rgba(47,211,95,.12); color: #fff; transition: all .18s; }
-.casepop__close:hover { background: rgba(47,211,95,.2); border-color: rgba(182,240,106,.28); transform: translateY(-1px); }
-.casepop__close:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.casepop__close { border: 1px solid rgba(182,240,106,.14); border-radius: 14px; padding: 12px 20px; font-weight: 800; cursor: pointer; background: linear-gradient(180deg,rgba(47,211,95,.22),rgba(47,211,95,.12)); color: #fff; transition: all .18s; font-size: 15px; }
+.casepop__close:hover { background: linear-gradient(180deg,rgba(47,211,95,.32),rgba(47,211,95,.18)); border-color: rgba(182,240,106,.28); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(47,211,95,.15); }
+.casepop__close:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
 body.light .casepop__panel { background: linear-gradient(180deg,#fff,#f4fff8); border-color: #bfe4cc; }
-body.light .casepop__title, body.light .casepop__name { color: #0d2b19; }
-body.light .casepop__roll { background: #f0fff5; border-color: #bfe4cc; }
-body.light .casepop__roll::before{background:linear-gradient(90deg,#f0fff5,transparent)}
-body.light .casepop__roll::after{background:linear-gradient(270deg,#f0fff5,transparent)}
-body.light .casepop__close { background: #dff3e6; color: #0d2b19; }
+body.light .casepop__title, body.light .casepop__name, body.light .casepop__win .casepop__name { color: #0d2b19; }
+body.light .casepop__roll { background: radial-gradient(ellipse at center,#f6fff9,#e8f5ec); border-color: #bfe4cc; }
+body.light .casepop__roll::before{background:linear-gradient(90deg,#f0fff5 10%,rgba(240,255,245,0))}
+body.light .casepop__roll::after{background:linear-gradient(270deg,#f0fff5 10%,rgba(240,255,245,0))}
+body.light .casepop__card{background:linear-gradient(180deg,#fff,#f4fff8);border-color:#cfe8d7}
+body.light .casepop__card-name{color:#0d2b19}
+body.light .casepop__close { background: linear-gradient(180deg,#e8ffe8,#d4f0d8); color: #0d2b19; }
 
 /* ---------- Колесо апгрейда ---------- */
 .upg-wheel-wrap {
@@ -2850,8 +2870,11 @@ body.light .upg-feed__who { color: #0d2b19; }
   <div class="casepop__panel" role="dialog" aria-modal="true" aria-label="Открытие кейса">
     <h3 class="casepop__title" id="casePopTitle">Открытие кейса</h3>
     <p class="casepop__sub" id="casePopSub">Крутим...</p>
-    <div class="casepop__roll">
-      <div class="casepop__item is-blur" id="casePopItem">
+    <div class="casepop__roll" id="casePopRoll">
+      <div class="casepop__pointer"></div>
+      <div class="casepop__track" id="casePopTrack"></div>
+      <div class="casepop__win" id="casePopWin" hidden>
+        <div class="casepop__win-glow" id="casePopWinGlow"></div>
         <div class="casepop__icon" id="casePopIcon">🎁</div>
         <div class="casepop__name" id="casePopName">...</div>
         <div class="casepop__rarity" id="casePopRarity"></div>
@@ -2966,7 +2989,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261122-cb-friend-fix-3";
+var APP_BUILD = "20261122-case-anim-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7250,7 +7273,7 @@ function casePopGrant() {
 
 function casePopClose() {
   if (CASE_POP.busy) return;
-  if (CASE_POP.timer) { clearInterval(CASE_POP.timer); CASE_POP.timer = null; }
+  if (CASE_POP.timer) { clearTimeout(CASE_POP.timer); clearInterval(CASE_POP.timer); CASE_POP.timer = null; }
   casePopGrant();
   var pop = document.getElementById("casePop");
   if (pop) pop.hidden = true;
@@ -7259,24 +7282,28 @@ function casePopClose() {
 function casePopShow(cfg, dropItem, onGrant) {
   var pop = document.getElementById("casePop");
   if (!pop || !dropItem) return;
-  if (CASE_POP.timer) { clearInterval(CASE_POP.timer); CASE_POP.timer = null; }
+  if (CASE_POP.timer) { clearTimeout(CASE_POP.timer); CASE_POP.timer = null; }
   CASE_POP.busy = true;
   CASE_POP.granted = false;
   CASE_POP.onGrant = typeof onGrant === "function" ? onGrant : null;
 
   var title = document.getElementById("casePopTitle");
   var sub = document.getElementById("casePopSub");
-  var itemEl = document.getElementById("casePopItem");
   var icon = document.getElementById("casePopIcon");
   var name = document.getElementById("casePopName");
   var rarity = document.getElementById("casePopRarity");
   var price = document.getElementById("casePopPrice");
   var close = document.getElementById("casePopClose");
+  var track = document.getElementById("casePopTrack");
+  var win = document.getElementById("casePopWin");
+  var winGlow = document.getElementById("casePopWinGlow");
+  var roll = document.getElementById("casePopRoll");
 
   if (title) title.textContent = cfg && cfg.name ? cfg.name : "Открытие кейса";
-  if (sub) sub.textContent = "Крутим...";
+  if (sub) sub.textContent = "Крутим кейс...";
   if (close) { close.disabled = true; close.textContent = "Забрать"; }
-  if (itemEl) { itemEl.className = "casepop__item is-blur"; }
+  if (win) win.hidden = true;
+  if (track) { track.style.transition = "none"; track.style.transform = "translateX(0px)"; track.innerHTML = ""; track.style.opacity = "1"; }
 
   var pool = [];
   if (cfg && cfg.pool) {
@@ -7287,34 +7314,73 @@ function casePopShow(cfg, dropItem, onGrant) {
   }
   if (!pool.length) pool = [dropItem];
 
-  function paint(it, blur) {
-    if (!it) return;
-    var r = UPG_RARITY[it.rarity] || UPG_RARITY.common;
-    if (icon) icon.textContent = it.icon || "🍉";
-    if (name) name.textContent = it.name;
-    if (rarity) { rarity.textContent = r.name; rarity.style.color = r.color; }
-    if (price) price.textContent = upgMoney(it.price);
-    if (itemEl) itemEl.className = "casepop__item " + (blur ? "is-blur" : "is-win");
+  var cardW = 130; // 118 + 12 margin
+  var winIndex = 38;
+  var totalCards = winIndex + 8;
+  var cards = [];
+  for (var c = 0; c < totalCards; c++) {
+    var pick = (c === winIndex) ? dropItem : pool[Math.floor(Math.random() * pool.length)];
+    cards.push(pick);
   }
 
-  paint(pool[Math.floor(Math.random() * pool.length)], true);
+  if (track) {
+    var html = "";
+    for (var j = 0; j < cards.length; j++) {
+      var ci = cards[j];
+      var rr = UPG_RARITY[ci.rarity] || UPG_RARITY.common;
+      var isWinCard = j === winIndex;
+      html += '<div class="casepop__card' + (isWinCard ? ' is-winner' : '') + '" style="--rc:' + rr.color + '">' +
+        '<div class="casepop__card-icon">' + (ci.icon || "🍉") + '</div>' +
+        '<div class="casepop__card-name">' + ci.name + '</div>' +
+        '<div class="casepop__card-rarity" style="color:' + rr.color + '">' + rr.name + '</div>' +
+        '<div class="casepop__card-price">' + upgMoney(ci.price) + '</div>' +
+      '</div>';
+    }
+    track.innerHTML = html;
+  }
+
   pop.hidden = false;
 
-  var ticks = 0;
-  var totalTicks = 22;
-  CASE_POP.timer = setInterval(function () {
-    ticks++;
-    if (ticks < totalTicks) {
-      paint(pool[Math.floor(Math.random() * pool.length)], true);
-      return;
+  var rollW = roll ? roll.clientWidth : 520;
+  var centerOffset = rollW / 2;
+  var targetX = -(winIndex * cardW + cardW / 2 - centerOffset);
+  // small random jitter so it doesn't always land perfectly same
+  var jitter = (Math.random() - 0.5) * 30;
+  targetX += jitter;
+
+  // start from slight right offset
+  requestAnimationFrame(function () {
+    if (track) {
+      track.style.transition = "none";
+      track.style.transform = "translateX(0px)";
     }
-    clearInterval(CASE_POP.timer);
-    CASE_POP.timer = null;
-    paint(dropItem, false);
+    requestAnimationFrame(function () {
+      if (track) {
+        track.style.transition = "transform 5.2s cubic-bezier(.08,.72,.04,1)";
+        track.style.transform = "translateX(" + targetX + "px)";
+      }
+    });
+  });
+
+  var done = false;
+  function finish() {
+    if (done) return;
+    done = true;
+    if (CASE_POP.timer) { clearTimeout(CASE_POP.timer); CASE_POP.timer = null; }
+    var dr = UPG_RARITY[dropItem.rarity] || UPG_RARITY.common;
+    if (track) { track.style.transition = "opacity .25s ease"; track.style.opacity = "0.15"; }
+    if (winGlow) winGlow.style.setProperty("--win-glow", dr.color);
+    if (icon) icon.textContent = dropItem.icon || "🍉";
+    if (name) name.textContent = dropItem.name;
+    if (rarity) { rarity.textContent = dr.name; rarity.style.color = dr.color; }
+    if (price) price.textContent = upgMoney(dropItem.price);
+    if (win) win.hidden = false;
     if (sub) sub.textContent = "Выпало! Забери награду.";
     CASE_POP.busy = false;
     if (close) { close.disabled = false; close.textContent = "Забрать в инвентарь"; }
-  }, 90);
+  }
+
+  CASE_POP.timer = setTimeout(finish, 5600);
 }
 
 function upgOpenBalanceCase(caseId) {
@@ -7705,21 +7771,48 @@ function cbProcessStart(payload) {
     var caseCfg = cbCaseById(caseId);
     var spinIcon = caseCfg ? (caseCfg.icon || "🎁") : "🎁";
     var spinName = caseCfg ? caseCfg.name : "Кейс";
+    var pool = [];
+    if (caseCfg && caseCfg.pool) {
+      for (var pi = 0; pi < caseCfg.pool.length; pi++) { var pit = upgItem(caseCfg.pool[pi].id); if (pit) pool.push(pit); }
+    }
+    if (!pool.length) pool = [{ icon: "🍉", name: "Арбуз", price: 0 }];
     for (var p2 = 0; p2 < view.length; p2++) {
       view[p2].drops.push({ spinning: true, icon: spinIcon, name: spinName });
     }
     cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + ": открываем " + spinName + "…");
-    setTimeout(function () {
-      for (var p3 = 0; p3 < view.length; p3++) {
-        var dr = allDrops[p3][round];
-        view[p3].drops[view[p3].drops.length - 1] = dr;
-        view[p3].total += dr ? dr.price : 0;
+    var spinTicks = 0;
+    var spinMax = 14;
+    var spinTimer = setInterval(function () {
+      spinTicks++;
+      for (var sp = 0; sp < view.length; sp++) {
+        var last = view[sp].drops.length - 1;
+        if (last >= 0 && view[sp].drops[last] && view[sp].drops[last].spinning) {
+          var rp = pool[Math.floor(Math.random() * pool.length)];
+          view[sp].drops[last] = { spinning: true, icon: rp.icon || "🍉", name: rp.name };
+        }
       }
-      cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + "…");
-      round++;
-      if (round < picks.length) { setTimeout(revealRound, 550); return; }
-      setTimeout(finish, 550);
-    }, 650);
+      cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + ": открываем " + spinName + "…");
+      if (spinTicks >= spinMax) {
+        clearInterval(spinTimer);
+        var revealIdx = 0;
+        function revealNext() {
+          if (revealIdx < view.length) {
+            var dr = allDrops[revealIdx][round];
+            view[revealIdx].drops[view[revealIdx].drops.length - 1] = dr;
+            view[revealIdx].total += dr ? dr.price : 0;
+            cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + ": " + view[revealIdx].name.replace(" (ты)", "") + " получил " + (dr ? (dr.icon + " " + dr.name) : "ничего"));
+            revealIdx++;
+            setTimeout(revealNext, 220);
+            return;
+          }
+          cbRenderArena(view, "Раунд " + (round + 1) + "/" + picks.length + " завершён");
+          round++;
+          if (round < picks.length) { setTimeout(revealRound, 700); return; }
+          setTimeout(finish, 900);
+        }
+        setTimeout(revealNext, 180);
+      }
+    }, 90);
   }
   function finish() {
     for (var t = 0; t < view.length; t++) { view[t].total = totals[t]; view[t].win = t === winnerIdx; view[t].lose = t !== winnerIdx; }
@@ -8176,24 +8269,48 @@ function cbStart() {
     var caseCfg = cbCaseById(caseId);
     var spinIcon = caseCfg ? (caseCfg.icon || "🎁") : "🎁";
     var spinName = caseCfg ? caseCfg.name : "Кейс";
+    var pool = [];
+    if (caseCfg && caseCfg.pool) {
+      for (var pi = 0; pi < caseCfg.pool.length; pi++) { var pit = upgItem(caseCfg.pool[pi].id); if (pit) pool.push(pit); }
+    }
+    if (!pool.length) pool = [{ icon: "🍉", name: "Арбуз", price: 0 }];
     for (var p2 = 0; p2 < view.length; p2++) {
       view[p2].drops.push({ spinning: true, icon: spinIcon, name: spinName });
     }
     cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + ": открываем " + spinName + "…");
-    setTimeout(function () {
-      for (var p3 = 0; p3 < view.length; p3++) {
-        var dr = allDrops[p3][round];
-        view[p3].drops[view[p3].drops.length - 1] = dr;
-        view[p3].total += dr ? dr.price : 0;
+    var spinTicks = 0;
+    var spinMax = 14;
+    var spinTimer = setInterval(function () {
+      spinTicks++;
+      for (var sp = 0; sp < view.length; sp++) {
+        var last = view[sp].drops.length - 1;
+        if (last >= 0 && view[sp].drops[last] && view[sp].drops[last].spinning) {
+          var rp = pool[Math.floor(Math.random() * pool.length)];
+          view[sp].drops[last] = { spinning: true, icon: rp.icon || "🍉", name: rp.name };
+        }
       }
-      cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + "…");
-      round++;
-      if (round < CB.picks.length) {
-        setTimeout(revealRound, 550);
-        return;
+      cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + ": открываем " + spinName + "…");
+      if (spinTicks >= spinMax) {
+        clearInterval(spinTimer);
+        var revealIdx = 0;
+        function revealNext() {
+          if (revealIdx < view.length) {
+            var dr = allDrops[revealIdx][round];
+            view[revealIdx].drops[view[revealIdx].drops.length - 1] = dr;
+            view[revealIdx].total += dr ? dr.price : 0;
+            cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + ": " + view[revealIdx].name.replace(" (ты)", "") + " получил " + (dr ? (dr.icon + " " + dr.name) : "ничего"));
+            revealIdx++;
+            setTimeout(revealNext, 220);
+            return;
+          }
+          cbRenderArena(view, "Раунд " + (round + 1) + "/" + CB.picks.length + " завершён");
+          round++;
+          if (round < CB.picks.length) { setTimeout(revealRound, 700); return; }
+          setTimeout(finishBattle, 900);
+        }
+        setTimeout(revealNext, 180);
       }
-      setTimeout(finishBattle, 550);
-    }, 650);
+    }, 90);
   }
 
   function finishBattle() {
