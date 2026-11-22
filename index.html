@@ -1727,7 +1727,7 @@ body.light .cbattle__pname, body.light .cbattle__dropname, body.light .cbattle__
 .casepop__card-rarity{font-size:10px;font-weight:800;position:relative;text-transform:uppercase;letter-spacing:.03em}
 .casepop__card-price{font-size:10px;color:var(--muted);font-weight:700;position:relative}
 .casepop__card.is-winner{border-color:var(--rc,rgba(255,204,87,.7));box-shadow:0 0 0 1px var(--rc,rgba(255,204,87,.4)),0 0 30px color-mix(in srgb,var(--rc,#ffcc57) 30%,transparent)}
-.casepop__win{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:6;padding:16px;animation:casepopWinIn .45s cubic-bezier(.2,.9,.2,1)}
+.casepop__win{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:6;padding:16px;animation:casepopWinIn .45s cubic-bezier(.2,.9,.2,1);background:radial-gradient(ellipse at center,rgba(10,28,17,.72),rgba(6,16,10,.88))}
 .casepop__win[hidden]{display:none!important}
 .casepop__win-glow{position:absolute;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,var(--win-glow,rgba(255,204,87,.35)),transparent 70%);filter:blur(2px);animation:casepopGlow 1.8s ease-in-out infinite alternate}
 .casepop__win .casepop__icon{font-size:72px;line-height:1;filter:drop-shadow(0 12px 30px rgba(0,0,0,.4));animation:casepopIconPop .6s cubic-bezier(.2,1.2,.3,1);position:relative}
@@ -2989,7 +2989,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261122-case-anim-2";
+var APP_BUILD = "20261122-case-anim-3";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7341,15 +7341,14 @@ function casePopShow(cfg, dropItem, onGrant) {
 
   pop.hidden = false;
 
-  var rollW = roll ? roll.clientWidth : 520;
-  var centerOffset = rollW / 2;
-  var targetX = -(winIndex * cardW + cardW / 2 - centerOffset);
-  // small random jitter so it doesn't always land perfectly same
-  var jitter = (Math.random() - 0.5) * 30;
-  targetX += jitter;
-
-  // start from slight right offset
   requestAnimationFrame(function () {
+    var rollW = roll ? (roll.clientWidth || roll.offsetWidth || 520) : 520;
+    if (rollW < 100) rollW = 520;
+    var centerOffset = rollW / 2;
+    var targetX = -(winIndex * cardW + cardW / 2 - centerOffset);
+    var jitter = (Math.random() - 0.5) * 30;
+    targetX += jitter;
+
     if (track) {
       track.style.transition = "none";
       track.style.transform = "translateX(0px)";
