@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pereprodazhniki — арбузы оптом и в розницу</title>
+<meta name="description" content="Pereprodazhniki: перепродаём арбузы с доставкой. Шутим, но возим настоящие арбузы.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='34' r='27' fill='%231f9d47'/%3E%3Cpath d='M5 34a27 27 0 0 0 54 0z' fill='%23e63946'/%3E%3Cpath d='M4 34h56' stroke='%231f9d47' stroke-width='5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="marquee">
+  <div class="marquee__row">
+    <span>PEREPRODAZHNIKI 🍉 ОПТОМ И В РОЗНИЦУ 🍉 ДОСТАВКА 2 ЧАСА 🍉 ХАЛЯЛЬНЫЕ АРБУЗЫ (КРОМЕ СВИНОГО) 🍉</span>
+    <span>PEREPRODAZHNIKI 🍉 ОПТОМ И В РОЗНИЦУ 🍉 ДОСТАВКА 2 ЧАСА 🍉 ХАЛЯЛЬНЫЕ АРБУЗЫ (КРОМЕ СВИНОГО) 🍉</span>
+  </div>
+</div>
+
+<header class="header">
+  <a class="logo" href="#top">
+    <span class="logo__melon">🍉</span>
+    <span class="logo__text">Pereprodazhniki</span>
+  </a>
+  <nav class="nav">
+    <a href="#catalog">Каталог</a>
+    <a href="#memes">Мемы</a>
+    <a href="#how">Доставка</a>
+    <a href="#team">Команда</a>
+    <a href="#reviews">Отзывы</a>
+    <a href="#game">Игра</a>
+  </nav>
+  <div class="music" id="musicBox">
+    <button class="music__btn" id="musicBtn" type="button" title="Музыка" aria-expanded="false" aria-controls="musicPanel">🎵</button>
+    <div class="music__panel" id="musicPanel" hidden>
+      <b class="music__title">Арбузный плейлист</b>
+      <div class="music__track">
+        <button class="music__nav" id="musicPrev" type="button" aria-label="Предыдущий трек">⏮</button>
+        <span class="music__name" id="musicTrack">Арбузный шансон</span>
+        <button class="music__nav" id="musicNext" type="button" aria-label="Следующий трек">⏭</button>
+      </div>
+      <p class="music__note" id="musicNote">5 треков в стиле русской попсы. По умолчанию выключено.</p>
+      <div class="music__row">
+        <button class="music__play" id="musicPlay" type="button">▶ Включить</button>
+        <span class="music__vol" id="musicVolOut">45%</span>
+      </div>
+      <input class="range" id="musicVol" type="range" min="0" max="100" value="45" aria-label="Громкость музыки">
+    </div>
+  </div>
+  <button class="theme-toggle" id="themeToggle" type="button" title="Сменить тему">🌙</button>
+  <span class="live-sold" title="Столько арбузов продано на сайте">🍉 продано: <b id="soldTop">0</b></span>
+  <button class="cart-btn" id="cartOpen" type="button" onclick="openCart()">
+    Корзина <span class="cart-btn__count" id="cartCount">0</span>
+  </button>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="hero__text">
+      <p class="hero__kicker">Pereprodazhniki — сезон 2026</p>
+      <h1 class="hero__title">ПЕРЕПРОДАЁМ<br>АРБУЗЫ<br>ЧЕСТНО<br>И С МЕМАМИ</h1>
+      <p class="hero__desc">
+        Мы скупаем арбузы у бабушек и перепродаём их вам.
+        Тот же арбуз, наценка на наш грех и максимум шуток в описании.
+      </p>
+      <div class="hero__actions">
+        <a class="btn btn--big" href="#catalog">Выбрать арбуз</a>
+        <button class="btn btn--ghost" id="jokeBtn" type="button">Сказать шутку</button>
+      </div>
+      <p class="hero__joke" id="jokeText">Нажми «Сказать шутку»</p>
+      <div class="sold" id="soldBox">
+        <span class="sold__dot" aria-hidden="true"></span>
+        Продано арбузов: <b id="soldCount">0</b>
+      </div>
+    </div>
+
+    <div class="hero__melon" aria-hidden="true">
+      <div class="melon melon--clickable" id="bigMelon" title="Нажми и посмотри, что будет">
+        <div class="melon__shine"></div>
+      </div>
+      <div class="hero__badge">100%<br>перепродажа</div>
+      <div class="hero__badge hero__badge--2">без<br>наценки</div>
+    </div>
+
+    <aside class="quest" id="questPanel" hidden>
+      <div class="quest__head">
+        <b>🕵️ Квест: пропавший арбуз</b>
+        <button class="quest__close" id="questClose" type="button" aria-label="Закрыть">✕</button>
+      </div>
+      <p class="quest__intro" id="questIntro">Кто-то спрятал арбуз. Найдём.</p>
+      <ul class="quest__steps" id="questSteps"></ul>
+      <div class="quest__foot">
+        <button class="btn btn--ghost" id="questHint" type="button">Подсказка</button>
+        <span class="quest__progress" id="questProgress"></span>
+      </div>
+      <p class="quest__reward" id="questReward" hidden></p>
+    </aside>
+  </section>
+
+  <section class="section" id="catalog">
+    <h2 class="section__title">Каталог</h2>
+    <p class="section__sub">Цены указаны за штуку. Доставка бесплатная, курьер приходит с весами и чувством вины.</p>
+
+    <div class="cert">
+      <span class="cert__badge">ХАЛЯЛЬ</span>
+      <div>
+        <b>Халяль — все арбузы, кроме свиного.</b>
+        <p>Все сорта готовятся по рецепту халяль. Свиной арбуз честно помечен как «не халяль» — мы не врём ради продаж.</p>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <input class="search" id="search" type="search" placeholder="Поиск: мед, ночной, свиной…">
+      <select class="select" id="sort">
+        <option value="default">Сначала популярные</option>
+        <option value="asc">Сначала дешёвые</option>
+        <option value="desc">Сначала дорогие</option>
+        <option value="name">По названию</option>
+      </select>
+      <div class="chips" id="chips"></div>
+    </div>
+
+    <div class="grid" id="catalogGrid"></div>
+    <p class="empty" id="catalogEmpty" hidden>Ничего не нашлось. Попробуй слово «арбуз».</p>
+  </section>
+
+  <section class="section" id="guarantees">
+    <h2 class="section__title">Гарантии</h2>
+    <p class="section__sub">Пункт про возврат арбуза — не шутка. Остальное — слегка шутка.</p>
+    <div class="steps">
+      <div class="step">
+        <span class="step__num">%</span>
+        <h3>Вернём деньги</h3>
+        <p>Арбуз не сок — возвращаем оплату. Сам арбуз забираем себе, мы не звери.</p>
+      </div>
+      <div class="step">
+        <span class="step__num">24</span>
+        <h3>Часа на жалобу</h3>
+        <p>Сообщи в день доставки. Косточки в качестве доказательства не принимаем.</p>
+      </div>
+      <div class="step">
+        <span class="step__num">0</span>
+        <h3>Семок не гарантируем</h3>
+        <p>Семена — это косточки. Косточки — это семена. Всё логично.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="calc">
+    <h2 class="section__title">Калькулятор арбузной жизни</h2>
+    <p class="section__sub">Посчитай, сколько арбузов ты съешь и во что это обойдётся.</p>
+
+    <div class="calc">
+      <label class="calc__row">
+        <span>Арбузов в неделю: <b id="calcPerWeekOut">3</b></span>
+        <input class="range" id="calcPerWeek" type="range" min="1" max="50" value="3">
+      </label>
+
+      <label class="calc__row">
+        <span>Средний вес арбуза: <b id="calcWeightOut">6 кг</b></span>
+        <input class="range" id="calcWeight" type="range" min="2" max="20" value="6">
+      </label>
+
+      <div class="calc__out">
+        <div><b id="calcYearKg">0</b><span>кг в год</span></div>
+        <div><b id="calcYearMoney">0 ₽</b><span>в год</span></div>
+        <div><b id="calcLifetimes">0</b><span>арбузов за жизнь</span></div>
+      </div>
+
+      <p class="calc__note" id="calcNote">Нормальный аппетит. Ничего подозрительного.</p>
+    </div>
+  </section>
+
+  <section class="section" id="quiz">
+    <h2 class="section__title">Проверь себя, арбузник</h2>
+    <p class="section__sub">5 вопросов. Отвечай честно, бабушка всё равно узнает.</p>
+    <div class="quiz" id="quizBox">
+      <p class="quiz__q" id="quizQ">Нажми «Начать», когда будешь готов.</p>
+      <div class="quiz__options" id="quizOptions"></div>
+      <p class="quiz__score" id="quizScore"></p>
+      <button class="btn btn--big" id="quizBtn" type="button">Начать</button>
+    </div>
+  </section>
+
+  <section class="section section--memes" id="memes">
+    <h2 class="section__title">Отдел перепродажи</h2>
+    <p class="section__sub">Наши сотрудники не высыпаются, но арбузы перепродают идеально.</p>
+    <div class="memes">
+      <figure class="meme">
+        <div class="meme__img"><span class="meme__big">Я КУПИЛ<br>АРБУЗ</span></div>
+        <figcaption class="meme__cap">ЭТО АРБУЗ</figcaption>
+      </figure>
+      <figure class="meme">
+        <div class="meme__img meme__img--green"><span class="meme__big">БАБУШКА<br>ПРОСИТ</span></div>
+        <figcaption class="meme__cap">ОТСТАТЬ ОТ АРБУЗА</figcaption>
+      </figure>
+      <figure class="meme">
+        <div class="meme__img meme__img--seed"><span class="meme__big">СЕМЕЧКО<br>В АРБУЗЕ</span></div>
+        <figcaption class="meme__cap">ЭТО НЕ БАГ, ЭТО НАЦЕНКА</figcaption>
+      </figure>
+      <figure class="meme">
+        <div class="meme__img meme__img--red"><span class="meme__big">Я В АРБУЗЕ</span></div>
+        <figcaption class="meme__cap">Я НЕ ВЫХОЖУ, ТУТ ВЫГОДНЕЕ</figcaption>
+      </figure>
+      <figure class="meme">
+        <div class="meme__img meme__img--green"><span class="meme__big">БАБУШКА<br>ПРИНЕСЛА</span></div>
+        <figcaption class="meme__cap">СВОЙ АРБУЗ ИЗ САДА</figcaption>
+      </figure>
+<figure class="meme">
+        <div class="meme__img meme__img--seed"><span class="meme__big">СВИНОЙ<br>АРБУЗ</span></div>
+        <figcaption class="meme__cap">НЕ ХАЛЯЛЬ. И НЕ БУДЕТ.</figcaption>
+      </figure>
+      <figure class="meme">
+        <div class="meme__img"><span class="meme__big">БЕЗ<br>КОСТОЧЕК</span></div>
+        <figcaption class="meme__cap">99 990 ₽ ЗА ТО, ЧТО МЫ ВЫТАЩИЛИ</figcaption>
+      </figure>
+      <figure class="meme">
+        <div class="meme__img meme__img--red"><span class="meme__big">БАБУШКА<br>ЗАБИЛА</span></div>
+        <figcaption class="meme__cap">ПОКУПАЮТ ЛИ БАБУШКЕ СВИНЬЮ</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" id="docs">
+    <h2 class="section__title">Документы и свидетельства</h2>
+    <p class="section__sub">Показывать при проверках. Бабушка проверяет всё.</p>
+    <div class="docs">
+      <article class="doc">
+        <span class="doc__stamp">ХАЛЯЛЬ</span>
+        <b>Сертификат халяль</b>
+        <p>Для всех арбузов, кроме свиного. Выдаётся вместе с арбузом.</p>
+      </article>
+      <article class="doc">
+        <span class="doc__stamp doc__stamp--pig">НЕ ХАЛЯЛЬ</span>
+        <b>Пометка на свиной арбуз</b>
+        <p>Свиной арбуз не халяльный и продаётся с честной пометкой. Покупай, если знаешь, что делаешь.</p>
+      </article>
+      <article class="doc">
+        <span class="doc__stamp doc__stamp--baba">БАБУШКА</span>
+        <b>Гарантия от бабушки</b>
+        <p>Если арбуз не понравится — вернём деньги и ещё один арбуз, чтобы понравилось.</p>
+      </article>
+    </div>
+
+    <div class="tip">
+      <button class="btn btn--big" id="tipBtn" type="button">Совет от бабушки</button>
+      <p class="tip__text" id="tipText">Бабушка молчит. Нажми кнопку, если терпишь.</p>
+    </div>
+  </section>
+
+  <section class="section" id="babas">
+    <h2 class="section__title">Отзывы бабушек</h2>
+    <p class="section__sub">Присылают в комментариях, мы сохраняли в рамочку.</p>
+    <div class="babas">
+      <blockquote class="baba" id="babaZina" title="Можно нажать"><p>«Свой арбуз вкуснее вашего. Но я всё равно куплю, раз дочка просит.»</p><footer>— бабушка Зина, 84 года</footer></blockquote>
+      <blockquote class="baba"><p>«Я не понимаю эти ваши халяли. Но арбуз вкусный, даю.»</p><footer>— бабушка Валя, 61 год</footer></blockquote>
+      <blockquote class="baba"><p>«Свиней я не ем. И ваш халяль мне тут не поможет. Бабушка знает, что свинина — это свинина.»</p><footer>— бабушка Люда, 73 года</footer></blockquote>
+    </div>
+  </section>
+
+  <section class="section" id="how">
+    <h2 class="section__title">Как купить</h2>
+    <div class="steps">
+      <div class="step">
+        <span class="step__num">1</span>
+        <h3>Выбираешь</h3>
+        <p>Листай каталог, жми «В корзину». Можно хоть двадцать арбузов.</p>
+      </div>
+      <div class="step">
+        <span class="step__num">2</span>
+        <h3>Перепродаём</h3>
+        <p>Ищем бабушку, торгуемся, заворачиваем в плёнку и везём.</p>
+      </div>
+      <div class="step">
+        <span class="step__num">3</span>
+        <h3>Едешь арбуз</h3>
+        <p>Курьер привозит, ты взвешиваешь, платишь. Всё как обычно.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="team">
+    <h2 class="section__title">Команда Pereprodazhniki</h2>
+    <p class="section__sub">Все эти люди реально работают с арбузами. Почти все.</p>
+    <div class="team">
+      <article class="person">
+        <span class="person__ava">🗂️</span>
+        <h3 class="person__name">Карина</h3>
+        <p class="person__role">Секретарь</p>
+        <p class="person__note">Принимает звонки, пока не спит. Ищет арбуз по голосу.</p>
+      </article>
+      <article class="person">
+        <span class="person__ava">🛒</span>
+        <h3 class="person__name">Юля</h3>
+        <p class="person__role">Продавец</p>
+        <p class="person__note">Торгуется с бабушками. Никогда не проигрывает. Почти.</p>
+      </article>
+      <article class="person">
+        <span class="person__ava">🧪</span>
+        <h3 class="person__name">Тимур Аминев</h3>
+        <p class="person__role">Тестер сайта · Инвестор</p>
+        <p class="person__note">Тестирует сайт до последнего бага и вкладывает деньги в арбузы свыше 9 кг. Говорит, это не конфликт интересов, а диверсификация.</p>
+      </article>
+      <article class="person">
+        <span class="person__ava">📞</span>
+        <h3 class="person__name">Камиль</h3>
+        <p class="person__role">Трезвонщик · Создатель</p>
+        <p class="person__note">Звонит всем подряд и лично собрал этот сайт. Поэтому счётчик иногда считает неправильно.</p>
+      </article>
+      <article class="person">
+        <span class="person__ava">🤝</span>
+        <h3 class="person__name">Тимур Беленький</h3>
+        <p class="person__role">Он решала поставок</p>
+        <p class="person__note">Если арбузы не приехали — значит, он ещё договаривается. Договаривается со всеми, даже с теми, кто уже всё перекупил.</p>
+      </article>
+      <article class="person">
+        <span class="person__ava">📋</span>
+        <h3 class="person__name">Сафия</h3>
+        <p class="person__role">Помощник Беленького</p>
+        <p class="person__note">Ведёт поставки арбузов: помнит, кто должен и кому уже привезли.</p>
+      </article>
+      <article class="person">
+        <span class="person__ava">🚚</span>
+        <h3 class="person__name">Кира</h3>
+        <p class="person__role">Курьер</p>
+        <p class="person__note">Довозит арбуз быстрее, чем бабушка успевает спросить «а подешевле?». Знает все дворы района наизусть и ни один лежачий полицейский её ещё не остановил. Пока что.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="reviews">
+    <h2 class="section__title">Отзывы</h2>
+    <div class="reviews" id="reviewList"></div>
+
+    <h3 class="form__title">Оставь свой отзыв</h3>
+    <form class="form" id="reviewForm" novalidate>
+      <input class="input" id="reviewName" type="text" maxlength="24" placeholder="Как тебя зовут" required>
+      <textarea class="input" id="reviewText" rows="3" maxlength="300" placeholder="Про арбуз (без мата, пожалуйста)" required></textarea>
+      <button class="btn btn--big" type="submit">Отправить отзыв</button>
+      <p class="form__note" id="reviewNote"></p>
+    </form>
+  </section>
+
+  <section class="section" id="lottery">
+    <h2 class="section__title">Испытай удачу</h2>
+    <p class="section__sub">Розыгрыш арбузов среди своих. Шанс честный: примерно один на три.</p>
+    <div class="lottery">
+      <button class="btn btn--big" id="lotteryBtn" type="button">Крутить барабан</button>
+      <p class="lottery__result" id="lotteryResult">Ещё не крутил. Кнопка ждёт.</p>
+      <ul class="lottery__log" id="lotteryLog"></ul>
+    </div>
+
+    <div class="season">
+      <b id="seasonDays">—</b>
+      <span>дней до конца арбузного сезона</span>
+    </div>
+  </section>
+
+  <section class="section" id="vote">
+    <h2 class="section__title">Твой любимый сорт</h2>
+    <p class="section__sub">Голосуй — счётчик общий, результаты видят все. Кто победил, того привезём первым.</p>
+    <div class="votes" id="voteList"></div>
+    <button class="btn btn--ghost" id="nameGen" type="button">Сгенерировать имя для арбуза</button>
+    <p class="tip__text" id="nameOut">Нажми кнопку — бабушка придумает имя.</p>
+  </section>
+
+  <section class="section" id="buyers">
+    <h2 class="section__title">Кто уже купил</h2>
+    <p class="section__sub">Твой личный список покупок: считается на этом устройстве.</p>
+    <div class="buyers" id="buyersList"><p class="buyers__empty">Пока никто. Будь первым!</p></div>
+    <p class="buyers__sync" id="buyersSync">Синхронизация…</p>
+  </section>
+
+  <section class="section" id="job">
+    <h2 class="section__title">Хочешь работать у нас?</h2>
+    <p class="section__sub">Заявки приходят прямо на компьютер владельца сайта. Без посредников.</p>
+
+    <form class="jobform" name="zayavka" method="POST" id="jobForm">
+      <p class="honeypot">
+        <label>Не заполняй это поле: <input name="bot-field"></label>
+      </p>
+
+      <div class="jobform__grid">
+        <label class="jobrow">
+          <span>Как тебя зовут <i>*</i></span>
+          <input class="input" type="text" name="name" maxlength="40" required placeholder="Например: Булат">
+        </label>
+
+        <label class="jobrow">
+          <span>Сколько тебе лет <i>*</i></span>
+          <input class="input" type="text" name="age" maxlength="3" required placeholder="12">
+        </label>
+
+        <label class="jobrow">
+          <span>Кем хочешь работать <i>*</i></span>
+          <select class="input" name="position" required>
+            <option value="">— выбери —</option>
+            <option>Продавец арбузов</option>
+            <option>Трезвонщик</option>
+            <option>Секретарь</option>
+            <option>Курьер</option>
+            <option>Наставник по бабушкам</option>
+            <option>Специалист по свиным арбузам</option>
+            <option>Создатель сайта</option>
+          </select>
+        </label>
+
+        <label class="jobrow">
+          <span>Телефон или почта <i>*</i></span>
+          <input class="input" type="text" name="contact" maxlength="60" required placeholder="Телефон или @почта">
+        </label>
+      </div>
+
+      <label class="jobrow">
+        <span>Опыт работы <i>*</i></span>
+        <textarea class="input" name="experience" rows="2" maxlength="300" required placeholder="Продавал арбузы на базаре 3 года"></textarea>
+      </label>
+
+      <label class="jobrow">
+        <span>Почему мы должны тебя взять? <i>*</i></span>
+        <textarea class="input" name="why" rows="3" maxlength="500" required placeholder="Потому что я умею торговаться с бабушками"></textarea>
+      </label>
+
+      <label class="check">
+        <input type="checkbox" name="agree" required>
+        <span>Согласен, что моё письмо получит создатель сайта и все бабушки на районе</span>
+      </label>
+
+      <button class="btn btn--big" type="submit">Отправить заявку</button>
+      <p class="jobform__note" id="jobNote"></p>
+      <p class="jobform__cooldown" id="jobCooldown" hidden></p>
+    </form>
+  </section>
+
+  <section class="section section--cta">
+    <h2 class="section__title">Остался последний арбуз сезона</h2>
+    <p>Один. Реально один. Потом закрываемся до весны.</p>
+    <button class="btn btn--big" id="lastMelon" type="button">Забрать последний</button>
+  </section>
+
+  <section class="section" id="game">
+    <h2 class="section__title">Арбузный слайсер</h2>
+    <p class="section__sub">Проведи мышкой (или пальцем) по арбузу — разрежешь. Свиной арбуз не трогай: он взрывается. Золотой даёт втрое больше очков.</p>
+
+    <div class="game">
+      <div class="game__hud">
+        <span>Счёт: <b id="gameScore">0</b></span>
+        <span>Рекорд: <b id="gameBest">0</b></span>
+        <span>Жизни: <b id="gameLives">❤️❤️❤️</b></span>
+        <span>Комбо: <b id="gameCombo">x1</b></span>
+        <button class="game__sound" id="gameAutoSlice" type="button" title="Апгрейдер: Авто-резка (+50 очков)">⚡ Авто</button>
+        <button class="game__sound" id="gameSound" type="button" title="Звук игры">🔊</button>
+        <button class="game__sound" id="gamePause" type="button" title="Пауза">⏸</button>
+      </div>
+      <div class="game__combo"><i id="gameComboFill"></i></div>
+
+      <div class="game__stage">
+        <canvas id="gameCanvas" width="900" height="460" aria-label="Игра: режь арбузы"></canvas>
+        <div class="game__overlay" id="gameOverlay">
+          <p class="game__big" id="gameOverTitle">Готов резать?</p>
+          <p class="game__hint" id="gameOverHint">Тащи мышкой по арбузам. Свиной 🐷 — не трогай, будет взрыв. Имя выбирается один раз — потом результат обновляется, только если побьёшь свой рекорд.</p>
+          <div class="game__name">
+            <label class="game__namelabel" for="gameName">Имя для рейтинга (один раз)</label>
+            <input class="input" id="gameName" type="text" maxlength="30" placeholder="Настоящее имя, например: Иван">
+            <p class="game__namehint" id="gameNameHint"></p>
+          </div>
+          <div class="game__send" id="gameSendBox" hidden>
+            <p class="game__sendwho" id="gameSendWho" hidden></p>
+            <button class="btn btn--big" id="gameSend" type="button">Отправить в рейтинг</button>
+            <p class="game__sendnote" id="gameSendNote"></p>
+          </div>
+          <button class="btn btn--big" id="gameStart" type="button">Играть</button>
+          <button class="btn btn--ghost game__share" id="gameShare" type="button" hidden>Поделиться результатом</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="board__toggle" id="boardToggle" type="button" aria-expanded="false" aria-controls="boardPanel">
+      <span>🏆 Рейтинг игроков</span>
+      <span class="board__toggle-note" id="boardToggleNote">показать</span>
+    </button>
+    <div class="board" id="boardPanel" hidden>
+      <div class="board__head">
+        <b>Топ-10</b>
+        <span id="boardNote">общий для всех</span>
+      </div>
+      <ol class="board__list" id="boardList"><li class="board__empty">Пока пусто. Стань первым!</li></ol>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer__cols">
+    <div>
+      <b>Pereprodazhniki</b>
+      <p>Перепродажа арбузов с 2026 года</p>
+    </div>
+    <div>
+      <b>Контакты</b>
+      <p>pereprodazhniki@example.ru</p>
+      <p>Ежедневно с 9:00 до 22:00</p>
+    </div>
+    <div>
+      <b>Рассказать друзьям</b>
+      <div class="share">
+        <button class="btn btn--ghost" id="copyLink" type="button">Скопировать ссылку</button>
+        <a class="btn btn--ghost" id="shareTg" href="#" target="_blank" rel="noopener">Telegram</a>
+        <a class="btn btn--ghost" id="shareVk" href="#" target="_blank" rel="noopener">ВКонтакте</a>
+      </div>
+    </div>
+  </div>
+  <p class="footer__note">Сайт собрал Камиль. Арбузы привёз Тимур Беленький. Халяль-гарантию подписал Тимур Аминев.</p>
+  <p class="footer__note">Сайт является шуткой. Арбузы настоящие.</p>
+</footer>
+
+<!-- Корзина -->
+<div class="cart" id="cart" hidden>
+  <div class="cart__panel" role="dialog" aria-label="Корзина">
+    <div class="cart__head">
+      <h3>Корзина</h3>
+      <button class="cart__close" id="cartClose" type="button" aria-label="Закрыть" onclick="closeCart()">✕</button>
+    </div>
+
+    <div class="cart__items" id="cartItems"></div>
+
+    <div class="ship">
+      <button class="ship__btn is-active" type="button" data-ship="delivery">Доставка курьером</button>
+      <button class="ship__btn" type="button" data-ship="pickup">Самовывоз со склада</button>
+      <small class="ship__note" id="shipNote">Доставка 200 ₽ — курьер приедет за арбузом лично</small>
+    </div>
+
+    <div class="cart__total">
+      <span>Итого: <b id="cartTotal">0 ₽</b></span>
+      <span class="cart__weight" id="cartWeight">0 кг</span>
+    </div>
+
+    <div class="receipt" id="receipt" hidden>
+      <h4 class="receipt__title">Чек</h4>
+      <pre class="receipt__body" id="receiptBody"></pre>
+      <button class="btn btn--ghost btn--full" id="receiptCopy" type="button">Скопировать чек</button>
+    </div>
+
+    <div class="coupon">
+      <input class="input" id="couponInput" type="text" maxlength="20" placeholder="Промокод: БАБУШКА, КОСТОЧКИ…">
+      <button class="btn btn--ghost" id="couponApply" type="button">Применить</button>
+      <p class="coupon__note" id="couponNote">Промокод не найден — это не баг, это фича.</p>
+    </div>
+
+    <h4 class="form__title">Куда везти</h4>
+    <form class="form" id="orderForm" novalidate>
+      <input class="input" id="orderName" type="text" maxlength="30" placeholder="Имя" required>
+      <input class="input" id="orderPhone" type="tel" maxlength="20" placeholder="Телефон (11 цифр)" required>
+      <input class="input" id="orderAddr" type="text" maxlength="80" placeholder="Адрес или «самовывоз»" required>
+      <p class="form__note" id="orderNote"></p>
+      <button class="btn btn--big btn--full" id="checkout" type="button">Оформить заказ</button>
+    </form>
+
+    <button class="btn btn--ghost btn--full" id="cartClear" type="button">Очистить корзину</button>
+    <button class="btn btn--ghost btn--full" type="button" onclick="closeCart()">Закрыть корзину</button>
+  </div>
+  <div class="cart__overlay" id="cartOverlay" onclick="closeCart()"></div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>
