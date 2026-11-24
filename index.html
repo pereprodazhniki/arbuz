@@ -755,6 +755,10 @@ body.light .cert p { color: #3d6b52; }
   box-shadow: 0 30px 80px rgba(0, 0, 0, .5);
 }
 .auth__close { position: absolute; top: 10px; right: 14px; border: 0; background: transparent; color: var(--muted); font-size: 26px; cursor: pointer; }
+.auth.is-gate { z-index: 2000; }
+.auth.is-gate .auth__close { display: none; }
+.auth__gate { display: none; margin: 0 0 14px; padding: 10px 12px; border-radius: 12px; background: rgba(182,240,106,.1); border: 1px solid rgba(182,240,106,.22); color: var(--lime); font-size: 13px; font-weight: 700; }
+.auth.is-gate .auth__gate { display: block; }
 .auth__panel h2 { margin: 0 0 6px; font-size: 24px; color: #fff; }
 .auth__note { margin: 0 0 14px; color: var(--muted); font-size: 13px; line-height: 1.5; }
 .auth__tabs { display: flex; gap: 6px; margin-bottom: 14px; }
@@ -3083,6 +3087,7 @@ body.light .upg-feed__who { color: #0d2b19; }
   <div class="auth__panel" role="dialog" aria-modal="true" aria-labelledby="authTitle" tabindex="-1" id="authPanel">
     <button class="auth__close" id="authClose" type="button" aria-label="Закрыть">×</button>
     <h2 id="authTitle">Демо-аккаунт 🍉</h2>
+    <p class="auth__gate">Вход обязателен: без аккаунта сайт не открывается. Войди или зарегистрируйся — это займёт полминуты.</p>
     <p class="auth__note">Логин сразу используется как Ник в топах, поэтому он должен быть настоящим русским именем. Пароль хранится только на этом устройстве в виде хэша и никуда не отправляется.</p>
     <div class="auth__tabs" role="tablist">
       <button class="auth__tab is-active" data-tab="login" type="button" role="tab">Вход</button>
@@ -3217,7 +3222,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-auth-demo-1";
+var APP_BUILD = "20261124-auth-required-1";
 
 var cart = read(STORE.cart, {});
 if (!cart || typeof cart !== "object" || Array.isArray(cart)) cart = {};
@@ -3341,7 +3346,7 @@ function toast(text) {
    PBKDF2-хэш и контрольный код для переноса на другое устройство. */
 var AUTH_KEY = "prz_auth_accounts_v1";
 var AUTH_SESSION_KEY = "prz_auth_session_v1";
-var AUTH = { accounts: [], sessionId: "", failCount: 0, failUntil: 0 };
+var AUTH = { accounts: [], sessionId: "", failCount: 0, failUntil: 0, required: false, manualOpen: false };
 
 function authSubtle() { return (window.crypto && window.crypto.subtle) ? window.crypto.subtle : null; }
 function authHex(arr) {
@@ -3428,6 +3433,36 @@ function authMsg(id, text, bad) {
   el.textContent = text || "";
   el.classList.toggle("is-bad", !!bad);
 }
+function authEnforce() {
+  var m = document.getElementById("authModal");
+  if (!m) return;
+  var a = authCurrent();
+  if (!a) {
+    AUTH.required = true;
+    m.classList.add("is-gate");
+    m.hidden = false;
+    document.body.style.overflow = "hidden";
+    var btn = document.getElementById("authBtn");
+    if (btn) btn.hidden = true;
+    if (typeof authTab === "function") authTab("login");
+    return;
+  }
+  AUTH.required = false;
+  AUTH.manualOpen = false;
+  m.classList.remove("is-gate");
+  m.hidden = true;
+  var btn2 = document.getElementById("authBtn");
+  if (btn2) btn2.hidden = false;
+  var cart = document.getElementById("cart");
+  var pop = document.getElementById("casePop");
+  if ((!cart || cart.hidden) && (!pop || pop.hidden)) document.body.style.overflow = "";
+}
+function authGuard() {
+  if (authCurrent()) return true;
+  toast("Сначала войди в аккаунт");
+  authOpen("login");
+  return false;
+}
 function authApplyUI() {
   var a = authCurrent();
   var btn = document.getElementById("authBtn");
@@ -3456,6 +3491,7 @@ function authApplyUI() {
   }
   if (typeof lbNameHint === "function") lbNameHint(true);
   if (typeof upgNameHint === "function") upgNameHint();
+  authEnforce();
 }
 function authRegister(loginRaw, pass, pass2) {
   if (!authSubtle()) return Promise.resolve({ error: "Для входа нужна HTTPS-страница или localhost." });
@@ -3552,6 +3588,7 @@ function authTab(name) {
 function authOpen(tab) {
   var m = document.getElementById("authModal");
   if (!m) return;
+  AUTH.manualOpen = true;
   m.hidden = false;
   document.body.style.overflow = "hidden";
   authTab(tab || (authCurrent() ? "transfer" : "login"));
@@ -3559,10 +3596,14 @@ function authOpen(tab) {
   if (panel && panel.focus) panel.focus();
 }
 function authClose() {
+  if (AUTH.required && !authCurrent()) return;
   var m = document.getElementById("authModal");
   if (!m || m.hidden) return;
+  AUTH.manualOpen = false;
   m.hidden = true;
-  document.body.style.overflow = "";
+  var cart = document.getElementById("cart");
+  var pop = document.getElementById("casePop");
+  if ((!cart || cart.hidden) && (!pop || pop.hidden)) document.body.style.overflow = "";
 }
 function authSubmit(formId, msgId, run, okText) {
   var form = document.getElementById(formId);
@@ -4785,6 +4826,7 @@ function markOrderSent() {
 }
 
 function checkout() {
+  if (!authGuard()) return;
   if (checkoutBusy) return;
   var note = document.getElementById("orderNote");
 
@@ -5342,6 +5384,7 @@ function lotteryUpdateBtn() {
 }
 
 function spin() {
+  if (!authGuard()) return;
   if (lotteryBusy) return;
   var left = lotteryLeft();
   if (left > 0) {
@@ -6488,6 +6531,7 @@ function gameFrame(ts) {
 }
 
 function gameStart() {
+  if (!authGuard()) return;
   /* звук не должен мешать запуску игры */
   try { audioCtx(); } catch (e) {}
 
@@ -7163,6 +7207,7 @@ function lbPublishLive(name, score, ts) {
 }
 
 function lbSendScore(score, auto) {
+  if (!authGuard()) return;
   if (LB.sending) return;
 
   var note = document.getElementById("gameSendNote");
@@ -8864,6 +8909,7 @@ function cbRoomStartSync() {
 }
 
 function cbRoomCreate() {
+  if (!authGuard()) return;
   if (CB.busy) return;
   var id = cbUid();
   CB.room.id = id;
@@ -8887,6 +8933,7 @@ function cbRoomCreate() {
 }
 
 function cbRoomJoin(id) {
+  if (!authGuard()) return;
   id = String(id || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 32);
   if (!id) return;
   CB.room.id = id;
@@ -9174,6 +9221,7 @@ function cbPrepareReels(reels) {
 }
 
 function cbStart() {
+  if (!authGuard()) return;
   if (CB.busy) return;
   if (UPG.spinning) { toast("Дождись конца апгрейда"); return; }
   if (UPG.pendingCase) { toast("Сначала забери дроп из кейса"); return; }
@@ -9423,6 +9471,7 @@ function upgSpinWheel(win, chance, ms, done) {
 }
 
 function upgDo() {
+  if (!authGuard()) return;
   if (UPG.spinning) return;
   if (typeof CB !== "undefined" && CB.busy) { toast("Дождись конца Case Battle"); return; }
   if (UPG.pendingCase) { toast("Сначала забери дроп из кейса"); return; }
@@ -10036,6 +10085,7 @@ function upgTopSyncMe() {
 }
 
 function upgTopSubmit(auto) {
+  if (!authGuard()) return;
   if (UPG_TOP.sending) return;
   var input = document.getElementById("upgTopName");
   var note = document.getElementById("upgTopHint");
