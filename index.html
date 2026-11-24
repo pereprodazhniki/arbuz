@@ -65,9 +65,13 @@ body { line-height: 1.5; -webkit-font-smoothing: antialiased; text-rendering: op
 .card, .quest, .review, .upg-panel, .upg-core, .cbattle, .board, .upg-top, .casepop__dialog, .cart__dialog, .music__panel { box-shadow: var(--shadow-soft); }
 input, select, textarea { border-radius: 16px !important; }
 .btn, .cart-btn, button { -webkit-tap-highlight-color: transparent; }
+.btn:active, .cart-btn:active, .upg-btn:active, .cbattle__btn:active, .music__ctrl:active { transform: translateY(1px) scale(.99); }
+input:focus, select:focus, textarea:focus { border-color: rgba(182,240,106,.45) !important; box-shadow: 0 0 0 3px rgba(182,240,106,.12); outline: none; }
 .to-top { position: fixed; right: 18px; bottom: 18px; width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(182,240,106,.25); background: rgba(16,42,26,.82); color: var(--lime); font-size: 22px; font-weight: 900; cursor: pointer; box-shadow: var(--shadow-soft); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); opacity: 0; transform: translateY(10px) scale(.96); pointer-events: none; transition: opacity .25s, transform .25s, background .2s; z-index: 60; }
 .to-top.is-show { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
 .to-top:hover { background: rgba(47,211,95,.18); transform: translateY(-2px) scale(1.02); }
+.reveal-on .rv { opacity: 0; transform: translateY(18px) scale(.985); transition: opacity .55s ease, transform .55s cubic-bezier(.2,.8,.2,1); }
+.reveal-on .rv.is-in { opacity: 1; transform: none; }
 @media (max-width: 720px) {
   .section { padding: 52px 14px; }
   .hero { padding-top: 34px; }
@@ -3032,7 +3036,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-ui-polish-1";
+var APP_BUILD = "20261124-ui-polish-2";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -9926,6 +9930,19 @@ if (document.readyState === "loading") {
   var on=function(){ b.classList.toggle('is-show', window.scrollY>500); };
   window.addEventListener('scroll', on, {passive:true}); on();
   b.addEventListener('click', function(){ window.scrollTo({top:0, behavior:'smooth'}); });
+})();
+(function(){
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var sel = '.card,.quest,.review,.step,.person,.upg-panel,.upg-core,.cbattle,.board,.upg-top,.case-card,.calc,.lottery,.form,.ship';
+  var items = Array.prototype.slice.call(document.querySelectorAll(sel));
+  if (!items.length) return;
+  document.body.classList.add('reveal-on');
+  items.forEach(function(el, i){ el.classList.add('rv'); el.style.transitionDelay = ((i % 6) * 40) + 'ms'; });
+  if (!('IntersectionObserver' in window)) { items.forEach(function(el){ el.classList.add('is-in'); }); return; }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+  items.forEach(function(el){ io.observe(el); });
 })();
 </script>
 </body>
