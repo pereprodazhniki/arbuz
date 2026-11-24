@@ -2970,7 +2970,7 @@ body.light .upg-feed__who { color: #0d2b19; }
       </div>
 
       <div class="upg-feed">
-        <div class="upg-feed__head"><b>Живая лента</b><span>общая для всех · только настоящие имена</span></div>
+        <div class="upg-feed__head"><b>Живая лента</b><span>демо-лента · без связи — только на этом устройстве</span></div>
         <div class="upg-feed__list" id="upgFeed"></div>
       </div>
     </div>
@@ -3222,7 +3222,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-auth-required-1";
+var APP_BUILD = "20261124-top-feed-fix-1";
 
 var cart = read(STORE.cart, {});
 if (!cart || typeof cart !== "object" || Array.isArray(cart)) cart = {};
@@ -3292,6 +3292,19 @@ function read(key, fallback) {
 
 function write(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
+}
+
+/* локальные копии записей топа/ленты: внешние сервисы часто недоступны */
+function readList(key) {
+  var v = read(key, []);
+  return Array.isArray(v) ? v : [];
+}
+function pushList(key, item, max) {
+  var a = readList(key);
+  a.unshift(item);
+  var lim = max || 30;
+  if (a.length > lim) a.length = lim;
+  write(key, a);
 }
 
 /* fetch с жёстким таймаутом: сеть не должна подвешивать интерфейс */
@@ -7076,6 +7089,16 @@ function lbLoad() {
   });
 }
 
+/* свои результаты не теряются, даже если внешняя лента недоступна */
+function lbRestoreLocal() {
+  var a = readList("prz_lb_local_v1");
+  for (var i = 0; i < a.length; i++) {
+    var s = a[i];
+    if (!s) continue;
+    lbAdd(s.name, s.score, s.ts, "local|" + i + "|" + (s.ts || 0));
+  }
+}
+
 function lbHideSend() {
   var box = document.getElementById("gameSendBox");
   var share = document.getElementById("gameShare");
@@ -7102,6 +7125,14 @@ function lbOwn() {
   return { name: name, best: best };
 }
 
+/* рекорд устройства учитываем только если это тот же логин */
+function lbOwnCurrent() {
+  var o = lbOwn();
+  var n = lbCurrentName();
+  if (!o || !n) return null;
+  return o.name.toLowerCase() === n.toLowerCase() ? o : null;
+}
+
 function lbSaveOwn(name, best) {
   name = normalizeName(name);
   best = parseInt(best, 10);
@@ -7125,7 +7156,7 @@ function lbShowSend(auto) {
   }
 
   box.hidden = false;
-  var own = (typeof authName === "function" && authName()) ? null : lbOwn();
+  var own = lbOwnCurrent();
   var name = lbCurrentName();
   var saved = name && !nameProblem(name);
 
@@ -7169,7 +7200,7 @@ function lbOnGameOver(isRecord) {
   if (GAME.score <= 0) return;
 
   /* результат отправляется только по явному нажатию кнопки */
-  var own = lbOwn();
+  var own = lbOwnCurrent();
   if (own) {
     LB.name = own.name;
     lbShowSend(false);
@@ -7213,6 +7244,7 @@ function lbSendScore(score, auto) {
   var note = document.getElementById("gameSendNote");
   var btn = document.getElementById("gameSend");
   var name = lbCurrentName();
+  var own = lbOwnCurrent();
   var err = nameProblem(name);
 
   if (err) {
@@ -7247,6 +7279,7 @@ function lbSendScore(score, auto) {
   LB.lastSent = now;
   write("prz_lb_last", now);
   lbAdd(name, score, now, "own|" + now);
+  pushList("prz_lb_local_v1", { name: name, score: score, ts: now }, 30);
   lbSaveOwn(name, score);
   lbNameHint();
   lbRender();
@@ -7278,7 +7311,7 @@ function lbSubmit() {
   var note = document.getElementById("gameSendNote");
   if (!input) return;
 
-  var own = lbOwn();
+  var own = lbOwnCurrent();
   if (own) {
     LB.name = own.name;
     if (GAME.score <= own.best) {
@@ -7326,7 +7359,7 @@ function lbNameHint(soft) {
     return;
   }
 
-  var own = lbOwn();
+  var own = lbOwnCurrent();
   if (own) {
     input.readOnly = true;
     input.value = own.name;
@@ -7401,6 +7434,7 @@ function initLeaderboard() {
     });
   }
 
+  lbRestoreLocal();
   lbRender();
   lbLoad();
   setInterval(function () {
@@ -8074,7 +8108,7 @@ function upgRenderFeed() {
   }
   var out = "";
   for (var i = 0; i < rows.length; i++) out += upgFeedRow(rows[i]);
-  box.innerHTML = out || '<p class="upg-empty">Пока тихо. Укажи настоящее имя и сделай апгрейд — он появится в общей ленте.</p>';
+  box.innerHTML = out || '<p class="upg-empty">Пока тихо. Войди в аккаунт и сделай апгрейд — он появится в ленте.</p>';
 }
 
 function upgFillReel() { /* replaced by wheel */ }
@@ -9784,6 +9818,7 @@ function upgFeedPublish(row) {
   if (!fromKey || !upgItem(row.to)) return Promise.resolve(false);
   var body = "UPGF|" + name + "|" + (row.win ? "1" : "0") + "|" + fromKey + "|" + row.to + "|" + ts;
   upgFeedAdd({ win: row.win, from: row.from, to: row.to, who: name, ts: ts }, "own|" + name.toLowerCase() + "|" + fromKey + "|" + row.to + "|" + (row.win ? 1 : 0) + "|" + Math.floor(ts / 1000));
+  pushList("prz_upg_feed_local_v1", { win: !!row.win, from: row.from, to: row.to, who: name, ts: ts }, 30);
   upgRenderFeed();
   var jobs = UPG_FEED.postUrls.map(function (url) {
     return fetchT(url, {
@@ -9867,11 +9902,21 @@ function upgFeedStreamStart() {
     if (UPG_FEED.streamAbort === ctrl) UPG_FEED.streamAbort = null;
     UPG_FEED.streamIdx = (idx + 1) % urls.length;
     if (UPG_FEED.streamTimer) clearTimeout(UPG_FEED.streamTimer);
-    UPG_FEED.streamTimer = setTimeout(function () { upgFeedStreamStart(); }, 3000);
+    UPG_FEED.streamTimer = setTimeout(function () { upgFeedStreamStart(); }, 15000);
   });
 }
 
+function upgFeedRestoreLocal() {
+  var a = readList("prz_upg_feed_local_v1");
+  for (var i = 0; i < a.length; i++) {
+    var r = a[i];
+    if (!r) continue;
+    upgFeedAdd(r, "local|" + i + "|" + (r.ts || 0));
+  }
+}
+
 function upgFeedInit() {
+  upgFeedRestoreLocal();
   upgRenderFeed();
   try {
     upgFeedFetchLive().then(function () { UPG_FEED.loaded = true; upgRenderFeed(); }).catch(function () { UPG_FEED.loaded = true; upgRenderFeed(); });
@@ -9901,6 +9946,7 @@ var UPG_TOP = {
   seen: {},
   lastSent: read("prz_upg_top_last", 0) || 0,
   loaded: false,
+  online: false,
   sending: false,
   streamAbort: null,
   streamIdx: 0,
@@ -9955,7 +10001,7 @@ function upgTopRender() {
   var list = document.getElementById("upgTopList");
   var note = document.getElementById("upgTopNote");
   if (!list) return;
-  var myName = normalizeName(read("prz_upg_top_name", "") || (document.getElementById("upgTopName") ? document.getElementById("upgTopName").value : ""));
+  var myName = (typeof authName === "function") ? authName() : normalizeName(read("prz_upg_top_name", "") || (document.getElementById("upgTopName") ? document.getElementById("upgTopName").value : ""));
   list.innerHTML = "";
   if (!UPG_TOP.scores.length) {
     list.innerHTML = '<li class="upg-top__empty">Пока пусто. Отправь свой инвентарь первым!</li>';
@@ -9987,7 +10033,7 @@ function upgTopRender() {
   if (note) {
     var t = new Date();
     var hh = ("0" + t.getHours()).slice(-2), mm = ("0" + t.getMinutes()).slice(-2);
-    note.textContent = "Демо-рейтинг · " + (UPG_TOP.loaded ? "обновлён " + hh + ":" + mm : "загрузка…");
+    note.textContent = "Демо-рейтинг · " + (UPG_TOP.online ? "обновлён " + hh + ":" + mm : "локально, без связи " + hh + ":" + mm);
   }
 }
 
@@ -10072,7 +10118,7 @@ function upgTopStreamStart() {
     if (UPG_TOP.streamAbort === ctrl) UPG_TOP.streamAbort = null;
     UPG_TOP.streamIdx = (idx + 1) % urls.length;
     if (UPG_TOP.streamTimer) clearTimeout(UPG_TOP.streamTimer);
-    UPG_TOP.streamTimer = setTimeout(function () { upgTopStreamStart(); }, 3000);
+    UPG_TOP.streamTimer = setTimeout(function () { upgTopStreamStart(); }, 15000);
   });
 }
 
@@ -10106,6 +10152,7 @@ function upgTopSubmit(auto) {
   UPG_TOP.lastSent = now;
   write("prz_upg_top_last", now);
   upgTopAdd(name, st.value, st.count, now, "own|" + now);
+  pushList("prz_upg_top_local_v1", { name: name, score: st.value, count: st.count, ts: now }, 30);
   upgTopRender();
   if (note) note.textContent = " Сохранено локально. Отправляем в демо-ленту…";
   upgTopPublishLive(name, st.value, st.count, now).then(function (ok) {
@@ -10121,16 +10168,26 @@ function upgTopSubmit(auto) {
   });
 }
 
+function upgTopRestoreLocal() {
+  var a = readList("prz_upg_top_local_v1");
+  for (var i = 0; i < a.length; i++) {
+    var s = a[i];
+    if (!s) continue;
+    upgTopAdd(s.name, s.score, s.count, s.ts, "local|" + i + "|" + (s.ts || 0));
+  }
+}
+
 function upgTopLoad(force) {
   upgTopSyncMe();
   if (UPG_TOP.loaded && !force) { upgTopRender(); return; }
   if (force) UPG_TOP.seen = {};
-  var done = function () {
+  var done = function (any) {
+    UPG_TOP.online = !!any;
     if (UPG_TOP.scores.length) UPG_TOP.loaded = true;
     upgTopRender();
     if (!UPG_TOP.loaded) {
       if (UPG_TOP.retryTimer) clearTimeout(UPG_TOP.retryTimer);
-      UPG_TOP.retryTimer = setTimeout(function () { upgTopLoad(false); }, 5000);
+      UPG_TOP.retryTimer = setTimeout(function () { upgTopLoad(false); }, 15000);
     }
   };
   upgTopFetchLive().then(done).catch(done);
@@ -10141,13 +10198,15 @@ function upgTopInit() {
   var n = read("prz_upg_top_name", "") || (typeof LB !== "undefined" ? LB.name : "");
   var inp = document.getElementById("upgTopName");
   if (inp && n && !inp.value && !nameProblem(n)) inp.value = n;
+  upgTopRestoreLocal();
   upgTopRender();
-  var done = function () {
+  var done = function (any) {
+    UPG_TOP.online = !!any;
     if (UPG_TOP.scores.length) UPG_TOP.loaded = true;
     upgTopRender();
     if (!UPG_TOP.loaded) {
       if (UPG_TOP.retryTimer) clearTimeout(UPG_TOP.retryTimer);
-      UPG_TOP.retryTimer = setTimeout(function () { upgTopLoad(false); }, 5000);
+      UPG_TOP.retryTimer = setTimeout(function () { upgTopLoad(false); }, 15000);
     }
   };
   try { upgTopFetchLive().then(done).catch(done); } catch (e) { done(); }
