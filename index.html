@@ -1844,8 +1844,6 @@ body.light .casepop__close { background: linear-gradient(180deg,#e8ffe8,#d4f0d8)
   height: 136px;
   border-radius: 50%;
   position: relative;
-  transform: rotate(0deg);
-  will-change: transform;
   background: conic-gradient(#2fd35f 0 calc(var(--p, 0) * 1%), #ff4d5a calc(var(--p, 0) * 1%) 100%);
   box-shadow: 0 0 0 7px rgba(0,0,0,.22), 0 0 0 1px rgba(182,240,106,.12), 0 0 40px rgba(47,211,95,.12), inset 0 0 20px rgba(0,0,0,.1);
 }
@@ -1875,6 +1873,9 @@ body.light .casepop__close { background: linear-gradient(180deg,#e8ffe8,#d4f0d8)
   inset: -2px;
   z-index: 4;
   pointer-events: none;
+  transform: rotate(0deg);
+  transform-origin: 50% 50%;
+  will-change: transform;
 }
 .upg-arrow::before {
   content: "";
@@ -2811,7 +2812,7 @@ body.light .upg-feed__who { color: #0d2b19; }
           <div class="upg-result" id="upgResult" hidden></div>
 
           <button class="btn btn--big btn--full upg-go" id="upgGo" type="button" disabled>Апгрейд</button>
-          <p class="upg-note">Можно выбрать от 1 до 3 предметов. Шанс = сумма цен выбранных / цена цели × 92%, но не больше 75%. Цель должна быть дороже суммы выбранных предметов. Проиграл — все выбранные предметы ушли бабушке. Эффект «на волоске» — редкая визуальная инсценировка, на шанс она не влияет.</p>
+          <p class="upg-note">Можно выбрать от 1 до 3 предметов. Шанс = сумма цен выбранных / цена цели × 92%, но не больше 75%. Цель должна быть дороже суммы выбранных предметов. Проиграл — все выбранные предметы ушли бабушке. Эффект «на волоске» — редкая визуальная инсценировка, на шанс она не влияет. Крутится стрелка, колесо остаётся на месте — в центре всегда виден текущий шанс.</p>
         </div>
 
         <aside class="upg-panel">
@@ -3124,7 +3125,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-fixes-revert-1";
+var APP_BUILD = "20261124-arrow-spin-1";
 
 var cart = read(STORE.cart, {});
 if (!cart || typeof cart !== "object" || Array.isArray(cart)) cart = {};
@@ -7144,7 +7145,7 @@ var UPG = {
   spinning: false,
   assortOpen: false,
   bcasesOpen: false,
-  wheelDeg: 0
+  arrowDeg: 0
 };
 
 
@@ -7257,6 +7258,7 @@ function upgLoad() {
   UPG.balance = 0;
   UPG.pendingCase = null;
   UPG.pendingCbReward = null;
+  UPG.arrowDeg = 0;
 
   if (!d || !Array.isArray(d.inv)) {
     UPG.inv = UPG_START.slice();
@@ -7520,6 +7522,7 @@ function upgRenderCore() {
   var fromTile = document.getElementById("upgFromTile");
   var toTile = document.getElementById("upgToTile");
   var wheel = document.getElementById("upgWheel");
+  var arrow = document.getElementById("upgArrow");
   var chanceEl = document.getElementById("upgChance");
   var go = document.getElementById("upgGo");
   if (!fromTile || !toTile || !chanceEl || !go) return;
@@ -7536,9 +7539,9 @@ function upgRenderCore() {
   if (wheel) wheel.style.setProperty("--p", String(chance));
   chanceEl.textContent = chance ? upgChanceText(chance) + "%" : "—";
 
-  if (wheel && !UPG.spinning && Number(UPG.wheelDeg)) {
-    wheel.style.transition = "none";
-    wheel.style.transform = "rotate(" + UPG.wheelDeg + "deg)";
+  if (arrow && !UPG.spinning) {
+    arrow.style.transition = "none";
+    arrow.style.transform = "rotate(" + (Number(UPG.arrowDeg) || 0) + "deg)";
   }
 
   if (UPG.spinning) {
@@ -8976,8 +8979,8 @@ function upgHideResult() {
 }
 
 function upgSpinWheel(win, chance, ms, done) {
-  var wheel = document.getElementById("upgWheel");
-  if (!wheel) { done(); return; }
+  var arrow = document.getElementById("upgArrow");
+  if (!arrow) { done(); return; }
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   chance = Math.max(0.5, Math.min(99.5, Number(chance) || 50));
   var greenEnd = chance * 3.6;
@@ -9002,25 +9005,27 @@ function upgSpinWheel(win, chance, ms, done) {
       target = redStart + rPad + Math.random() * rSpan;
     }
   }
-  // Указатель стоит сверху, вращается колесо: нужный сектор должен прийти под него.
-  var cur = Number(UPG.wheelDeg) || 0;
-  var base = Math.floor(cur / 360) * 360;
-  var next = base - 360 * (4 + Math.floor(Math.random() * 3)) - target;
-  if (next >= cur - 360) next -= 360;
-  UPG.wheelDeg = next;
-  var endTransform = "rotate(" + UPG.wheelDeg + "deg)";
+  // Колесо стоит, крутится стрелка: ведём её в нужный сектор по часовой стрелке.
+  // conic-gradient начинается сверху и идёт по часовой, поэтому угол стрелки
+  // напрямую совпадает с позицией в секторе.
+  var cur = Number(UPG.arrowDeg) || 0;
+  var norm = ((cur % 360) + 360) % 360;
+  var delta = (target - norm + 360) % 360;
+  var next = cur + 360 * (4 + Math.floor(Math.random() * 3)) + delta;
+  UPG.arrowDeg = next;
+  var endTransform = "rotate(" + UPG.arrowDeg + "deg)";
   if (reduce) {
-    wheel.style.transition = "none";
-    wheel.style.transform = endTransform;
+    arrow.style.transition = "none";
+    arrow.style.transform = endTransform;
     setTimeout(function () { done(nearMiss); }, 120);
     return;
   }
   // Без requestAnimationFrame: вкладка может быть скрыта, и анимация не запустится.
-  wheel.style.transition = "none";
-  wheel.style.transform = "rotate(" + cur + "deg)";
-  void wheel.offsetWidth;
-  wheel.style.transition = "transform " + ms + "ms cubic-bezier(.12,.72,.08,1)";
-  wheel.style.transform = endTransform;
+  arrow.style.transition = "none";
+  arrow.style.transform = "rotate(" + cur + "deg)";
+  void arrow.offsetWidth;
+  arrow.style.transition = "transform " + ms + "ms cubic-bezier(.12,.72,.08,1)";
+  arrow.style.transform = endTransform;
   setTimeout(function () { done(nearMiss); }, ms + 60);
 }
 
@@ -9194,11 +9199,11 @@ function upgResetAll() {
   UPG.lastCase = 0;
   UPG.pendingCase = null;
   UPG.pendingCbReward = null;
-  UPG.wheelDeg = 0;
-  var wheel = document.getElementById("upgWheel");
-  if (wheel) {
-    wheel.style.transition = "none";
-    wheel.style.transform = "rotate(0deg)";
+  UPG.arrowDeg = 0;
+  var arrow = document.getElementById("upgArrow");
+  if (arrow) {
+    arrow.style.transition = "none";
+    arrow.style.transform = "rotate(0deg)";
   }
   var res = document.getElementById("upgResult");
   if (res) res.hidden = true;
