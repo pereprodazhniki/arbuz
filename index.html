@@ -3036,7 +3036,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-ui-polish-2";
+var APP_BUILD = "20261124-nearmiss-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7479,8 +7479,17 @@ function casePopShow(cfg, dropItem, onGrant) {
   var winIndex = 38;
   var totalCards = winIndex + 8;
   var cards = [];
+  var teaser = dropItem;
+  for (var ti = 0; ti < pool.length; ti++) {
+    if (!teaser || (pool[ti].price || 0) > (teaser.price || 0)) teaser = pool[ti];
+  }
+  var nearMiss = Math.random() < 0.45;
+  var nearSide = Math.random() < 0.5 ? -1 : 1;
   for (var c = 0; c < totalCards; c++) {
-    var pick = (c === winIndex) ? dropItem : pool[Math.floor(Math.random() * pool.length)];
+    var pick;
+    if (c === winIndex) pick = dropItem;
+    else if (nearMiss && c === winIndex + nearSide && teaser) pick = teaser;
+    else pick = pool[Math.floor(Math.random() * pool.length)];
     cards.push(pick);
   }
 
@@ -7518,7 +7527,13 @@ function casePopShow(cfg, dropItem, onGrant) {
     var centerOffset = rollW / 2;
     // Land anywhere within the winning card (edges/sides/center) for suspense
     var cardInner = 118;
-    var jitter = (Math.random() - 0.5) * (cardInner * 0.72);
+    var jitter;
+    if (nearMiss) {
+      var edge = (cardInner * 0.28) + Math.random() * (cardInner * 0.18);
+      jitter = nearSide < 0 ? edge : -edge;
+    } else {
+      jitter = (Math.random() - 0.5) * (cardInner * 0.72);
+    }
     var targetX = -(winIndex * cardW + cardW / 2 - centerOffset) + jitter;
 
     if (track) {
@@ -8392,7 +8407,13 @@ function cbRenderArena(players, statusText, statusCls) {
           if (rw < 80) rw = 300;
           var cW = 92; // 84 + 8
           var cardInner = 84;
-          var jitter = (Math.random() - 0.5) * (cardInner * 0.72);
+          var jitter;
+          if (rl2.nearSide) {
+            var edge = (cardInner * 0.28) + Math.random() * (cardInner * 0.18);
+            jitter = rl2.nearSide < 0 ? edge : -edge;
+          } else {
+            jitter = (Math.random() - 0.5) * (cardInner * 0.72);
+          }
           var tx = -(reelWin * cW + cW / 2 - rw / 2) + jitter;
           if (rTrack) { rTrack.style.transition = "none"; rTrack.style.transform = "translateX(0px)"; }
           requestAnimationFrame(function () {
@@ -8415,9 +8436,18 @@ function cbBuildReel(caseCfg, dropItem, playerName, isMe) {
   if (!pool.length) pool = [dropItem || { icon: "🍉", name: "Арбуз", price: 0, rarity: "common" }];
   var winIndex = 28;
   var totalCards = winIndex + 6;
+  var teaser = dropItem || pool[0];
+  for (var ti = 0; ti < pool.length; ti++) {
+    if (!teaser || (pool[ti].price || 0) > (teaser.price || 0)) teaser = pool[ti];
+  }
+  var nearMiss = Math.random() < 0.45;
+  var nearSide = Math.random() < 0.5 ? -1 : 1;
   var html = "";
   for (var c = 0; c < totalCards; c++) {
-    var pick = (c === winIndex) ? (dropItem || pool[0]) : pool[Math.floor(Math.random() * pool.length)];
+    var pick;
+    if (c === winIndex) pick = dropItem || pool[0];
+    else if (nearMiss && c === winIndex + nearSide && teaser) pick = teaser;
+    else pick = pool[Math.floor(Math.random() * pool.length)];
     var rr = UPG_RARITY[pick.rarity] || UPG_RARITY.common;
     html += '<div class="cbattle__reel-card" style="--rc:' + rr.color + '">' +
       '<div class="cbattle__reel-icon">' + (pick.icon || "🍉") + '</div>' +
@@ -8434,6 +8464,7 @@ function cbBuildReel(caseCfg, dropItem, playerName, isMe) {
     winIndex: winIndex,
     duration: dur,
     easing: easings[Math.floor(Math.random() * easings.length)],
+    nearSide: nearMiss ? nearSide : 0,
     animate: true
   };
 }
@@ -8653,17 +8684,26 @@ function upgSpinWheel(win, chance, ms, done) {
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   chance = Math.max(0.5, Math.min(99.5, Number(chance) || 50));
   var greenEnd = chance * 3.6;
+  var nearMiss = Math.random() < 0.45;
   var target;
   if (win) {
     var gPad = Math.min(5, greenEnd * 0.2);
     var gSpan = Math.max(0.5, greenEnd - gPad * 2);
-    target = gPad + Math.random() * gSpan;
+    if (nearMiss && gSpan > 1) {
+      target = Math.max(0.5, greenEnd - (0.4 + Math.random() * 1.8));
+    } else {
+      target = gPad + Math.random() * gSpan;
+    }
   } else {
     var redStart = greenEnd;
     var redEnd = 360;
     var rPad = Math.min(5, (redEnd - redStart) * 0.2);
     var rSpan = Math.max(0.5, (redEnd - redStart) - rPad * 2);
-    target = redStart + rPad + Math.random() * rSpan;
+    if (nearMiss && rSpan > 1) {
+      target = Math.min(359.5, greenEnd + (0.4 + Math.random() * 1.8));
+    } else {
+      target = redStart + rPad + Math.random() * rSpan;
+    }
   }
   var base = Math.ceil(UPG.arrowDeg / 360) * 360;
   var next = base + 360 * (4 + Math.floor(Math.random() * 3)) + target;
