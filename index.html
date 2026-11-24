@@ -30,6 +30,14 @@
   --shadow: 0 20px 60px rgba(0, 0, 0, .24);
   --shadow-soft: 0 12px 34px rgba(0, 0, 0, .16);
   --glow: 0 0 0 1px rgba(182,240,106,.08), 0 24px 70px rgba(47,211,95,.09);
+  --font-display: "Segoe UI", "Manrope", "Inter", system-ui, Arial, sans-serif;
+  --space-1: 6px;
+  --space-2: 10px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 34px;
+  --ease-out: cubic-bezier(.2, .8, .2, 1);
+  --surface-glass: linear-gradient(160deg, rgba(22, 53, 31, .88), rgba(9, 26, 15, .94));
 }
 
 * { box-sizing: border-box; }
@@ -2250,6 +2258,114 @@ body.light .upg-feed__who { color: #0d2b19; }
   .reveal { opacity: 0; transform: translateY(16px); transition: opacity .55s ease, transform .55s ease; }
   .reveal.is-in { opacity: 1; transform: translateY(0); }
 }
+/* ---------- ARBUZ 2.0: игровая дизайн-система ---------- */
+.logo__copy { display: flex; flex-direction: column; line-height: 1; }
+.logo__text { font-family: var(--font-display); font-size: clamp(19px, 2.4vw, 26px); font-weight: 900; letter-spacing: 1.4px; }
+.logo__sub { margin-top: 5px; color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: 1.5px; }
+.nav a.nav__hub { color: var(--lime); background: rgba(182,240,106,.1); border: 1px solid rgba(182,240,106,.18); }
+
+.hub { padding-top: 26px; }
+.section, #cbattle, #upgTop, #upgFeed, #boardPanel { scroll-margin-top: 130px; }
+@media (max-width: 900px) {
+  body { background-attachment: scroll; }
+}
+.hub__head {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4);
+  margin-bottom: var(--space-4); flex-wrap: wrap;
+}
+.hub__eyebrow {
+  display: inline-flex; align-items: center; gap: 8px; margin: 0 0 10px;
+  color: var(--lime); font-size: 11px; font-weight: 900; letter-spacing: 2.2px; text-transform: uppercase;
+}
+.hub__pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 5px rgba(47,211,95,.14); animation: hubPulse 2s infinite; }
+@keyframes hubPulse { 0%,100% { box-shadow: 0 0 0 4px rgba(47,211,95,.16); } 50% { box-shadow: 0 0 0 10px rgba(47,211,95,0); } }
+.hub__title { margin: 0; font-family: var(--font-display); font-size: clamp(30px, 4vw, 46px); line-height: 1.04; letter-spacing: -1.4px; font-weight: 900; }
+.hub__lead { margin: 10px 0 0; max-width: 62ch; color: var(--muted); font-size: 15px; }
+.hub__status {
+  display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px;
+  border: 1px solid var(--line-strong); border-radius: 999px;
+  background: rgba(12, 36, 21, .65); color: var(--muted); font-size: 12px; font-weight: 700;
+}
+.hub__status b { color: var(--lime); }
+.hub__status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 12px rgba(182,240,106,.6); }
+
+.hub__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--space-3); }
+.game-card {
+  --gc: var(--lime);
+  position: relative; isolation: isolate; overflow: hidden; min-height: 228px;
+  display: flex; flex-direction: column; gap: 10px; padding: 20px;
+  border: 1px solid var(--line-strong); border-radius: 26px;
+  background: var(--surface-glass); color: var(--text); text-decoration: none;
+  box-shadow: var(--shadow-soft);
+  transition: transform .35s var(--ease-out), border-color .35s, box-shadow .35s;
+}
+.game-card::before {
+  content: ""; position: absolute; inset: -40% -20% auto; height: 220px; z-index: -1;
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--gc) 26%, transparent), transparent 68%);
+  opacity: .75; transition: opacity .35s, transform .5s var(--ease-out);
+}
+.game-card::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; opacity: .22;
+  background-image: linear-gradient(rgba(182,240,106,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(182,240,106,.08) 1px, transparent 1px);
+  background-size: 26px 26px; mask-image: linear-gradient(180deg, #000, transparent 78%);
+}
+.game-card--slicer { --gc: #ff8fa3; }
+.game-card--upg { --gc: var(--lime); }
+.game-card--cb { --gc: var(--green); }
+.game-card--case { --gc: #ffe07a; }
+.game-card:hover { transform: translateY(-6px); border-color: color-mix(in srgb, var(--gc) 55%, transparent); box-shadow: 0 26px 60px rgba(0,0,0,.32), 0 0 34px color-mix(in srgb, var(--gc) 16%, transparent); }
+.game-card:hover::before { opacity: 1; transform: translateY(10px) scale(1.08); }
+.game-card:active { transform: translateY(-2px) scale(.995); }
+.game-card__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.game-card__icon {
+  display: grid; place-items: center; width: 46px; height: 46px; border-radius: 16px; font-size: 24px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--gc) 32%, transparent), rgba(255,255,255,.04));
+  border: 1px solid color-mix(in srgb, var(--gc) 38%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 10px 24px rgba(0,0,0,.2);
+}
+.game-card__tag { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-size: 10px; font-weight: 900; letter-spacing: 1.2px; }
+.game-card__title { margin: 12px 0 0; font-family: var(--font-display); font-size: 20px; font-weight: 900; letter-spacing: -.3px; }
+.game-card__desc { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.game-card__foot { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.game-card__meta { color: var(--muted); font-size: 11px; font-weight: 700; }
+.game-card__go { color: var(--gc); font-size: 13px; font-weight: 900; }
+
+.hub__side { display: grid; grid-template-columns: 1.35fr 1fr; gap: var(--space-3); margin-top: var(--space-3); }
+.hub-panel { padding: 20px; border: 1px solid var(--line); border-radius: 24px; background: var(--surface); box-shadow: var(--shadow-soft); }
+.hub-panel__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.hub-panel__head h3 { margin: 0; font-family: var(--font-display); font-size: 16px; font-weight: 900; }
+.hub-panel__head span { color: var(--muted); font-size: 11px; font-weight: 700; }
+.hub-links { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.hub-links a {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px;
+  border: 1px solid transparent; background: rgba(0,0,0,.14); color: var(--text); text-decoration: none;
+  font-size: 13px; font-weight: 700; transition: background .2s, border-color .2s, transform .2s;
+}
+.hub-links a:hover { background: rgba(182,240,106,.08); border-color: var(--line-strong); transform: translateX(3px); }
+.hub-links i { font-style: normal; font-size: 17px; }
+.hub-links small { margin-left: auto; color: var(--muted); font-size: 11px; font-weight: 700; text-align: right; }
+.hub-balance { display: flex; align-items: baseline; gap: 10px; margin: 8px 0 12px; }
+.hub-balance b { font-family: var(--font-display); font-size: clamp(32px, 4vw, 46px); line-height: 1; color: var(--lime); }
+.hub-balance span { color: var(--muted); font-size: 12px; }
+.hub__fineprint { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+body.light .hub__status { background: #fff; }
+body.light .hub-links a { background: rgba(18,128,60,.06); }
+
+@media (max-width: 900px) {
+  .hub__side { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .section { scroll-margin-top: 158px; }
+  .logo__sub { display: none; }
+  .hub__head { align-items: flex-start; }
+  .hub__status { width: 100%; justify-content: flex-start; }
+  .hub__grid { grid-template-columns: 1fr; }
+  .game-card { min-height: 190px; padding: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .game-card, .game-card::before, .hub-links a { transition: none; }
+  .hub__pulse { animation: none; }
+}
 </style>
 </head>
 <body>
@@ -2262,18 +2378,23 @@ body.light .upg-feed__who { color: #0d2b19; }
 </div>
 
 <header class="header">
-  <a class="logo" href="#top">
+  <a class="logo" href="#top" aria-label="ARBUZ 2.0 — на главную">
     <span class="logo__melon">🍉</span>
-    <span class="logo__text">Pereprodazhniki</span>
+    <span class="logo__copy">
+      <span class="logo__text">ARBUZ</span>
+      <span class="logo__sub">PEREPRODAZHNIKI · 2.0</span>
+    </span>
   </a>
-  <nav class="nav">
+  <nav class="nav" aria-label="Основная навигация">
+    <a class="nav__hub" href="#hub">Хаб</a>
     <a href="#catalog">Каталог</a>
+    <a href="#game">Игра</a>
+    <a href="#upgrader">Апгрейдер</a>
+    <a href="#cbattle">Батлы</a>
     <a href="#memes">Мемы</a>
     <a href="#how">Доставка</a>
     <a href="#team">Команда</a>
     <a href="#reviews">Отзывы</a>
-    <a href="#game">Игра</a>
-    <a href="#upgrader">Апгрейдер</a>
   </nav>
   <div class="music" id="musicBox">
     <button class="music__btn" id="musicBtn" type="button" title="Музыка" aria-expanded="false" aria-controls="musicPanel">🎵</button>
@@ -2348,6 +2469,65 @@ body.light .upg-feed__who { color: #0d2b19; }
       </div>
       <p class="quest__reward" id="questReward" hidden></p>
     </aside>
+  </section>
+
+  <section class="hub section" id="hub" aria-labelledby="hubTitle">
+    <div class="hub__head">
+      <div>
+        <p class="hub__eyebrow"><span class="hub__pulse" aria-hidden="true"></span> ARBUZ ARCADE · СЕЗОН 2026</p>
+        <h2 class="hub__title" id="hubTitle">Выбери свою игру</h2>
+        <p class="hub__lead">Четыре режима, одна арбузная вселенная. Заходи, играй и собирай виртуальные трофеи.</p>
+      </div>
+      <div class="hub__status"><span class="hub__status-dot" aria-hidden="true"></span> Демо-платформа · <b>без реальных ставок</b></div>
+    </div>
+
+    <div class="hub__grid">
+      <a class="game-card game-card--slicer" href="#game">
+        <span class="game-card__top"><span class="game-card__icon" aria-hidden="true">🔪</span><span class="game-card__tag">ARCADE</span></span>
+        <b class="game-card__title">ARBUZ SLICER</b>
+        <span class="game-card__desc">Режь арбузы, лови комбо и обновляй личный рекорд.</span>
+        <span class="game-card__foot"><span class="game-card__meta">мышь · тач</span><span class="game-card__go">Играть →</span></span>
+      </a>
+      <a class="game-card game-card--upg" href="#upgrader">
+        <span class="game-card__top"><span class="game-card__icon" aria-hidden="true">🎯</span><span class="game-card__tag">RNG</span></span>
+        <b class="game-card__title">ARBUZ UPGRADER</b>
+        <span class="game-card__desc">Собирай предметы, крути колесо и апгрейдь до легендарки.</span>
+        <span class="game-card__foot"><span class="game-card__meta">1–3 предмета</span><span class="game-card__go">Апгрейдить →</span></span>
+      </a>
+      <a class="game-card game-card--cb" href="#cbattle">
+        <span class="game-card__top"><span class="game-card__icon" aria-hidden="true">⚔️</span><span class="game-card__tag">PVP ДЕМО</span></span>
+        <b class="game-card__title">CASE BATTLE</b>
+        <span class="game-card__desc">Комнаты, боты и друзья. Локальная симуляция без сервера.</span>
+        <span class="game-card__foot"><span class="game-card__meta">создать · Joining</span><span class="game-card__go">В бой →</span></span>
+      </a>
+      <a class="game-card game-card--case" href="#lottery">
+        <span class="game-card__top"><span class="game-card__icon" aria-hidden="true">🎁</span><span class="game-card__tag">EVENT</span></span>
+        <b class="game-card__title">КЕЙСЫ И РОЗЫГРЫШ</b>
+        <span class="game-card__desc">Бесплатные кейсы, сезонные розыгрыши и сюрпризы.</span>
+        <span class="game-card__foot"><span class="game-card__meta">виртуальные предметы</span><span class="game-card__go">Попробовать →</span></span>
+      </a>
+    </div>
+
+    <div class="hub__side">
+      <article class="hub-panel">
+        <div class="hub-panel__head"><h3>Активность платформы</h3><span>короткие пути</span></div>
+        <ul class="hub-links">
+          <li><a href="#upgFeed"><i aria-hidden="true">📡</i> Последние события <small>лента апгрейдов</small></a></li>
+          <li><a href="#upgTop"><i aria-hidden="true">🏆</i> Рейтинг игроков <small>локальный топ</small></a></li>
+          <li><a href="#boardPanel"><i aria-hidden="true">🔪</i> Рекорды Slicer <small>таблица лидеров</small></a></li>
+          <li><a href="#buyers"><i aria-hidden="true">🚚</i> Покупатели <small>доставка и отзывы</small></a></li>
+        </ul>
+      </article>
+      <article class="hub-panel">
+        <div class="hub-panel__head"><h3>Твой баланс</h3><span>демо-значение</span></div>
+        <div class="hub-balance"><b id="hubBalance">0 ₽</b><span>виртуальные очки</span></div>
+        <p class="hub__fineprint">Баланс хранится только в этом браузере. Пополнение и вывод средств отсутствуют.</p>
+        <ul class="hub-links">
+          <li><a href="#upgrader"><i aria-hidden="true">🎁</i> Бесплатный кейс <small>раз в 25 секунд</small></a></li>
+          <li><a href="#upgrader"><i aria-hidden="true">💱</i> Обменять очки <small>внутри апгрейдера</small></a></li>
+        </ul>
+      </article>
+    </div>
   </section>
 
   <section class="section" id="catalog">
@@ -3108,14 +3288,17 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-arrow-1";
+var APP_BUILD = "20261124-arbuz2-hub-1";
 
 var cart = read(STORE.cart, {});
+if (!cart || typeof cart !== "object" || Array.isArray(cart)) cart = {};
 var ship = read(STORE.ship, "delivery");
 var payMode = read(STORE.pay, "normal");
 var reviews = read(STORE.reviews, []);
+if (!Array.isArray(reviews)) reviews = [];
 var sold = read(STORE.sold, 0);
 var buyers = read(STORE.buyers, []);
+if (!Array.isArray(buyers)) buyers = [];
 var activeTag = null;
 var catalogOpen = false;
 
@@ -3489,6 +3672,7 @@ function renderQuiz() {
 
 /* ---------- голосование (общий счётчик для всех, только старые арбузы) ---------- */
 var votes = read(STORE.votes, {});
+if (!votes || typeof votes !== "object" || Array.isArray(votes)) votes = {};
 var voted = read(STORE.voted, false);
 
 var VOTE_API = "https://abacus.jasoncameron.dev";
@@ -3874,14 +4058,16 @@ function initJobForm() {
     }
 
     var data = {};
+    var botValue = "";
     var inputs = form.querySelectorAll("input, select, textarea");
     for (var i = 0; i < inputs.length; i++) {
       var f = inputs[i];
-      if (!f.name || f.name === "form-name" || f.name === "bot-field") continue;
+      if (f.name === "bot-field") { botValue = String(f.value || "").trim(); continue; }
+      if (!f.name || f.name === "form-name") continue;
       data[f.name] = f.type === "checkbox" ? (f.checked ? "да" : "нет") : String(f.value || "").trim();
     }
 
-    if (data["bot-field"]) return;
+    if (botValue) return;
 
     var problem = validateJobForm(data);
     if (problem) {
@@ -7581,6 +7767,8 @@ function upgRenderHud() {
   if (bal) bal.textContent = upgMoney(UPG.balance || 0);
   var balTop = document.getElementById("siteBalanceTop");
   if (balTop) balTop.textContent = upgMoney(UPG.balance || 0);
+  var balHub = document.getElementById("hubBalance");
+  if (balHub) balHub.textContent = upgMoney(UPG.balance || 0);
   var balCart = document.getElementById("cartBalanceVal");
   if (balCart) balCart.textContent = upgMoney(UPG.balance || 0);
   var rolls = document.getElementById("upgRolls");
@@ -10155,16 +10343,29 @@ function initUpgrader() {
 }
 
 var APP_UPDATE_CHECKING = false;
+function appUiBusy() {
+  if (typeof UPG !== "undefined" && UPG.spinning) return true;
+  if (typeof CB !== "undefined" && CB.busy) return true;
+  if (typeof CASE_POP !== "undefined" && CASE_POP && CASE_POP.busy) return true;
+  if (typeof GAME !== "undefined" && GAME.running) return true;
+  var active = document.activeElement;
+  if (active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName) && !active.readOnly) return true;
+  var cartBox = document.getElementById("cart");
+  var caseBox = document.getElementById("casePop");
+  if ((cartBox && !cartBox.hidden) || (caseBox && !caseBox.hidden)) return true;
+  return false;
+}
+
 function checkAppUpdate() {
   if (APP_UPDATE_CHECKING) return;
   if (typeof fetch !== "function") return;
-  if (typeof UPG !== "undefined" && UPG.spinning) return;
+  if (appUiBusy()) return;
   APP_UPDATE_CHECKING = true;
   var url = location.pathname + "?_v=" + Date.now();
   fetch(url, { cache: "no-store" }).then(function (r) { return r.ok ? r.text() : ""; }).then(function (text) {
     if (!text) return;
     var m = text.match(/APP_BUILD\s*=\s*"([^"]+)"/);
-    if (m && m[1] && m[1] !== APP_BUILD) {
+    if (m && m[1] && m[1] !== APP_BUILD && !appUiBusy()) {
       try { toast("Есть обновление, перезагружаю…"); } catch (e) {}
       setTimeout(function () {
         try { location.reload(); } catch (e) { location.href = location.pathname + "?fresh=" + Date.now(); }
