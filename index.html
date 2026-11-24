@@ -2732,7 +2732,7 @@ body.light .upg-feed__who { color: #0d2b19; }
           <div class="upg-result" id="upgResult" hidden></div>
 
           <button class="btn btn--big btn--full upg-go" id="upgGo" type="button" disabled>Апгрейд</button>
-          <p class="upg-note">Можно выбрать от 1 до 3 предметов. Шанс = сумма цен выбранных / цена цели × 92%. Цель должна быть круче всех выбранных предметов. Проиграл — все выбранные предметы ушли бабушке.</p>
+          <p class="upg-note">Можно выбрать от 1 до 3 предметов. Шанс = сумма цен выбранных / цена цели × 92%. Цель должна быть дороже суммы выбранных предметов. Проиграл — все выбранные предметы ушли бабушке.</p>
         </div>
 
         <aside class="upg-panel">
@@ -3045,7 +3045,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-upg-multi-1";
+var APP_BUILD = "20261124-upg-multi-2";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7211,16 +7211,15 @@ function upgEnsure() {
   upgNormalizeSelected();
   if (!UPG.selected.length && UPG.inv.length) UPG.selected = [UPG.inv[0]];
 
-  var maxP = upgSelectedMaxPrice();
   var sum = upgSelectedSum();
   if (!UPG.selected.length || !sum) { UPG.target = null; return; }
 
   var tgt = upgItem(UPG.target);
-  if (!tgt || tgt.price <= maxP) {
+  if (!tgt || tgt.price <= sum) {
     var best = null;
     for (var i = 0; i < UPG_ITEMS.length; i++) {
       var it = UPG_ITEMS[i];
-      if (it.price > maxP && (!best || it.price < best.price)) best = it;
+      if (it.price > sum && (!best || it.price < best.price)) best = it;
     }
     UPG.target = best ? best.id : null;
   }
@@ -7280,7 +7279,6 @@ function upgRenderTargets() {
   var countEl = document.getElementById("upgAssortCount");
   var toggle = document.getElementById("upgAssortToggle");
   if (!box) return;
-  var maxP = upgSelectedMaxPrice();
   var sum = upgSelectedSum();
   var hasSel = upgSelectedIds().length > 0;
 
@@ -7300,7 +7298,7 @@ function upgRenderTargets() {
   var allCount = 0;
   for (var i = 0; i < UPG_ITEMS.length; i++) {
     var it = UPG_ITEMS[i];
-    if (it.price <= maxP) continue;
+    if (it.price <= sum) continue;
     allCount++;
     var p = upgEffPct(sum, it);
     var cls = p < 25 ? "upg-chance--low" : p < 55 ? "upg-chance--mid" : "upg-chance--high";
@@ -7316,14 +7314,14 @@ function upgRenderTargets() {
     var pops = [];
     for (var j = 0; j < UPG_ITEMS.length; j++) {
       var pit = UPG_ITEMS[j];
-      if (pit.price <= maxP) continue;
+      if (pit.price <= sum) continue;
       if (pit.pop) pops.push(pit);
     }
     pops.sort(function(a,b){ return a.price - b.price; });
     if (!pops.length) {
       for (var k = 0; k < UPG_ITEMS.length; k++) {
         var pit2 = UPG_ITEMS[k];
-        if (pit2.price <= maxP) continue;
+        if (pit2.price <= sum) continue;
         pops.push(pit2);
         if (pops.length >= 6) break;
       }
@@ -8882,7 +8880,7 @@ function upgDo() {
   var sum = 0;
   var fromIds = [];
   for (var fi = 0; fi < fromItems.length; fi++) { fromIds.push(fromItems[fi].id); sum += fromItems[fi].price; if (fromItems[fi].price > maxP) maxP = fromItems[fi].price; }
-  if (to.price <= maxP) { toast("Цель должна быть круче всех выбранных предметов"); return; }
+  if (to.price <= sum) { toast("Цель должна быть дороже суммы выбранных предметов"); return; }
 
   var chance = upgEffPct(sum, to);
   var win = Math.random() * 100 < chance;
@@ -8943,13 +8941,12 @@ function upgDo() {
 
 function upgPickMult(mult) {
   var sum = upgSelectedSum();
-  var maxP = upgSelectedMaxPrice();
   if (!sum) return;
   var ideal = sum * mult;
   var best = null;
   for (var i = 0; i < UPG_ITEMS.length; i++) {
     var it = UPG_ITEMS[i];
-    if (it.price <= maxP) continue;
+    if (it.price <= sum) continue;
     if (!best || Math.abs(it.price - ideal) < Math.abs(best.price - ideal)) best = it;
   }
   if (!best) return;
