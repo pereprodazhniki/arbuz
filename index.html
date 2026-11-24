@@ -1624,6 +1624,20 @@ body.light .jobform__cooldown { background: #f2fff7; border-color: #12803c; colo
 .upg-result__icon { font-size: 28px; flex: 0 0 auto; filter: drop-shadow(0 4px 10px rgba(0,0,0,.2)); }
 .upg-result.is-win { border-color: rgba(47,211,95,.4); background: linear-gradient(180deg, rgba(47,211,95,.14), rgba(47,211,95,.06)); color: var(--lime); box-shadow: 0 8px 24px rgba(47,211,95,.08); }
 .upg-result.is-lose { border-color: rgba(255,77,90,.35); background: linear-gradient(180deg, rgba(255,77,90,.12), rgba(255,77,90,.05)); color: #ff9b9b; }
+.upg-result.is-near { border-color: rgba(255,196,107,.55); box-shadow: 0 0 0 1px rgba(255,196,107,.14), 0 12px 32px rgba(255,196,107,.12); }
+.upg-result__near {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffe0a3, #ffc46b);
+  color: #3a2300;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .2px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(255,196,107,.3);
+}
 
 .upg-go:disabled { opacity: .55; filter: grayscale(.45); cursor: default; transform: none; box-shadow: 0 8px 0 #2c3a2c; }
 .upg-note { margin: 10px 0 0; font-size: 12px; line-height: 1.35; color: var(--muted); text-align: center; }
@@ -2782,7 +2796,7 @@ body.light .upg-feed__who { color: #0d2b19; }
           <div class="upg-result" id="upgResult" hidden></div>
 
           <button class="btn btn--big btn--full upg-go" id="upgGo" type="button" disabled>Апгрейд</button>
-          <p class="upg-note">Можно выбрать от 1 до 3 предметов. Шанс = сумма цен выбранных / цена цели × 92%. Цель должна быть дороже суммы выбранных предметов. Проиграл — все выбранные предметы ушли бабушке.</p>
+          <p class="upg-note">Можно выбрать от 1 до 3 предметов. Шанс = сумма цен выбранных / цена цели × 92%. Цель должна быть дороже суммы выбранных предметов. Проиграл — все выбранные предметы ушли бабушке. Эффект «на волоске» — редкая визуальная инсценировка, на шанс она не влияет.</p>
         </div>
 
         <aside class="upg-panel">
@@ -3096,7 +3110,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-modern-3";
+var APP_BUILD = "20261124-near-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -6232,6 +6246,14 @@ function sfxUiCase() {
   playTone(440, t, 0.08, "triangle", 0.08, MUSIC.sfxGain);
   playTone(554.37, t + 0.06, 0.1, "triangle", 0.08, MUSIC.sfxGain);
 }
+function sfxUiNear() {
+  if (!SFX.on) return;
+  var ctx = audioCtx();
+  if (!ctx) return;
+  var t = ctx.currentTime;
+  playTone(1046.5, t, 0.07, "sine", 0.07, MUSIC.sfxGain);
+  playTone(1318.5, t + 0.06, 0.09, "sine", 0.06, MUSIC.sfxGain);
+}
 
 function initGame() {
   var canvas = document.getElementById("gameCanvas");
@@ -7152,6 +7174,14 @@ function upgEffPct(from, to) {
   return c;
 }
 
+/* Редкий визуальный эффект «на волоске». На шанс и результат не влияет. */
+function upgNearMissRoll(chance) {
+  var c = Number(chance) || 0;
+  if (c < 18 || c > 82) return Math.random() < 0.03;
+  return Math.random() < 0.10;
+}
+function caseNearMissRoll() { return Math.random() < 0.12; }
+
 function upgSelectedIds() {
   return Array.isArray(UPG.selected) ? UPG.selected.slice() : (UPG.selected ? [UPG.selected] : []);
 }
@@ -7742,7 +7772,7 @@ function casePopShow(cfg, dropItem, onGrant) {
   var maxPrice = bestTeaser ? (bestTeaser.price || 0) : 0;
   var minPrice = worstTeaser ? (worstTeaser.price || 0) : 0;
   var isGood = dropPrice >= maxPrice * 0.6 || (dropItem && /legendary|mythic|epic/.test(dropItem.rarity || ""));
-  var nearMiss = Math.random() < 0.45;
+  var nearMiss = caseNearMissRoll();
   var nearSide = Math.random() < 0.5 ? -1 : 1;
   var teaser = (nearMiss && isGood && Math.random() < 0.65 && worstTeaser && worstTeaser.id !== dropItem.id) ? worstTeaser : bestTeaser;
   for (var c = 0; c < totalCards; c++) {
@@ -8708,7 +8738,7 @@ function cbBuildReel(caseCfg, dropItem, playerName, isMe) {
   var dropPrice = (dropItem || pool[0]) ? ((dropItem || pool[0]).price || 0) : 0;
   var maxPrice = bestTeaser ? (bestTeaser.price || 0) : 0;
   var isGood = dropPrice >= maxPrice * 0.6 || ((dropItem || pool[0]) && /legendary|mythic|epic/.test((dropItem || pool[0]).rarity || ""));
-  var nearMiss = Math.random() < 0.45;
+  var nearMiss = caseNearMissRoll();
   var nearSide = Math.random() < 0.5 ? -1 : 1;
   var teaser = (nearMiss && isGood && Math.random() < 0.65 && worstTeaser && worstTeaser.id !== (dropItem || pool[0]).id) ? worstTeaser : bestTeaser;
   var html = "";
@@ -8934,7 +8964,7 @@ function upgPushHist(win, fromIds, toId, who) {
   if (UPG.hist.length > 20) UPG.hist.length = 20;
 }
 
-function upgShowResult(win, fromItems, to) {
+function upgShowResult(win, fromItems, to, near) {
   var res = document.getElementById("upgResult");
   if (!res) return;
   var items = Array.isArray(fromItems) ? fromItems : (fromItems ? [fromItems] : []);
@@ -8943,8 +8973,9 @@ function upgShowResult(win, fromItems, to) {
   for (var i = 0; i < items.length; i++) { if (items[i]) { names.push("«" + items[i].name + "»"); sum += items[i].price; } }
   var fromLabel = names.length === 1 ? names[0] : (names.length + " предмета (" + upgMoney(sum) + ")");
   var fromNames = names.join(", ");
-  res.className = "upg-result " + (win ? "is-win" : "is-lose");
-  res.innerHTML = '<span class="upg-result__icon">' + (win ? "🎉" : "💀") + '</span><span>' +
+  res.className = "upg-result " + (win ? "is-win" : "is-lose") + (near ? " is-near" : "");
+  res.innerHTML = (near ? '<span class="upg-result__near">На волоске!</span>' : '') +
+    '<span class="upg-result__icon">' + (win ? "🎉" : "💀") + '</span><span>' +
     (win
       ? 'Апгрейд удался! Забрал «' + to.name + '» за ' + upgMoney(to.price) + '.'
       : 'Не повезло. ' + (names.length === 1 ? fromLabel + ' ушёл бабушке. Она не вернёт.' : fromNames + ' ушли бабушке. Она не вернёт.')) +
@@ -8963,7 +8994,7 @@ function upgSpinWheel(win, chance, ms, done) {
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   chance = Math.max(0.5, Math.min(99.5, Number(chance) || 50));
   var greenEnd = chance * 3.6;
-  var nearMiss = Math.random() < 0.45;
+  var nearMiss = upgNearMissRoll(chance);
   var target;
   if (win) {
     var gPad = Math.min(5, greenEnd * 0.2);
@@ -8991,14 +9022,14 @@ function upgSpinWheel(win, chance, ms, done) {
   if (reduce) {
     arrow.style.transition = "none";
     arrow.style.transform = "rotate(" + UPG.arrowDeg + "deg)";
-    setTimeout(done, 120);
+    setTimeout(function () { done(nearMiss); }, 120);
     return;
   }
   arrow.style.transition = "transform " + ms + "ms cubic-bezier(.12,.72,.08,1)";
   requestAnimationFrame(function () {
     arrow.style.transform = "rotate(" + UPG.arrowDeg + "deg)";
   });
-  setTimeout(done, ms + 60);
+  setTimeout(function () { done(nearMiss); }, ms + 60);
 }
 
 function upgDo() {
@@ -9059,16 +9090,17 @@ function upgDo() {
   var multBtns = document.querySelectorAll("#upgMults .upg-mult");
   for (var mi = 0; mi < multBtns.length; mi++) multBtns[mi].disabled = true;
 
-  upgSpinWheel(win, chance, 3200, function () {
+  upgSpinWheel(win, chance, 3200, function (near) {
     UPG.spinning = false;
     upgEnsure();
     upgRender();
-    upgShowResult(win, fromItems, to);
+    upgShowResult(win, fromItems, to, near);
     if (feedName && typeof upgFeedPublish === "function") {
       upgFeedPublish({ win: win, from: histFrom, to: to.id, who: feedName, ts: Date.now() });
     }
     var loseName = fromItems.length === 1 ? "«" + fromItems[0].name + "»" : (fromItems.length + " предмета");
     if (win) sfxUiWin(); else sfxUiLose();
+    if (near) sfxUiNear();
     toast(win ? "🎉 Апгрейд! Забрал «" + to.name + "»" : "💀 " + loseName + " ушли бабушке");
   });
 }
