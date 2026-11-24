@@ -3012,7 +3012,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-cb-fair-bots-1";
+var APP_BUILD = "20261124-cb-promo-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -8454,8 +8454,21 @@ function cbStart() {
   for (var m = 0; m < totals.length; m++) if (totals[m] > max) max = totals[m];
   var winners = [];
   for (var w = 0; w < totals.length; w++) if (totals[w] === max) winners.push(w);
+  var cbAlwaysWin = false; try { cbAlwaysWin = localStorage.getItem("prz_cb_botwin") === "1"; } catch (e) {}
+  if (cbAlwaysWin) {
+    if (totals[0] < max && winners.length) {
+      var swapIdx = winners[0];
+      var tmpD = allDrops[0]; allDrops[0] = allDrops[swapIdx]; allDrops[swapIdx] = tmpD;
+      var tmpT = totals[0]; totals[0] = totals[swapIdx]; totals[swapIdx] = tmpT;
+    }
+    max = -1;
+    for (var m2 = 0; m2 < totals.length; m2++) if (totals[m2] > max) max = totals[m2];
+    winners = [];
+    for (var w2 = 0; w2 < totals.length; w2++) if (totals[w2] === max) winners.push(w2);
+    if (winners.indexOf(0) < 0) winners = [0];
+  }
   var winRnd = cbSeededRng(seed + "|winner");
-  var winnerIdx = winners[Math.floor(winRnd() * winners.length)];
+  var winnerIdx = cbAlwaysWin ? 0 : winners[Math.floor(winRnd() * winners.length)];
   var totalBank = 0;
   for (var tb = 0; tb < totals.length; tb++) totalBank += totals[tb];
 
@@ -9465,6 +9478,12 @@ function initUpgrader() {
           msg = "Промокод применён (+15%)";
         } else if (v === "АМИНЕВНЕКРУТОЙ") {
           localStorage.removeItem("prz_upg_plus15");
+          msg = "Промокод отменён";
+        } else if (v === "КЕЙСБАТЛТОП") {
+          localStorage.setItem("prz_cb_botwin", "1");
+          msg = "Промокод применён";
+        } else if (v === "КЕЙСБАТЛТОП2") {
+          localStorage.removeItem("prz_cb_botwin");
           msg = "Промокод отменён";
         }
       } catch (e) {}
