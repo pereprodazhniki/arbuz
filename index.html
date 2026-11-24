@@ -1871,36 +1871,43 @@ body.light .casepop__close { background: linear-gradient(180deg,#e8ffe8,#d4f0d8)
 .upg-arrow {
   position: absolute;
   inset: -2px;
-  z-index: 4;
+  z-index: 2;
   pointer-events: none;
   transform: rotate(0deg);
   transform-origin: 50% 50%;
   will-change: transform;
 }
-.upg-arrow::before {
-  content: "";
+.upg-arrow__needle {
   position: absolute;
-  top: -10px;
+  top: -17px;
   left: 50%;
+  width: 16px;
+  height: 30px;
   transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 11px solid transparent;
-  border-right: 11px solid transparent;
-  border-top: 20px solid #f4fff8;
-  filter: drop-shadow(0 2px 3px rgba(0,0,0,.45));
+  background: linear-gradient(180deg, rgba(244,255,248,.35) 0%, #f4fff8 34%, var(--lime) 100%);
+  clip-path: polygon(28% 0, 72% 0, 100% 38%, 50% 100%, 0 38%);
+  filter: drop-shadow(0 3px 5px rgba(0,0,0,.55)) drop-shadow(0 0 7px rgba(182,240,106,.55));
 }
-.upg-arrow::after {
-  content: "";
+.upg-arrow__stem {
   position: absolute;
-  top: -8px;
+  top: -4px;
   left: 50%;
+  width: 3px;
+  height: 82px;
   transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 7px solid transparent;
-  border-right: 7px solid transparent;
-  border-top: 13px solid var(--lime);
+  border-radius: 3px;
+  background: linear-gradient(180deg, rgba(182,240,106,.75), rgba(182,240,106,.28) 60%, rgba(182,240,106,0));
+}
+.upg-arrow__hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 46px;
+  height: 46px;
+  margin: -23px 0 0 -23px;
+  border-radius: 50%;
+  border: 1px solid rgba(182,240,106,.35);
+  box-shadow: 0 0 0 4px rgba(9,26,15,.55), 0 0 14px rgba(182,240,106,.18), inset 0 0 12px rgba(182,240,106,.08);
 }
 
 /* ---------- Ассортимент апгрейдера (сворачиваемый) ---------- */
@@ -2115,6 +2122,8 @@ body.light .catalog-peek__name { color: #13281d; }
 
 body.light .upg-wheel::after { background: #fff; }
 body.light .upg-wheel__center b { color: #0d2b19; }
+body.light .upg-arrow__needle { filter: drop-shadow(0 2px 4px rgba(13,43,25,.35)) drop-shadow(0 0 7px rgba(182,240,106,.5)); }
+body.light .upg-arrow__hub { border-color: rgba(47,211,95,.4); box-shadow: 0 0 0 4px rgba(255,255,255,.75), 0 0 14px rgba(47,211,95,.16), inset 0 0 12px rgba(182,240,106,.12); }
 body.light .upg-assort { background: #fff; border-color: #bfe4cc; }
 body.light .upg-peek { background: #f4fff8; border-color: #bfe4cc; color: #0d2b19; }
 body.light .upg-t-item { background: #f4fff8; border-color: #bfe4cc; }
@@ -2795,7 +2804,11 @@ body.light .upg-feed__who { color: #0d2b19; }
             <div class="upg-wheel-wrap" id="upgWheelWrap">
               <div class="upg-wheel" id="upgWheel" style="--p:0"></div>
               <div class="upg-wheel__center"><b id="upgChance">—</b><span>шанс</span></div>
-              <div class="upg-arrow" id="upgArrow"></div>
+              <div class="upg-arrow" id="upgArrow" aria-hidden="true">
+                <span class="upg-arrow__stem"></span>
+                <span class="upg-arrow__needle"></span>
+                <span class="upg-arrow__hub"></span>
+              </div>
             </div>
             <div class="upg-tile" id="upgToTile"></div>
           </div>
@@ -3125,7 +3138,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-arrow-spin-1";
+var APP_BUILD = "20261124-arrow-pretty-1";
 
 var cart = read(STORE.cart, {});
 if (!cart || typeof cart !== "object" || Array.isArray(cart)) cart = {};
