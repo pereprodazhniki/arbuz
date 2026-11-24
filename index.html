@@ -2796,7 +2796,7 @@ body.light .upg-feed__who { color: #0d2b19; }
           <div class="upg-result" id="upgResult" hidden></div>
 
           <button class="btn btn--big btn--full upg-go" id="upgGo" type="button" disabled>Апгрейд</button>
-          <p class="upg-note">Можно выбрать от 1 до 3 предметов. Шанс = сумма цен выбранных / цена цели × 92%. Цель должна быть дороже суммы выбранных предметов. Проиграл — все выбранные предметы ушли бабушке. Эффект «на волоске» — редкая визуальная инсценировка, на шанс она не влияет.</p>
+          <p class="upg-note">Можно выбрать от 1 до 3 предметов. Шанс = сумма цен выбранных / цена цели × 92%, но не больше 75%. Цель должна быть дороже суммы выбранных предметов. Проиграл — все выбранные предметы ушли бабушке. Эффект «на волоске» — редкая визуальная инсценировка, на шанс она не влияет.</p>
         </div>
 
         <aside class="upg-panel">
@@ -3110,7 +3110,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-near-1";
+var APP_BUILD = "20261124-near-2";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7163,14 +7163,14 @@ function upgPct(from, to) {
   var fromPrice = (from && typeof from === "object") ? from.price : Number(from) || 0;
   if (!fromPrice || !to || to.price <= fromPrice) return 0;
   var c = (fromPrice / to.price) * 100 * UPG_EDGE;
-  if (c > 95) c = 95;
+  if (c > 75) c = 75;
   return c;
 }
 
 function upgEffPct(from, to) {
   var c = upgPct(from, to);
   try { if (c > 0 && localStorage.getItem("prz_upg_plus15") === "1") c += c * 0.15; } catch (e) {}
-  if (c > 100) c = 100;
+  if (c > 75) c = 75;
   return c;
 }
 
