@@ -3036,7 +3036,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-nearmiss-1";
+var APP_BUILD = "20261124-nearmiss-2";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7479,12 +7479,18 @@ function casePopShow(cfg, dropItem, onGrant) {
   var winIndex = 38;
   var totalCards = winIndex + 8;
   var cards = [];
-  var teaser = dropItem;
+  var bestTeaser = dropItem, worstTeaser = dropItem;
   for (var ti = 0; ti < pool.length; ti++) {
-    if (!teaser || (pool[ti].price || 0) > (teaser.price || 0)) teaser = pool[ti];
+    if (!bestTeaser || (pool[ti].price || 0) > (bestTeaser.price || 0)) bestTeaser = pool[ti];
+    if (!worstTeaser || (pool[ti].price || 0) < (worstTeaser.price || 0)) worstTeaser = pool[ti];
   }
+  var dropPrice = dropItem ? (dropItem.price || 0) : 0;
+  var maxPrice = bestTeaser ? (bestTeaser.price || 0) : 0;
+  var minPrice = worstTeaser ? (worstTeaser.price || 0) : 0;
+  var isGood = dropPrice >= maxPrice * 0.6 || (dropItem && /legendary|mythic|epic/.test(dropItem.rarity || ""));
   var nearMiss = Math.random() < 0.45;
   var nearSide = Math.random() < 0.5 ? -1 : 1;
+  var teaser = (nearMiss && isGood && Math.random() < 0.65 && worstTeaser && worstTeaser.id !== dropItem.id) ? worstTeaser : bestTeaser;
   for (var c = 0; c < totalCards; c++) {
     var pick;
     if (c === winIndex) pick = dropItem;
@@ -8436,12 +8442,17 @@ function cbBuildReel(caseCfg, dropItem, playerName, isMe) {
   if (!pool.length) pool = [dropItem || { icon: "🍉", name: "Арбуз", price: 0, rarity: "common" }];
   var winIndex = 28;
   var totalCards = winIndex + 6;
-  var teaser = dropItem || pool[0];
+  var bestTeaser = dropItem || pool[0], worstTeaser = dropItem || pool[0];
   for (var ti = 0; ti < pool.length; ti++) {
-    if (!teaser || (pool[ti].price || 0) > (teaser.price || 0)) teaser = pool[ti];
+    if (!bestTeaser || (pool[ti].price || 0) > (bestTeaser.price || 0)) bestTeaser = pool[ti];
+    if (!worstTeaser || (pool[ti].price || 0) < (worstTeaser.price || 0)) worstTeaser = pool[ti];
   }
+  var dropPrice = (dropItem || pool[0]) ? ((dropItem || pool[0]).price || 0) : 0;
+  var maxPrice = bestTeaser ? (bestTeaser.price || 0) : 0;
+  var isGood = dropPrice >= maxPrice * 0.6 || ((dropItem || pool[0]) && /legendary|mythic|epic/.test((dropItem || pool[0]).rarity || ""));
   var nearMiss = Math.random() < 0.45;
   var nearSide = Math.random() < 0.5 ? -1 : 1;
+  var teaser = (nearMiss && isGood && Math.random() < 0.65 && worstTeaser && worstTeaser.id !== (dropItem || pool[0]).id) ? worstTeaser : bestTeaser;
   var html = "";
   for (var c = 0; c < totalCards; c++) {
     var pick;
