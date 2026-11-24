@@ -2140,6 +2140,16 @@ body.light .catalog-peek__name { color: #13281d; }
 .upg-top__title b { font-size: 19px; color: #fff; letter-spacing: -.2px; }
 .upg-top__title span { display: block; font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
 .upg-top__actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.upg-top__modes { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.upg-top__mode {
+  border: 1px solid rgba(182,240,106,.14); background: rgba(255,255,255,.03); color: var(--muted);
+  border-radius: 999px; padding: 7px 12px; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer;
+  transition: transform .18s, border-color .18s, background .18s, color .18s;
+}
+.upg-top__mode:hover { transform: translateY(-1px); color: var(--text); border-color: rgba(182,240,106,.3); }
+.upg-top__mode.is-active { border-color: rgba(47,211,95,.5); background: linear-gradient(180deg, rgba(47,211,95,.2), rgba(47,211,95,.07)); color: var(--lime); box-shadow: 0 6px 16px rgba(47,211,95,.08); }
+.upg-top__list.is-count .upg-top__cnt { color: var(--lime); font-weight: 900; font-size: 13px; }
+.upg-top__list.is-count .upg-top__val { color: var(--muted); }
 .upg-top__name {
   border: 1px solid rgba(182,240,106,.14); background: rgba(0,0,0,.18); color: var(--text);
   border-radius: 12px; padding: 9px 12px; font: inherit; font-size: 13px; width: 160px; max-width: 100%;
@@ -2904,7 +2914,11 @@ body.light .upg-feed__who { color: #0d2b19; }
         <div class="upg-top__head">
           <div class="upg-top__title">
             <b>🏆 Топ арбузного инвентаря</b>
-            <span>Автообновление раз в минуту · самый дорогой инвентарь в апгрейдере</span>
+            <span>Автообновление каждые 5 секунд · по стоимости и по количеству предметов</span>
+          </div>
+          <div class="upg-top__modes" id="upgTopModes">
+            <button class="upg-top__mode" type="button" data-top-mode="value">По стоимости</button>
+            <button class="upg-top__mode" type="button" data-top-mode="count">По предметам</button>
           </div>
           <div class="upg-top__actions">
             <input class="upg-top__name" id="upgTopName" type="text" maxlength="30" placeholder="Настоящее имя" aria-label="Настоящее имя для топа и ленты">
@@ -3233,7 +3247,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-auto-top-rarity-1";
+var APP_BUILD = "20261124-top-5s-count-1";
 
 var cart = read(STORE.cart, {});
 if (!cart || typeof cart !== "object" || Array.isArray(cart)) cart = {};
@@ -7453,6 +7467,9 @@ function initLeaderboard() {
   setInterval(function () {
     if (document.hidden) return;
     lbAutoSync();
+  }, AUTO_TOP_MS);
+  setInterval(function () {
+    if (document.hidden) return;
     lbFetchArchive();
     lbFetchLive();
   }, 60000);
@@ -9959,6 +9976,7 @@ var UPG_TOP = {
   ],
   scores: [],
   seen: {},
+  mode: read("prz_upg_top_mode", "value") === "count" ? "count" : "value",
   lastSent: read("prz_upg_top_last", 0) || 0,
   loaded: false,
   online: false,
@@ -9999,9 +10017,14 @@ function upgTopAdd(name, score, count, ts, key) {
   if (UPG_TOP.seen[k]) return false;
   UPG_TOP.seen[k] = true;
   for (var i = 0; i < UPG_TOP.scores.length; i++) {
-    if (UPG_TOP.scores[i].name.toLowerCase() === low) {
-      if (score < UPG_TOP.scores[i].score) return false;
-      if (score === UPG_TOP.scores[i].score && count <= (UPG_TOP.scores[i].count || 0)) return false;
+    var old = UPG_TOP.scores[i];
+    if (old.name.toLowerCase() === low) {
+      /* храним личные максимумы и по стоимости, и по количеству предметов */
+      var bestScore = Math.max(old.score, score);
+      var bestCount = Math.max(old.count || 0, count);
+      if (bestScore === old.score && bestCount === (old.count || 0)) return false;
+      score = bestScore;
+      count = bestCount;
       UPG_TOP.scores.splice(i, 1);
       break;
     }
@@ -10018,11 +10041,19 @@ function upgTopRender() {
   if (!list) return;
   var myName = (typeof authName === "function") ? authName() : normalizeName(read("prz_upg_top_name", "") || (document.getElementById("upgTopName") ? document.getElementById("upgTopName").value : ""));
   list.innerHTML = "";
-  if (!UPG_TOP.scores.length) {
-    list.innerHTML = '<li class="upg-top__empty">Пока пусто. Отправь свой инвентарь первым!</li>';
+  var countMode = UPG_TOP.mode === "count";
+  if (list.classList) list.classList.toggle("is-count", countMode);
+  var rows = UPG_TOP.scores.slice();
+  if (countMode) {
+    rows.sort(function (a, b) { return (b.count || 0) - (a.count || 0) || b.score - a.score || a.ts - b.ts; });
+  } else {
+    rows.sort(function (a, b) { return b.score - a.score || (b.count || 0) - (a.count || 0) || a.ts - b.ts; });
+  }
+  if (!rows.length) {
+    list.innerHTML = '<li class="upg-top__empty">Пока пусто. Инвентарь уйдёт в топ автоматически.</li>';
   } else {
     var medals = ["🥇", "🥈", "🥉"];
-    UPG_TOP.scores.slice(0, 10).forEach(function (s, i) {
+    rows.slice(0, 10).forEach(function (s, i) {
       var li = document.createElement("li");
       li.className = "upg-top__row" + (i < 3 ? " upg-top__row--" + (i + 1) : "");
       if (myName && s.name.toLowerCase() === myName.toLowerCase()) li.className += " is-me";
@@ -10048,8 +10079,19 @@ function upgTopRender() {
   if (note) {
     var t = new Date();
     var hh = ("0" + t.getHours()).slice(-2), mm = ("0" + t.getMinutes()).slice(-2);
-    note.textContent = "Демо-рейтинг · " + (UPG_TOP.online ? "обновлён " + hh + ":" + mm : "локально, без связи " + hh + ":" + mm);
+    note.textContent = "Демо-рейтинг · обновление каждые 5 сек · " + (countMode ? "по количеству предметов" : "по стоимости инвентаря") + " · " + (UPG_TOP.online ? "связь есть " + hh + ":" + mm : "локально, без связи " + hh + ":" + mm);
   }
+}
+
+function upgTopSetMode(mode) {
+  UPG_TOP.mode = mode === "count" ? "count" : "value";
+  write("prz_upg_top_mode", UPG_TOP.mode);
+  var btns = document.querySelectorAll("[data-top-mode]");
+  for (var i = 0; i < btns.length; i++) {
+    if (btns[i].getAttribute("data-top-mode") === UPG_TOP.mode) btns[i].classList.add("is-active");
+    else btns[i].classList.remove("is-active");
+  }
+  upgTopRender();
 }
 
 function upgTopPublishLive(name, score, count, ts) {
@@ -10185,7 +10227,7 @@ function upgTopSubmit(auto) {
 
 /* автозапись в топы раз в минуту: без кнопок и без ввода ника.
    Без вошедшего аккаунта ничего не отправляется. */
-var AUTO_TOP_MS = 60000;
+var AUTO_TOP_MS = 5000;
 function autoTopReady() {
   return typeof authCurrent === "function" && !!authCurrent() && !document.hidden;
 }
@@ -10209,7 +10251,12 @@ function upgTopAutoSync() {
   }
   upgTopSubmit(true);
 }
-function autoSyncAll() { lbAutoSync(); upgTopAutoSync(); }
+function autoSyncAll() {
+  lbAutoSync();
+  upgTopAutoSync();
+  if (typeof lbRender === "function") lbRender();
+  if (typeof upgTopRender === "function") upgTopRender();
+}
 
 function upgTopRestoreLocal() {
   var a = readList("prz_upg_top_local_v1");
@@ -10242,7 +10289,7 @@ function upgTopInit() {
   var inp = document.getElementById("upgTopName");
   if (inp && n && !inp.value && !nameProblem(n)) inp.value = n;
   upgTopRestoreLocal();
-  upgTopRender();
+  upgTopSetMode(UPG_TOP.mode);
   var done = function (any) {
     UPG_TOP.online = !!any;
     if (UPG_TOP.scores.length) UPG_TOP.loaded = true;
@@ -10391,6 +10438,11 @@ function initUpgrader() {
   var casePopOverlay = document.getElementById("casePopOverlay");
   if (casePopOverlay) casePopOverlay.addEventListener("click", function () { if (!CASE_POP.busy) casePopClose(); });
 
+  var upgTopModes = document.getElementById("upgTopModes");
+  if (upgTopModes) upgTopModes.addEventListener("click", function (e) {
+    var btn = upgClosest(e.target, "[data-top-mode]");
+    if (btn && typeof upgTopSetMode === "function") upgTopSetMode(btn.getAttribute("data-top-mode"));
+  });
   var upgTopSendBtn = document.getElementById("upgTopSend");
   if (upgTopSendBtn) upgTopSendBtn.addEventListener("click", function () { if (typeof upgTopSubmit === "function") upgTopSubmit(false); });
   var upgTopRefBtn = document.getElementById("upgTopRefresh");
