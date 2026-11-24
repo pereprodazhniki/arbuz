@@ -3012,7 +3012,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-revert-1";
+var APP_BUILD = "20261124-cb-fair-bots-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7595,23 +7595,10 @@ function cbSeededRng(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-function cbPickWeightedSeeded(pool, rnd, boostBest) {
+function cbPickWeightedSeeded(pool, rnd) {
   var total = 0;
-  var maxPrice = 0;
-  if (boostBest) {
-    for (var b = 0; b < pool.length; b++) {
-      var bi = upgItem(pool[b].id);
-      var bp = bi ? (Number(bi.price) || 0) : 0;
-      if (bp > maxPrice) maxPrice = bp;
-    }
-  }
   for (var i = 0; i < pool.length; i++) {
     var w = Math.max(0, Number(pool[i].w) || 0);
-    if (boostBest && maxPrice > 0) {
-      var it = upgItem(pool[i].id);
-      var p = it ? (Number(it.price) || 0) : 0;
-      w = w * (1 + 0.45 * (p / maxPrice));
-    }
     pool[i]._cbw = w;
     total += w;
   }
@@ -8455,7 +8442,7 @@ function cbStart() {
     var sum = 0;
     for (var k = 0; k < CB.picks.length; k++) {
       var cfg = cbCaseById(CB.picks[k]);
-      var did = cfg ? cbPickWeightedSeeded(cfg.pool, rnd, p > 0) : null;
+      var did = cfg ? cbPickWeightedSeeded(cfg.pool, rnd) : null;
       var it = did ? upgItem(did) : null;
       row.push(it);
       sum += it ? it.price : 0;
