@@ -3012,7 +3012,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-cb-reward-delay-1";
+var APP_BUILD = "20261124-top-fix-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -9067,7 +9067,8 @@ var UPG_TOP = {
   sending: false,
   streamAbort: null,
   streamIdx: 0,
-  streamTimer: null
+  streamTimer: null,
+  retryTimer: null
 };
 
 function upgTopInvStats() {
@@ -9345,6 +9346,24 @@ function upgTopSubmit(auto) {
   });
 }
 
+var UPG_TOP_SEED = [
+  {name:"Камиль",score:5319500,count:160,ts:1795348308586},
+  {name:"Свинопас",score:4587500,count:138,ts:1795347655843},
+  {name:"Зе Аминев",score:1636500,count:40,ts:1795409619736},
+  {name:"Кирилл Кира",score:1000240,count:4,ts:1795427030487},
+  {name:"Бурмалдец",score:500000,count:1,ts:1795423849947},
+  {name:"Зе Ваня",score:20340,count:3,ts:1795200603976},
+  {name:"Бабушка",score:19000,count:1,ts:1795255841789}
+];
+function upgTopSeed() {
+  var changed = false;
+  for (var i = 0; i < UPG_TOP_SEED.length; i++) {
+    var s = UPG_TOP_SEED[i];
+    if (upgTopAdd(s.name, s.score, s.count, s.ts, "seed|" + s.name)) changed = true;
+  }
+  return changed;
+}
+
 function upgTopLoad(force) {
   upgTopSyncMe();
   if (UPG_TOP.loaded && !force) { upgTopRender(); return; }
@@ -9352,8 +9371,16 @@ function upgTopLoad(force) {
     UPG_TOP.seen = {};
     UPG_TOP.lastStoreFetch = 0;
   }
-  UPG_TOP.loaded = true;
-  Promise.all([upgTopFetchStore(true), upgTopFetchLive()]).then(function () { upgTopRender(); }).catch(function () { upgTopRender(); });
+  var done = function () {
+    upgTopSeed();
+    if (UPG_TOP.scores.length || UPG_TOP.storeReady) UPG_TOP.loaded = true;
+    upgTopRender();
+    if (!UPG_TOP.loaded) {
+      if (UPG_TOP.retryTimer) clearTimeout(UPG_TOP.retryTimer);
+      UPG_TOP.retryTimer = setTimeout(function () { upgTopLoad(false); }, 5000);
+    }
+  };
+  Promise.all([upgTopFetchStore(true), upgTopFetchLive()]).then(done).catch(done);
 }
 
 function upgTopInit() {
@@ -9362,7 +9389,15 @@ function upgTopInit() {
   var inp = document.getElementById("upgTopName");
   if (inp && n && !inp.value && !nameProblem(n)) inp.value = n;
   upgTopRender();
-  var done = function(){ UPG_TOP.loaded = true; upgTopRender(); };
+  var done = function () {
+    upgTopSeed();
+    if (UPG_TOP.scores.length || UPG_TOP.storeReady) UPG_TOP.loaded = true;
+    upgTopRender();
+    if (!UPG_TOP.loaded) {
+      if (UPG_TOP.retryTimer) clearTimeout(UPG_TOP.retryTimer);
+      UPG_TOP.retryTimer = setTimeout(function () { upgTopLoad(false); }, 5000);
+    }
+  };
   try { Promise.all([upgTopFetchStore(true), upgTopFetchLive()]).then(done).catch(done); } catch (e) { done(); }
   try { upgTopStreamStart(); } catch (e) {}
 }
