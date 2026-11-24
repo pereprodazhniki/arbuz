@@ -2258,165 +2258,9 @@ body.light .upg-feed__who { color: #0d2b19; }
   .reveal { opacity: 0; transform: translateY(16px); transition: opacity .55s ease, transform .55s ease; }
   .reveal.is-in { opacity: 1; transform: translateY(0); }
 }
-/* ---------- ARBUZ 2.0: игровая дизайн-система ---------- */
-.logo__copy { display: flex; flex-direction: column; line-height: 1; }
-.logo__text { font-family: var(--font-display); font-size: clamp(19px, 2.4vw, 26px); font-weight: 900; letter-spacing: 1.4px; }
-.logo__sub { margin-top: 5px; color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: 1.5px; }
-.nav a.nav__hub { color: var(--lime); background: rgba(182,240,106,.1); border: 1px solid rgba(182,240,106,.18); }
-
-.hub { padding-top: 26px; }
-.section, #cbattle, #upgTop, #upgFeed, #boardPanel { scroll-margin-top: 130px; }
-@media (max-width: 900px) {
-  body { background-attachment: scroll; }
-}
-.hub__head {
-  display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4);
-  margin-bottom: var(--space-4); flex-wrap: wrap;
-}
-.hub__eyebrow {
-  display: inline-flex; align-items: center; gap: 8px; margin: 0 0 10px;
-  color: var(--lime); font-size: 11px; font-weight: 900; letter-spacing: 2.2px; text-transform: uppercase;
-}
-.hub__pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 5px rgba(47,211,95,.14); animation: hubPulse 2s infinite; }
-@keyframes hubPulse { 0%,100% { box-shadow: 0 0 0 4px rgba(47,211,95,.16); } 50% { box-shadow: 0 0 0 10px rgba(47,211,95,0); } }
-.hub__title { margin: 0; font-family: var(--font-display); font-size: clamp(30px, 4vw, 46px); line-height: 1.04; letter-spacing: -1.4px; font-weight: 900; }
-.hub__lead { margin: 10px 0 0; max-width: 62ch; color: var(--muted); font-size: 15px; }
-.hub__status {
-  display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px;
-  border: 1px solid var(--line-strong); border-radius: 999px;
-  background: rgba(12, 36, 21, .65); color: var(--muted); font-size: 12px; font-weight: 700;
-}
-.hub__status b { color: var(--lime); }
-.hub__status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 12px rgba(182,240,106,.6); }
-
-.hub__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--space-3); }
-.game-card {
-  --gc: var(--lime);
-  position: relative; isolation: isolate; overflow: hidden; min-height: 228px;
-  display: flex; flex-direction: column; gap: 10px; padding: 20px;
-  border: 1px solid var(--line-strong); border-radius: 26px;
-  background: var(--surface-glass); color: var(--text); text-decoration: none;
-  box-shadow: var(--shadow-soft);
-  transition: transform .35s var(--ease-out), border-color .35s, box-shadow .35s;
-}
-.game-card::before {
-  content: ""; position: absolute; inset: -40% -20% auto; height: 220px; z-index: -1;
-  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--gc) 26%, transparent), transparent 68%);
-  opacity: .75; transition: opacity .35s, transform .5s var(--ease-out);
-}
-.game-card::after {
-  content: ""; position: absolute; inset: 0; z-index: -1; opacity: .22;
-  background-image: linear-gradient(rgba(182,240,106,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(182,240,106,.08) 1px, transparent 1px);
-  background-size: 26px 26px; mask-image: linear-gradient(180deg, #000, transparent 78%);
-}
-.game-card--slicer { --gc: #ff8fa3; }
-.game-card--upg { --gc: var(--lime); }
-.game-card--cb { --gc: var(--green); }
-.game-card--case { --gc: #ffe07a; }
-.game-card:hover { transform: translateY(-6px); border-color: color-mix(in srgb, var(--gc) 55%, transparent); box-shadow: 0 26px 60px rgba(0,0,0,.32), 0 0 34px color-mix(in srgb, var(--gc) 16%, transparent); }
-.game-card:hover::before { opacity: 1; transform: translateY(10px) scale(1.08); }
-.game-card:active { transform: translateY(-2px) scale(.995); }
-.game-card__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.game-card__icon {
-  display: grid; place-items: center; width: 46px; height: 46px; border-radius: 16px; font-size: 24px;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--gc) 32%, transparent), rgba(255,255,255,.04));
-  border: 1px solid color-mix(in srgb, var(--gc) 38%, transparent);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 10px 24px rgba(0,0,0,.2);
-}
-.game-card__tag { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-size: 10px; font-weight: 900; letter-spacing: 1.2px; }
-.game-card__title { margin: 12px 0 0; font-family: var(--font-display); font-size: 20px; font-weight: 900; letter-spacing: -.3px; }
-.game-card__desc { color: var(--muted); font-size: 13px; line-height: 1.5; }
-.game-card__foot { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.game-card__meta { color: var(--muted); font-size: 11px; font-weight: 700; }
-.game-card__go { color: var(--gc); font-size: 13px; font-weight: 900; }
-
-.hub__side { display: grid; grid-template-columns: 1.35fr 1fr; gap: var(--space-3); margin-top: var(--space-3); }
-.hub-panel { padding: 20px; border: 1px solid var(--line); border-radius: 24px; background: var(--surface); box-shadow: var(--shadow-soft); }
-.hub-panel__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
-.hub-panel__head h3 { margin: 0; font-family: var(--font-display); font-size: 16px; font-weight: 900; }
-.hub-panel__head span { color: var(--muted); font-size: 11px; font-weight: 700; }
-.hub-links { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.hub-links a {
-  display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px;
-  border: 1px solid transparent; background: rgba(0,0,0,.14); color: var(--text); text-decoration: none;
-  font-size: 13px; font-weight: 700; transition: background .2s, border-color .2s, transform .2s;
-}
-.hub-links a:hover { background: rgba(182,240,106,.08); border-color: var(--line-strong); transform: translateX(3px); }
-.hub-links i { font-style: normal; font-size: 17px; }
-.hub-links small { margin-left: auto; color: var(--muted); font-size: 11px; font-weight: 700; text-align: right; }
-.hub-balance { display: flex; align-items: baseline; gap: 10px; margin: 8px 0 12px; }
-.hub-balance b { font-family: var(--font-display); font-size: clamp(32px, 4vw, 46px); line-height: 1; color: var(--lime); }
-.hub-balance span { color: var(--muted); font-size: 12px; }
-.hub__fineprint { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
-body.light .hub__status { background: #fff; }
-body.light .hub-links a { background: rgba(18,128,60,.06); }
-
-.profile__layout { display: grid; gap: var(--space-3); }
-.profile__hero {
-  display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap;
-  padding: 24px; border: 1px solid var(--line-strong); border-radius: 28px;
-  background: var(--surface-glass); box-shadow: var(--shadow-soft); position: relative; overflow: hidden;
-}
-.profile__hero::before {
-  content: ""; position: absolute; inset: -60% auto auto -10%; width: 460px; height: 460px; pointer-events: none;
-  background: radial-gradient(circle, rgba(182,240,106,.18), transparent 65%);
-}
-.profile__id { display: flex; align-items: center; gap: 18px; position: relative; z-index: 1; }
-.profile__avatar .wm-ava { font-size: 48px; box-shadow: 0 14px 34px rgba(0,0,0,.3); }
-.profile__eyebrow { margin: 0 0 4px; color: var(--lime); font-size: 10px; font-weight: 900; letter-spacing: 1.8px; text-transform: uppercase; }
-.profile__name { margin: 0; font-family: var(--font-display); font-size: clamp(24px, 3vw, 34px); line-height: 1.1; letter-spacing: -.8px; }
-.profile__level { margin: 6px 0 10px; color: var(--muted); font-size: 13px; font-weight: 700; }
-.profile__level b { color: var(--lime); }
-.profile__bar { width: min(280px, 60vw); height: 7px; border-radius: 999px; background: rgba(0,0,0,.3); overflow: hidden; border: 1px solid var(--line); }
-.profile__bar span { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--green), var(--lime)); box-shadow: 0 0 14px rgba(182,240,106,.45); transition: width .5s var(--ease-out); }
-.profile__wallet { position: relative; z-index: 1; display: grid; gap: 8px; justify-items: flex-start; }
-.profile__wallet span { color: var(--muted); font-size: 12px; font-weight: 700; }
-.profile__wallet b { font-family: var(--font-display); font-size: clamp(30px, 4vw, 42px); line-height: 1; color: var(--lime); }
-.profile__stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-.profile-stat { padding: 16px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); }
-.profile-stat b { display: block; font-family: var(--font-display); font-size: 24px; color: var(--text); }
-.profile-stat span { color: var(--muted); font-size: 11px; font-weight: 700; }
-.profile__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
-.profile__panel { padding: 20px; border: 1px solid var(--line); border-radius: 24px; background: var(--surface); }
-.profile__panel--wide { grid-column: 1 / -1; }
-.profile__panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
-.profile__panel-head h3 { margin: 0; font-family: var(--font-display); font-size: 16px; font-weight: 900; }
-.profile__panel-head span { color: var(--muted); font-size: 11px; font-weight: 700; }
-.profile__badges { display: flex; flex-wrap: wrap; gap: 8px; }
-.profile-badge { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line-strong); background: rgba(182,240,106,.08); color: var(--text); font-size: 12px; font-weight: 800; }
-.profile-badge.is-locked { border-color: var(--line); background: rgba(0,0,0,.14); color: var(--muted); opacity: .65; }
-.profile__inventory { display: flex; flex-wrap: wrap; gap: 8px; min-height: 54px; }
-.profile-item { display: inline-flex; align-items: center; gap: 7px; padding: 7px 11px; border-radius: 14px; background: rgba(0,0,0,.16); border: 1px solid var(--line); font-size: 12px; font-weight: 700; }
-.profile-item i { font-style: normal; font-size: 18px; }
-.profile-item b { color: var(--lime); font-size: 11px; }
-.profile__empty { color: var(--muted); font-size: 13px; }
-.profile__history { display: grid; gap: 7px; }
-.profile-hist { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 12px; background: rgba(0,0,0,.14); font-size: 12px; }
-.profile-hist__mark { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; background: var(--red); }
-.profile-hist.is-win .profile-hist__mark { background: var(--lime); box-shadow: 0 0 10px rgba(182,240,106,.5); }
-.profile-hist__who { color: var(--muted); margin-left: auto; font-size: 11px; }
-body.light .profile-stat, body.light .profile__panel { background: #fff; }
-
-@media (max-width: 900px) {
-  .hub__side, .profile__grid { grid-template-columns: 1fr; }
-  .profile__panel--wide { grid-column: auto; }
-}
-@media (max-width: 720px) {
-  .section { scroll-margin-top: 158px; }
-  .logo__sub { display: none; }
-  .hub__head { align-items: flex-start; }
-  .hub__status { width: 100%; justify-content: flex-start; }
-  .hub__grid { grid-template-columns: 1fr; }
-  .game-card { min-height: 190px; padding: 18px; }
-  .profile__hero { align-items: flex-start; padding: 18px; }
-  .profile__id { width: 100%; align-items: flex-start; }
-  .profile__avatar .wm-ava { font-size: 38px; }
-  .profile__wallet { width: 100%; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .game-card, .game-card::before, .hub-links a { transition: none; }
-  .hub__pulse { animation: none; }
-}
+/* QA: якоря не прячутся под шапкой, фон на мобильных не тормозит */
+.section, #cbattle, #upgTop, #upgFeed, #boardPanel { scroll-margin-top: 100px; }
+@media (max-width: 900px) { body { background-attachment: scroll; } }
 </style>
 </head>
 <body>
@@ -2429,24 +2273,18 @@ body.light .profile-stat, body.light .profile__panel { background: #fff; }
 </div>
 
 <header class="header">
-  <a class="logo" href="#top" aria-label="ARBUZ 2.0 — на главную">
+  <a class="logo" href="#top">
     <span class="logo__melon">🍉</span>
-    <span class="logo__copy">
-      <span class="logo__text">ARBUZ</span>
-      <span class="logo__sub">PEREPRODAZHNIKI · 2.0</span>
-    </span>
+    <span class="logo__text">Pereprodazhniki</span>
   </a>
-  <nav class="nav" aria-label="Основная навигация">
-    <a class="nav__hub" href="#hub">Хаб</a>
-    <a href="#profile">Профиль</a>
+  <nav class="nav">
     <a href="#catalog">Каталог</a>
-    <a href="#game">Игра</a>
-    <a href="#upgrader">Апгрейдер</a>
-    <a href="#cbattle">Батлы</a>
     <a href="#memes">Мемы</a>
     <a href="#how">Доставка</a>
     <a href="#team">Команда</a>
     <a href="#reviews">Отзывы</a>
+    <a href="#game">Игра</a>
+    <a href="#upgrader">Апгрейдер</a>
   </nav>
   <div class="music" id="musicBox">
     <button class="music__btn" id="musicBtn" type="button" title="Музыка" aria-expanded="false" aria-controls="musicPanel">🎵</button>
@@ -2521,105 +2359,6 @@ body.light .profile-stat, body.light .profile__panel { background: #fff; }
       </div>
       <p class="quest__reward" id="questReward" hidden></p>
     </aside>
-  </section>
-
-  <section class="hub section" id="hub" aria-labelledby="hubTitle">
-    <div class="hub__head">
-      <div>
-        <p class="hub__eyebrow"><span class="hub__pulse" aria-hidden="true"></span> ARBUZ ARCADE · СЕЗОН 2026</p>
-        <h2 class="hub__title" id="hubTitle">Выбери свою игру</h2>
-        <p class="hub__lead">Четыре режима, одна арбузная вселенная. Заходи, играй и собирай виртуальные трофеи.</p>
-      </div>
-      <div class="hub__status"><span class="hub__status-dot" aria-hidden="true"></span> Демо-платформа · <b>без реальных ставок</b></div>
-    </div>
-
-    <div class="hub__grid">
-      <a class="game-card game-card--slicer" href="#game">
-        <span class="game-card__top"><span class="game-card__icon" aria-hidden="true">🔪</span><span class="game-card__tag">ARCADE</span></span>
-        <b class="game-card__title">ARBUZ SLICER</b>
-        <span class="game-card__desc">Режь арбузы, лови комбо и обновляй личный рекорд.</span>
-        <span class="game-card__foot"><span class="game-card__meta">мышь · тач</span><span class="game-card__go">Играть →</span></span>
-      </a>
-      <a class="game-card game-card--upg" href="#upgrader">
-        <span class="game-card__top"><span class="game-card__icon" aria-hidden="true">🎯</span><span class="game-card__tag">RNG</span></span>
-        <b class="game-card__title">ARBUZ UPGRADER</b>
-        <span class="game-card__desc">Собирай предметы, крути колесо и апгрейдь до легендарки.</span>
-        <span class="game-card__foot"><span class="game-card__meta">1–3 предмета</span><span class="game-card__go">Апгрейдить →</span></span>
-      </a>
-      <a class="game-card game-card--cb" href="#cbattle">
-        <span class="game-card__top"><span class="game-card__icon" aria-hidden="true">⚔️</span><span class="game-card__tag">PVP ДЕМО</span></span>
-        <b class="game-card__title">CASE BATTLE</b>
-        <span class="game-card__desc">Комнаты, боты и друзья. Локальная симуляция без сервера.</span>
-        <span class="game-card__foot"><span class="game-card__meta">создать · Joining</span><span class="game-card__go">В бой →</span></span>
-      </a>
-      <a class="game-card game-card--case" href="#lottery">
-        <span class="game-card__top"><span class="game-card__icon" aria-hidden="true">🎁</span><span class="game-card__tag">EVENT</span></span>
-        <b class="game-card__title">КЕЙСЫ И РОЗЫГРЫШ</b>
-        <span class="game-card__desc">Бесплатные кейсы, сезонные розыгрыши и сюрпризы.</span>
-        <span class="game-card__foot"><span class="game-card__meta">виртуальные предметы</span><span class="game-card__go">Попробовать →</span></span>
-      </a>
-    </div>
-
-    <div class="hub__side">
-      <article class="hub-panel">
-        <div class="hub-panel__head"><h3>Активность платформы</h3><span>короткие пути</span></div>
-        <ul class="hub-links">
-          <li><a href="#profile"><i aria-hidden="true">👤</i> Мой профиль <small>уровень и достижения</small></a></li>
-          <li><a href="#upgFeed"><i aria-hidden="true">📡</i> Последние события <small>лента апгрейдов</small></a></li>
-          <li><a href="#upgTop"><i aria-hidden="true">🏆</i> Рейтинг игроков <small>локальный топ</small></a></li>
-          <li><a href="#boardPanel"><i aria-hidden="true">🔪</i> Рекорды Slicer <small>таблица лидеров</small></a></li>
-          <li><a href="#buyers"><i aria-hidden="true">🚚</i> Покупатели <small>доставка и отзывы</small></a></li>
-        </ul>
-      </article>
-      <article class="hub-panel">
-        <div class="hub-panel__head"><h3>Твой баланс</h3><span>демо-значение</span></div>
-        <div class="hub-balance"><b id="hubBalance">0 ₽</b><span>виртуальные очки</span></div>
-        <p class="hub__fineprint">Баланс хранится только в этом браузере. Пополнение и вывод средств отсутствуют.</p>
-        <ul class="hub-links">
-          <li><a href="#upgrader"><i aria-hidden="true">🎁</i> Бесплатный кейс <small>раз в 25 секунд</small></a></li>
-          <li><a href="#upgrader"><i aria-hidden="true">💱</i> Обменять очки <small>внутри апгрейдера</small></a></li>
-        </ul>
-      </article>
-    </div>
-  </section>
-
-  <section class="section profile" id="profile" aria-labelledby="profileTitle">
-    <div class="profile__layout">
-      <article class="profile__hero">
-        <div class="profile__id">
-          <div class="profile__avatar" id="profileAvatar" aria-hidden="true"></div>
-          <div class="profile__idtext">
-            <p class="profile__eyebrow">Игрок · локальный профиль</p>
-            <h2 class="profile__name" id="profileTitle"><span id="profileName">Игрок</span></h2>
-            <p class="profile__level">Уровень <b id="profileLevel">1</b> · <span id="profileExp">0</span> XP</p>
-            <div class="profile__bar" role="progressbar" aria-label="Прогресс уровня" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="profileBarBox"><span id="profileBar"></span></div>
-          </div>
-        </div>
-        <div class="profile__wallet">
-          <span>Виртуальный баланс</span>
-          <b id="profileBalance">0 ₽</b>
-          <a class="btn btn--ghost" href="#upgrader">Потратить в игре</a>
-        </div>
-      </article>
-
-      <div class="profile__stats" id="profileStats"></div>
-
-      <div class="profile__grid">
-        <article class="profile__panel">
-          <div class="profile__panel-head"><h3>Достижения</h3><span>открываются по игре</span></div>
-          <div class="profile__badges" id="profileBadges"></div>
-        </article>
-        <article class="profile__panel">
-          <div class="profile__panel-head"><h3>Инвентарь</h3><span><span id="profileInvCount">0</span> предметов</span></div>
-          <div class="profile__inventory" id="profileInventory"></div>
-        </article>
-        <article class="profile__panel profile__panel--wide">
-          <div class="profile__panel-head"><h3>История апгрейдов</h3><span>последние попытки</span></div>
-          <div class="profile__history" id="profileHistory"></div>
-          <p class="hub__fineprint">История Case Battle публикуется в общей ленте событий и не хранится отдельно в этом браузере.</p>
-        </article>
-      </div>
-    </div>
   </section>
 
   <section class="section" id="catalog">
@@ -2707,7 +2446,7 @@ body.light .profile-stat, body.light .profile__panel { background: #fff; }
 
   <section class="section" id="quiz">
     <h2 class="section__title">Проверь себя, арбузник</h2>
-    <p class="section__sub">5 вопросов. Отвечай честно, бабушка всё равно узнает.</p>
+    <p class="section__sub">6 вопросов. Отвечай честно, бабушка всё равно узнает.</p>
     <div class="quiz" id="quizBox">
       <p class="quiz__q" id="quizQ">Нажми «Начать», когда будешь готов.</p>
       <div class="quiz__options" id="quizOptions"></div>
@@ -2859,6 +2598,12 @@ body.light .profile-stat, body.light .profile__panel { background: #fff; }
         <p class="person__role">Курьер</p>
         <p class="person__note">Довозит арбуз быстрее, чем бабушка успевает спросить «а подешевле?». Знает все дворы района наизусть и ни один лежачий полицейский её ещё не остановил. Пока что.</p>
       </article>
+      <article class="person">
+        <span class="person__ava">🐷</span>
+        <h3 class="person__name">Никита</h3>
+        <p class="person__role">Специалист по свиным арбузам</p>
+        <p class="person__note">Опознаёт свиной арбуз по голосу, весу и подозрительному блеску. Проверяет каждую партию, вежливо объясняет бабушкам, что «просто арбуз» — не ответ, и лично подписывает главную гарантию: халяль — всё, кроме свиного.</p>
+      </article>
     </div>
   </section>
 
@@ -2988,7 +2733,7 @@ body.light .profile-stat, body.light .profile__panel { background: #fff; }
       <div class="game__combo"><i id="gameComboFill"></i></div>
 
       <div class="game__stage">
-        <canvas id="gameCanvas" width="900" height="460" aria-label="Игра: режь арбузы"></canvas>
+        <canvas id="gameCanvas" width="900" height="460" tabindex="0" aria-label="Игра: режь арбузы мышью или клавишей Пробел"></canvas>
         <div class="game__overlay" id="gameOverlay">
           <p class="game__big" id="gameOverTitle">Готов резать?</p>
           <p class="game__hint" id="gameOverHint">Тащи мышкой по арбузам. Свиной 🐷 — не трогай, будет взрыв. Имя выбирается один раз — потом результат обновляется, только если побьёшь свой рекорд.</p>
@@ -3015,7 +2760,7 @@ body.light .profile-stat, body.light .profile__panel { background: #fff; }
     <div class="board" id="boardPanel" hidden>
       <div class="board__head">
         <b>Топ-10</b>
-        <span id="boardNote">общий для всех</span>
+        <span id="boardNote">демо-лента · без проверки сервера</span>
       </div>
       <ol class="board__list" id="boardList"><li class="board__empty">Пока пусто. Стань первым!</li></ol>
     </div>
@@ -3098,7 +2843,7 @@ body.light .profile-stat, body.light .profile__panel { background: #fff; }
         </div>
         <div class="upg-top__me" id="upgTopMe">Твой инвентарь: <b id="upgTopMyVal">0 ₽</b> · <b id="upgTopMyCnt">0</b> шт. <span id="upgTopHint"></span></div>
         <ol class="upg-top__list" id="upgTopList"><li class="upg-top__empty">Пока пусто. Отправь свой инвентарь первым!</li></ol>
-        <p class="upg-top__note" id="upgTopNote">Рейтинг общий для всех. Считается суммарная стоимость твоего инвентаря в апгрейдере.</p>
+        <p class="upg-top__note" id="upgTopNote">Демо-рейтинг: лента без проверки сервером. Считается суммарная стоимость твоего инвентаря в апгрейдере.</p>
       </div>
 
       <div class="upg-bcases" id="upgBcases">
@@ -3196,12 +2941,11 @@ body.light .profile-stat, body.light .profile__panel { background: #fff; }
   <p class="footer__note">Сайт собрал Камиль. Арбузы привёз Тимур Беленький. Халяль-гарантию подписал Тимур Аминев.</p>
   <p class="footer__note">Сайт является шуткой. Арбузы настоящие.</p>
   <p class="footer__note">Демо-режим: балансы и предметы игровые, реальных ставок и вывода нет. Онлайн-рейтинги и лента используют публичные сервисы уведомлений; если внешний сервис недоступен, данные работают локально на устройстве.</p>
-  <div style="text-align:center;margin-top:10px;opacity:.18"><input id="upgPromo" type="text" autocomplete="off" spellcheck="false" style="width:88px;max-width:30vw;padding:2px 4px;border:none;border-bottom:1px solid rgba(255,255,255,.1);background:transparent;color:var(--muted,#9aa);font:inherit;font-size:11px;outline:none;text-align:center" aria-label=""></div>
 </footer>
 
 <!-- Корзина -->
 <div class="cart" id="cart" hidden>
-  <div class="cart__panel" role="dialog" aria-label="Корзина">
+  <div class="cart__panel" role="dialog" aria-modal="true" aria-label="Корзина" tabindex="-1" id="cartPanel">
     <div class="cart__head">
       <h3>Корзина</h3>
       <button class="cart__close" id="cartClose" type="button" aria-label="Закрыть" onclick="closeCart()">✕</button>
@@ -3258,7 +3002,7 @@ body.light .profile-stat, body.light .profile__panel { background: #fff; }
 
 <div class="casepop" id="casePop" hidden>
   <div class="casepop__overlay" id="casePopOverlay"></div>
-  <div class="casepop__panel" role="dialog" aria-modal="true" aria-label="Открытие кейса">
+  <div class="casepop__panel" role="dialog" aria-modal="true" aria-label="Открытие кейса" tabindex="-1" id="casePopPanel">
     <h3 class="casepop__title" id="casePopTitle">Открытие кейса</h3>
     <p class="casepop__sub" id="casePopSub">Крутим...</p>
     <div class="casepop__roll" id="casePopRoll">
@@ -3278,7 +3022,7 @@ body.light .profile-stat, body.light .profile__panel { background: #fff; }
   </div>
 </div>
 
-<div class="toast" id="toast" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script>
 /* Pereprodazhniki — вся логика: каталог, корзина, заказ, отзывы, шутки */
@@ -3380,7 +3124,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-arbuz2-profile-1";
+var APP_BUILD = "20261124-fixes-revert-1";
 
 var cart = read(STORE.cart, {});
 if (!cart || typeof cart !== "object" || Array.isArray(cart)) cart = {};
@@ -3709,7 +3453,8 @@ var QUIZ = [
   { q: "Кто у нас отвечает на звонки?", a: ["Камиль", "Карина", "Сафия"], correct: 1 },
   { q: "Какой арбуз у нас НЕ халяльный?", a: ["Ночной", "Свиной", "Медовый"], correct: 1 },
   { q: "Кто решает поставки арбузов?", a: ["Тимур Аминев", "Тимур Беленький", "Юля"], correct: 1 },
-  { q: "Сколько арбузов съедает бабушка за лето?", a: ["Один", "Все, что привезли", "Ноль"], correct: 1 }
+  { q: "Сколько арбузов съедает бабушка за лето?", a: ["Один", "Все, что привезли", "Ноль"], correct: 1 },
+  { q: "Кто у нас специалист по свиным арбузам?", a: ["Никита", "Камиль", "Кира"], correct: 0 }
 ];
 var quizIndex = 0, quizScore = 0;
 
@@ -4579,6 +4324,8 @@ function openCart() {
   c.hidden = false;
   c.classList.add("is-open");
   document.body.style.overflow = "hidden";
+  var panel = document.getElementById("cartPanel");
+  if (panel && panel.focus) panel.focus();
   if (typeof renderPayMode === "function") renderPayMode();
 }
 
@@ -4646,9 +4393,11 @@ function orderTooFast() {
     var left = Math.ceil((MIN_ORDER_GAP_MS - (now - last)) / 1000);
     return "Слишком быстро! Подожди " + left + " сек. и попробуй снова.";
   }
-
-  try { localStorage.setItem("prz_last_order", String(now)); } catch (e) {}
   return null;
+}
+
+function markOrderSent() {
+  try { localStorage.setItem("prz_last_order", String(Date.now())); } catch (e) {}
 }
 
 function checkout() {
@@ -4657,7 +4406,6 @@ function checkout() {
 
   if (cartCount() === 0) {
     note.textContent = "Сначала положи арбуз в корзину.";
-    toast("Корзина пуста");
     return;
   }
   checkoutBusy = true;
@@ -4684,7 +4432,6 @@ function checkout() {
     var balNow = (typeof UPG !== "undefined" && UPG) ? (Number(UPG.balance) || 0) : 0;
     if (balNow < total) {
       note.textContent = "Недостаточно баланса: нужно " + money(total) + ", у тебя " + money(balNow) + ". Выведи арбузы из апгрейдера или выбери обычную оплату.";
-      toast("Недостаточно баланса");
       return;
     }
   }
@@ -4721,18 +4468,17 @@ function checkout() {
 
   addSold(count);
   pushToServer(name, count, orderNo);
+  markOrderSent();
   if (questCodeUsed && quest.zina && !quest.done) unlockSecretProduct();
   showReceipt(receipt);
   renderCart();
   note.textContent = "";
   closeCart();
 
-  toast("Заказ " + orderNo + " на " + money(total) + ". Арбузов: " + count + ". " + (paidWithBalance ? "Оплачено балансом сайта." : "Позвоним на +7" + phone.slice(0, 10)));
-
-  if (usedCoupon) {
-    toast("Промокод «" + usedCoupon + "» сработал на этот заказ. Следующий — вводи заново.");
-  }
-  toast("Счётчик продаж: " + sold + " арбузов 🍉");
+  toast("Заказ " + orderNo + " на " + money(total) + ". Арбузов: " + count + ". " +
+    (paidWithBalance ? "Оплачено балансом сайта." : "Позвоним на +7" + phone.slice(0, 10)) +
+    " Всего продано: " + sold + " 🍉" +
+    (usedCoupon ? ". Промокод «" + usedCoupon + "» использован." : ""));
 
   /* промокод одноразовый: на следующий заказ его нужно ввести снова */
   coupon = null;
@@ -4843,6 +4589,16 @@ var NAME_SET = {};
     if (NAME_WORDS[i]) NAME_SET[NAME_WORDS[i]] = true;
   }
 })();
+
+/* экранирование для innerHTML: имена приходят из публичной ленты */
+function escHtml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 /* приводим имя к аккуратному виду: «иван петров» → «Иван Петров» */
 function normalizeName(s) {
@@ -5171,37 +4927,91 @@ var PRIZES = [
   { weight: 10, text: "Подарок: самый дешёвый арбуз добавлен в корзину!", gift: true }
 ];
 
+var LOTTERY_COOLDOWN_MS = 15000;
+var LOTTERY_GIFT_GAP_MS = 86400000;
+var lotteryBusy = false;
+
+function lotteryRenderLog(entries) {
+  var log = document.getElementById("lotteryLog");
+  if (!log) return;
+  log.innerHTML = "";
+  var list = Array.isArray(entries) ? entries : [];
+  for (var i = 0; i < list.length && i < 5; i++) {
+    var li = document.createElement("li");
+    li.textContent = String(list[i] || "");
+    log.appendChild(li);
+  }
+}
+
+function lotteryLeft() {
+  var last = 0;
+  try { last = parseInt(localStorage.getItem("prz_lottery_last") || "0", 10) || 0; } catch (e) {}
+  return Math.max(0, LOTTERY_COOLDOWN_MS - (Date.now() - last));
+}
+
+function lotteryUpdateBtn() {
+  var btn = document.getElementById("lotteryBtn");
+  if (!btn) return;
+  var left = lotteryLeft();
+  btn.disabled = lotteryBusy || left > 0;
+  btn.textContent = left > 0 ? "Подожди " + Math.ceil(left / 1000) + " с" : "Крутить барабан";
+}
+
 function spin() {
+  if (lotteryBusy) return;
+  var left = lotteryLeft();
+  if (left > 0) {
+    var resultWait = document.getElementById("lotteryResult");
+    if (resultWait) resultWait.textContent = "Подожди " + Math.ceil(left / 1000) + " с перед следующим вращением.";
+    lotteryUpdateBtn();
+    return;
+  }
+
+  lotteryBusy = true;
+  var now = Date.now();
+  try { localStorage.setItem("prz_lottery_last", String(now)); } catch (e) {}
+  lotteryUpdateBtn();
+
   var total = 0;
   PRIZES.forEach(function (p) { total += p.weight; });
-
   var roll = Math.random() * total;
   var acc = 0;
   var chosen = PRIZES[0];
-
   for (var i = 0; i < PRIZES.length; i++) {
     acc += PRIZES[i].weight;
     if (roll <= acc) { chosen = PRIZES[i]; break; }
   }
 
-  document.getElementById("lotteryResult").textContent = chosen.text;
-
+  var text = chosen.text;
   if (chosen.gift) {
-    var cheapest = PRODUCTS[0];
-    for (var j = 1; j < PRODUCTS.length; j++) {
-      if (PRODUCTS[j].price < cheapest.price) cheapest = PRODUCTS[j];
+    var giftAt = 0;
+    try { giftAt = parseInt(localStorage.getItem("prz_lottery_gift_at") || "0", 10) || 0; } catch (e) {}
+    if (now - giftAt < LOTTERY_GIFT_GAP_MS) {
+      text = "Подарок сегодня уже был — в этот раз просто улыбнулись.";
+    } else {
+      try { localStorage.setItem("prz_lottery_gift_at", String(now)); } catch (e) {}
+      var cheapest = PRODUCTS[0];
+      for (var j = 1; j < PRODUCTS.length; j++) {
+        if (PRODUCTS[j].price < cheapest.price) cheapest = PRODUCTS[j];
+      }
+      cart[cheapest.id] = (cart[cheapest.id] || 0) + 1;
+      write(STORE.cart, cart);
+      renderCart();
     }
-    cart[cheapest.id] = (cart[cheapest.id] || 0) + 1;
-    write(STORE.cart, cart);
-    renderCart();
   }
 
-  var log = document.getElementById("lotteryLog");
-  var li = document.createElement("li");
-  li.textContent = chosen.text;
-  log.insertBefore(li, log.firstChild);
+  var result = document.getElementById("lotteryResult");
+  if (result) result.textContent = text;
 
-  while (log.children.length > 5) log.removeChild(log.lastChild);
+  var entries = read("prz_lottery_log", []);
+  if (!Array.isArray(entries)) entries = [];
+  entries.unshift(text);
+  entries = entries.slice(0, 5);
+  write("prz_lottery_log", entries);
+  lotteryRenderLog(entries);
+
+  lotteryBusy = false;
+  lotteryUpdateBtn();
 }
 
 /* ---------- отсчёт до конца сезона ---------- */
@@ -6318,7 +6128,7 @@ function gameStart() {
 
   document.getElementById("gameOverlay").hidden = true;
   document.getElementById("gameOverTitle").textContent = "Готов резать?";
-  document.getElementById("gameOverHint").textContent = "Тащи мышкой по арбузам. Свиной 🐷 — не трогай, будет взрыв.";
+  document.getElementById("gameOverHint").textContent = "Тащи мышкой по арбузам или жми пробел на поле. Свиной 🐷 — не трогай, будет взрыв.";
   document.getElementById("gameStart").textContent = "Играть";
   document.getElementById("gamePause").textContent = "⏸";
   lbHideSend();
@@ -6337,7 +6147,7 @@ function gameTogglePause() {
     document.getElementById("gamePause").textContent = "⏸";
     document.getElementById("gameOverlay").hidden = true;
     document.getElementById("gameOverTitle").textContent = "Готов резать?";
-    document.getElementById("gameOverHint").textContent = "Тащи мышкой по арбузам. Свиной 🐷 — не трогай, будет взрыв.";
+    document.getElementById("gameOverHint").textContent = "Тащи мышкой по арбузам или жми пробел на поле. Свиной 🐷 — не трогай, будет взрыв.";
     document.getElementById("gameStart").textContent = "Играть";
     lbHideSend();
     GAME.lastTs = 0;
@@ -6380,7 +6190,7 @@ function gameOver() {
   } else if (GAME.score > 0) {
     hint += own
       ? '<br><span class="game__small">В рейтинге у тебя ' + own.best + ". Побей — и результат обновится.</span>"
-      : '<br><span class="game__small">Результат можно отправить в общий рейтинг.</span>';
+      : '<br><span class="game__small">Результат можно отправить в демо-рейтинг.</span>';
   }
 
   document.getElementById("gameOverTitle").textContent = "Игра окончена";
@@ -6531,6 +6341,22 @@ function sfxUiNear() {
   playTone(1318.5, t + 0.06, 0.09, "sine", 0.06, MUSIC.sfxGain);
 }
 
+/* клавиатурный доступ к игре: пробел/Enter режет ближайший безопасный арбуз */
+function gameSliceNearest() {
+  if (!GAME.running || GAME.paused || !GAME.objects.length) return;
+  var best = null;
+  var bestD = Infinity;
+  for (var i = 0; i < GAME.objects.length; i++) {
+    var o = GAME.objects[i];
+    if (!o || o.type === "bomb") continue;
+    var dx = o.x - GAME.canvas.width / 2;
+    var dy = o.y - GAME.canvas.height / 2;
+    var d = dx * dx + dy * dy;
+    if (d < bestD) { bestD = d; best = o; }
+  }
+  if (best) sliceMelon(best);
+}
+
 function initGame() {
   var canvas = document.getElementById("gameCanvas");
   if (!canvas) return;
@@ -6546,6 +6372,12 @@ function initGame() {
   canvas.addEventListener("pointerup", gamePointerUp);
   canvas.addEventListener("pointercancel", gamePointerUp);
   window.addEventListener("pointerup", gamePointerUp);
+  canvas.addEventListener("keydown", function (e) {
+    if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      gameSliceNearest();
+    }
+  });
 
   document.getElementById("gameStart").addEventListener("click", function () {
     if (GAME.running && GAME.paused) gameTogglePause();
@@ -6603,12 +6435,6 @@ var LB = {
     "https://cdn.jsdelivr.net/gh/pereprodazhniki/arbuz@main/leaderboard.json",
     "https://raw.githubusercontent.com/pereprodazhniki/arbuz/main/leaderboard.json"
   ],
-  /* общий архив рейтинга: пишется из браузера игрока, доступен всем */
-  storeUrl: "https://api.restful-api.dev/objects/ff808181a09d98f701a1c3fb7d577947",
-  storeReady: false,
-  storeScores: null,
-  lastStoreFetch: 0,
-  lastPush: 0,
   scores: [],
   seen: {},
   lastSent: read("prz_lb_last", 0) || 0,
@@ -6660,102 +6486,6 @@ function lbAdd(name, score, ts, key) {
   });
   if (LB.scores.length > 50) LB.scores.length = 50;
   return true;
-}
-
-/* приводим список к одному виду: без мусора, по одному лучшему результату на имя */
-function lbNormalizeList(arr) {
-  if (!Array.isArray(arr)) return [];
-
-  var map = {};
-  var out = [];
-
-  for (var i = 0; i < arr.length; i++) {
-    var s = arr[i];
-    if (!s) continue;
-
-    var name = normalizeName(s.name);
-    var score = parseInt(s.score, 10);
-    var ts = parseInt(s.ts, 10) || 0;
-
-    if (nameProblem(name)) continue;
-    if (!isFinite(score) || score <= 0 || score > 1000000) continue;
-
-    var low = name.toLowerCase();
-    if (!map[low] || score > map[low].score) {
-      map[low] = { name: name, score: score, ts: ts };
-    }
-  }
-
-  for (var k in map) {
-    if (Object.prototype.hasOwnProperty.call(map, k)) out.push(map[k]);
-  }
-
-  out.sort(function (a, b) {
-    return b.score - a.score || a.ts - b.ts;
-  });
-  if (out.length > 50) out.length = 50;
-  return out;
-}
-
-/* читаем общий архив рейтинга (не чаще раза в минуту — у сервиса лимит запросов) */
-function lbFetchStore(force) {
-  var now = Date.now();
-  if (!force && now - LB.lastStoreFetch < 60000) return Promise.resolve(false);
-  LB.lastStoreFetch = now;
-
-  return fetchT(LB.storeUrl, { cache: "no-store" }, 8000)
-    .then(function (r) { return r.ok ? r.json() : null; })
-    .then(function (data) {
-      if (!data) return false;
-
-      var arr = (data.data && data.data.scores) || data.scores || [];
-      if (!Array.isArray(arr)) return false;
-
-      LB.storeReady = true;
-      LB.storeScores = lbNormalizeList(arr);
-
-      var changed = false;
-      for (var i = 0; i < arr.length; i++) {
-        var s = arr[i];
-        if (!s) continue;
-        if (lbAdd(s.name, s.score, s.ts || 0, "s|" + (s.name || "") + "|" + s.score + "|" + (s.ts || 0))) changed = true;
-      }
-      if (changed) lbRender();
-      return true;
-    })
-    .catch(function () { return false; });
-}
-
-/* сохраняем общий архив: любой браузер может дописать новые результаты */
-function lbPushStore(force) {
-  if (!LB.storeReady) return Promise.resolve(false);
-
-  var scores = lbNormalizeList(LB.scores);
-  if (!scores.length) return Promise.resolve(false);
-
-  var json = JSON.stringify(scores);
-  if (!force && LB.storeScores && JSON.stringify(LB.storeScores) === json) {
-    return Promise.resolve(false);
-  }
-
-  var now = Date.now();
-  if (!force && now - LB.lastPush < 60000) return Promise.resolve(false);
-  LB.lastPush = now;
-
-  return fetchT(LB.storeUrl, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      name: "prz-liga",
-      data: { updated: new Date().toISOString(), scores: scores }
-    })
-  }, 8000)
-    .then(function (r) {
-      if (!r.ok) throw new Error("bad status");
-      LB.storeScores = scores;
-      return true;
-    })
-    .catch(function () { return false; });
 }
 
 function lbRender() {
@@ -6913,8 +6643,8 @@ function lbLoad() {
     var ok = res[0] || res[1];
     var time = new Date();
     lbNote(ok
-      ? "общий для всех · " + ("0" + time.getHours()).slice(-2) + ":" + ("0" + time.getMinutes()).slice(-2)
-      : "общий для всех · нет связи");
+      ? "демо-лента · " + ("0" + time.getHours()).slice(-2) + ":" + ("0" + time.getMinutes()).slice(-2)
+      : "демо-лента · нет связи, только локально");
   });
 }
 
@@ -6997,7 +6727,7 @@ function lbShowSend(auto) {
     if (note) {
       note.textContent = saved
         ? "Проверь имя и отправь результат."
-        : "Введи настоящее имя выше — и результат уйдёт в общий рейтинг.";
+        : "Введи настоящее имя выше — и результат уйдёт в демо-рейтинг.";
     }
   }
 }
@@ -7008,12 +6738,11 @@ function lbOnGameOver(isRecord) {
   if (share) share.hidden = GAME.score <= 0;
   if (GAME.score <= 0) return;
 
+  /* результат отправляется только по явному нажатию кнопки */
   var own = lbOwn();
   if (own) {
-    /* устройство уже отметилось: имя не меняем, результат только улучшаем */
     LB.name = own.name;
-    lbShowSend(GAME.score > own.best);
-    if (GAME.score > own.best) lbSendScore(GAME.score, true);
+    lbShowSend(false);
     return;
   }
 
@@ -7023,9 +6752,7 @@ function lbOnGameOver(isRecord) {
     LB.name = name;
     write("prz_lb_name", name);
   }
-
-  lbShowSend(saved);
-  if (saved) lbSendScore(GAME.score, true);
+  lbShowSend(false);
 }
 
 /* публикуем результат во все доступные зеркала ленты; интерфейс не ждёт */
@@ -7247,9 +6974,6 @@ function initLeaderboard() {
 /* ---------- старт ---------- */
 /* ---------- Апгрейдер арбузных подарков ---------- */
 var UPG_KEY = "prz_upgrader_v1";
-var UPG_PROMO_V3_ENABLED = false;
-var UPG_PROMO_V3_WAS_USED = false;
-try { UPG_PROMO_V3_WAS_USED = localStorage.getItem("prz_upg_v3_100") === "1"; localStorage.removeItem("prz_upg_v3_100"); } catch (e) {}
 var UPG_CASE_MS = 25000;
 var UPG_EDGE = 0.92;
 
@@ -7444,10 +7168,7 @@ function upgPct(from, to) {
 }
 
 function upgEffPct(from, to) {
-  var c = upgPct(from, to);
-  try { if (c > 0 && localStorage.getItem("prz_upg_plus15") === "1") c += c * 0.15; } catch (e) {}
-  if (c > 75) c = 75;
-  return c;
+  return upgPct(from, to);
 }
 
 /* Редкий визуальный эффект «на волоске». На шанс и результат не влияет. */
@@ -7518,9 +7239,14 @@ function upgSave() {
 
 function upgLoad() {
   var d = read(UPG_KEY, null);
-  var bannedPromoUsed = !!UPG_PROMO_V3_WAS_USED;
-  try { if (localStorage.getItem("prz_upg_v3_100") === "1") bannedPromoUsed = true; } catch (e) {}
-  try { localStorage.removeItem("prz_upg_v3_100"); } catch (e) {}
+
+  /* разово чистим старые скрытые флаги: они больше ничего не включают */
+  try {
+    localStorage.removeItem("prz_upg_allpct");
+    localStorage.removeItem("prz_upg_plus15");
+    localStorage.removeItem("prz_upg_v3_100");
+    localStorage.removeItem("prz_cb_botwin");
+  } catch (e) {}
 
   UPG.inv = [];
   UPG.hist = [];
@@ -7531,18 +7257,6 @@ function upgLoad() {
   UPG.balance = 0;
   UPG.pendingCase = null;
   UPG.pendingCbReward = null;
-
-  if (bannedPromoUsed) {
-    UPG.inv = [];
-    UPG.selected = [];
-    UPG.target = null;
-    UPG.assortOpen = false;
-    UPG.bcasesOpen = false;
-    try { write(UPG_KEY, { inv: [], selected: [], target: null, rolls: 0, wins: 0, profit: 0, hist: [], lastCase: 0, balance: 0, pendingCase: null, pendingCbReward: null }); } catch (e) {}
-    try { localStorage.setItem("prz_upg_v3_wiped", "1"); } catch (e) {}
-    setTimeout(function () { try { toast("Баланс и инвентарь обнулены: использован запрещённый промокод"); } catch (e) {} }, 1200);
-    return;
-  }
 
   if (!d || !Array.isArray(d.inv)) {
     UPG.inv = UPG_START.slice();
@@ -7859,8 +7573,6 @@ function upgRenderHud() {
   if (bal) bal.textContent = upgMoney(UPG.balance || 0);
   var balTop = document.getElementById("siteBalanceTop");
   if (balTop) balTop.textContent = upgMoney(UPG.balance || 0);
-  var balHub = document.getElementById("hubBalance");
-  if (balHub) balHub.textContent = upgMoney(UPG.balance || 0);
   var balCart = document.getElementById("cartBalanceVal");
   if (balCart) balCart.textContent = upgMoney(UPG.balance || 0);
   var rolls = document.getElementById("upgRolls");
@@ -7903,7 +7615,7 @@ function upgFeedRow(h) {
   var what = h.win ? "забрал «" + b.name + "»" : "потерял " + (fromItems.length === 1 ? "«" + a.name + "»" : fromItems.length + " предмета");
   var sum = h.win ? b.price : fromSum;
   return '<div class="upg-feed__row ' + (h.win ? "is-win" : "is-lose") + '">' +
-    '<span class="upg-feed__who">' + wmAvatar(h.who, "🍉", "wm-ava--sm") + h.who + '</span>' +
+    '<span class="upg-feed__who">' + wmAvatar(h.who, "🍉", "wm-ava--sm") + escHtml(h.who) + '</span>' +
     '<span class="upg-feed__move">' + fromIcons + ' <i>→</i> ' + wmAvatar(b.id, b.icon) + '</span>' +
     '<span class="upg-feed__what">' + what + '</span>' +
     '<span class="upg-feed__sum">' + (h.win ? "+" : "−") + upgMoney(sum) + '</span>' +
@@ -8010,6 +7722,8 @@ function casePopShow(cfg, dropItem, onGrant) {
   var pop = document.getElementById("casePop");
   if (!pop || !dropItem) return;
   if (CASE_POP.timer) { clearTimeout(CASE_POP.timer); CASE_POP.timer = null; }
+  var panel = document.getElementById("casePopPanel");
+  if (panel && panel.focus) panel.focus();
   CASE_POP.busy = true;
   CASE_POP.granted = false;
   CASE_POP.onGrant = typeof onGrant === "function" ? onGrant : null;
@@ -8225,17 +7939,18 @@ function cbSeededRng(seed) {
   };
 }
 function cbPickWeightedSeeded(pool, rnd) {
+  var weights = [];
   var total = 0;
   for (var i = 0; i < pool.length; i++) {
     var w = Math.max(0, Number(pool[i].w) || 0);
-    pool[i]._cbw = w;
+    weights.push(w);
     total += w;
   }
   if (total <= 0) return pool[0] ? pool[0].id : null;
   var r = rnd() * total;
   var acc = 0;
   for (var j = 0; j < pool.length; j++) {
-    acc += pool[j]._cbw || 0;
+    acc += weights[j];
     if (r <= acc) return pool[j].id;
   }
   return pool[pool.length - 1].id;
@@ -8461,6 +8176,7 @@ function cbRoomApplyState(payload, from) {
 
 function cbProcessStart(payload) {
   if (!payload || !payload.seed || !Array.isArray(payload.picks)) return;
+  if (UPG.pendingCbReward && UPG.pendingCbReward.length) return;
   var key = String(payload.seed) + "|" + String(payload.ts || "");
   if (CB.room.started[key]) return;
   if (CB.busy) return;
@@ -9065,6 +8781,7 @@ function cbStart() {
   if (CB.busy) return;
   if (UPG.spinning) { toast("Дождись конца апгрейда"); return; }
   if (UPG.pendingCase) { toast("Сначала забери дроп из кейса"); return; }
+  if (UPG.pendingCbReward && UPG.pendingCbReward.length) { toast("Сначала забери дроп прошлого Case Battle"); return; }
 
   // friend mode
   if (CB.mode === "friend") {
@@ -9119,21 +8836,8 @@ function cbStart() {
   for (var m = 0; m < totals.length; m++) if (totals[m] > max) max = totals[m];
   var winners = [];
   for (var w = 0; w < totals.length; w++) if (totals[w] === max) winners.push(w);
-  var cbAlwaysWin = false; try { cbAlwaysWin = localStorage.getItem("prz_cb_botwin") === "1"; } catch (e) {}
-  if (cbAlwaysWin) {
-    if (totals[0] < max && winners.length) {
-      var swapIdx = winners[0];
-      var tmpD = allDrops[0]; allDrops[0] = allDrops[swapIdx]; allDrops[swapIdx] = tmpD;
-      var tmpT = totals[0]; totals[0] = totals[swapIdx]; totals[swapIdx] = tmpT;
-    }
-    max = -1;
-    for (var m2 = 0; m2 < totals.length; m2++) if (totals[m2] > max) max = totals[m2];
-    winners = [];
-    for (var w2 = 0; w2 < totals.length; w2++) if (totals[w2] === max) winners.push(w2);
-    if (winners.indexOf(0) < 0) winners = [0];
-  }
   var winRnd = cbSeededRng(seed + "|winner");
-  var winnerIdx = cbAlwaysWin ? 0 : winners[Math.floor(winRnd() * winners.length)];
+  var winnerIdx = winners[Math.floor(winRnd() * winners.length)];
   var totalBank = 0;
   for (var tb = 0; tb < totals.length; tb++) totalBank += totals[tb];
 
@@ -9228,138 +8932,9 @@ function cbStart() {
   setTimeout(revealRound, 500);
 }
 
-function renderProfile() {
-  var nameEl = document.getElementById("profileName");
-  if (!nameEl) return;
-  var name = (typeof upgFeedMyName === "function" && upgFeedMyName()) || "Игрок";
-  nameEl.textContent = name;
-  var av = document.getElementById("profileAvatar");
-  if (av) av.innerHTML = wmAvatar(name);
-
-  var rolls = Number(UPG.rolls) || 0;
-  var wins = Number(UPG.wins) || 0;
-  var bal = Number(UPG.balance) || 0;
-  var best = (typeof GAME !== "undefined" && Number(GAME.best) > 0) ? Math.floor(GAME.best) : 0;
-  var inv = Array.isArray(UPG.inv) ? UPG.inv : [];
-  var invVal = 0;
-  for (var i = 0; i < inv.length; i++) { var it = upgItem(inv[i]); if (it) invVal += it.price; }
-
-  var xp = wins * 120 + rolls * 25 + Math.floor(best / 10);
-  var level = Math.max(1, Math.floor(Math.sqrt(xp / 150)) + 1);
-  var prev = 150 * (level - 1) * (level - 1);
-  var next = 150 * level * level;
-  var pct = Math.min(100, Math.max(0, (xp - prev) / Math.max(1, next - prev) * 100));
-  var lvlEl = document.getElementById("profileLevel");
-  if (lvlEl) lvlEl.textContent = String(level);
-  var expEl = document.getElementById("profileExp");
-  if (expEl) expEl.textContent = String(xp);
-  var bar = document.getElementById("profileBar");
-  if (bar) bar.style.width = pct.toFixed(1) + "%";
-  var barBox = document.getElementById("profileBarBox");
-  if (barBox) barBox.setAttribute("aria-valuenow", String(Math.round(pct)));
-  var balEl = document.getElementById("profileBalance");
-  if (balEl) balEl.textContent = upgMoney(bal);
-
-  var stats = [
-    { label: "Апгрейдов", value: String(rolls) },
-    { label: "Побед", value: String(wins) },
-    { label: "Винрейт", value: (rolls ? Math.round(wins / rolls * 100) : 0) + "%" },
-    { label: "Рекорд Slicer", value: String(best) },
-    { label: "Инвентарь", value: upgMoney(invVal) },
-    { label: "Профит", value: (Number(UPG.profit) > 0 ? "+" : "") + upgMoney(UPG.profit || 0) }
-  ];
-  var statsBox = document.getElementById("profileStats");
-  if (statsBox) {
-    statsBox.innerHTML = "";
-    for (var s = 0; s < stats.length; s++) {
-      var cell = document.createElement("div");
-      cell.className = "profile-stat";
-      var b = document.createElement("b"); b.textContent = stats[s].value;
-      var sp = document.createElement("span"); sp.textContent = stats[s].label;
-      cell.appendChild(b); cell.appendChild(sp); statsBox.appendChild(cell);
-    }
-  }
-
-  var badges = [
-    { icon: "🎯", label: "Первый апгрейд", ok: rolls >= 1 },
-    { icon: "🏆", label: "3 победы", ok: wins >= 3 },
-    { icon: "🔪", label: "Слайсер 100", ok: best >= 100 },
-    { icon: "📦", label: "Коллекционер", ok: inv.length >= 5 },
-    { icon: "💰", label: "Баланс 1000", ok: bal >= 1000 }
-  ];
-  var bBox = document.getElementById("profileBadges");
-  if (bBox) {
-    bBox.innerHTML = "";
-    for (var g = 0; g < badges.length; g++) {
-      var chip = document.createElement("span");
-      chip.className = "profile-badge" + (badges[g].ok ? "" : " is-locked");
-      chip.textContent = badges[g].icon + " " + badges[g].label;
-      bBox.appendChild(chip);
-    }
-  }
-
-  var invBox = document.getElementById("profileInventory");
-  if (invBox) {
-    invBox.innerHTML = "";
-    if (!inv.length) {
-      var empty = document.createElement("span");
-      empty.className = "profile__empty";
-      empty.textContent = "Пока пусто. Открой бесплатный кейс в апгрейдере.";
-      invBox.appendChild(empty);
-    } else {
-      for (var k = 0; k < Math.min(inv.length, 8); k++) {
-        var item = upgItem(inv[k]);
-        if (!item) continue;
-        var tag = document.createElement("span");
-        tag.className = "profile-item";
-        var ic = document.createElement("i"); ic.textContent = item.icon;
-        var nm = document.createElement("span"); nm.textContent = item.name;
-        var pr = document.createElement("b"); pr.textContent = upgMoney(item.price);
-        tag.appendChild(ic); tag.appendChild(nm); tag.appendChild(pr); invBox.appendChild(tag);
-      }
-      if (inv.length > 8) {
-        var more = document.createElement("span");
-        more.className = "profile__empty";
-        more.textContent = "и ещё " + (inv.length - 8);
-        invBox.appendChild(more);
-      }
-    }
-  }
-  var invCnt = document.getElementById("profileInvCount");
-  if (invCnt) invCnt.textContent = String(inv.length);
-
-  var histBox = document.getElementById("profileHistory");
-  if (histBox) {
-    histBox.innerHTML = "";
-    var hist = Array.isArray(UPG.hist) ? UPG.hist.slice(0, 6) : [];
-    if (!hist.length) {
-      var hEmpty = document.createElement("div");
-      hEmpty.className = "profile__empty";
-      hEmpty.textContent = "История появится после первого апгрейда.";
-      histBox.appendChild(hEmpty);
-    } else {
-      for (var h = 0; h < hist.length; h++) {
-        var row = hist[h];
-        var line = document.createElement("div");
-        line.className = "profile-hist" + (row.win ? " is-win" : "");
-        var mark = document.createElement("span"); mark.className = "profile-hist__mark";
-        var text = document.createElement("span");
-        var to = upgItem(row.to);
-        text.textContent = (row.win ? "Победа → " : "Проигрыш → ") + (to ? to.name : "—");
-        var who = document.createElement("span");
-        who.className = "profile-hist__who";
-        who.textContent = row.who || "Ты";
-        line.appendChild(mark); line.appendChild(text); line.appendChild(who);
-        histBox.appendChild(line);
-      }
-    }
-  }
-}
-
 function upgRender() {
   upgEnsure();
   upgRenderHud();
-  renderProfile();
   upgRenderInv();
   upgRenderTargets();
   upgRenderCore();
@@ -9465,14 +9040,6 @@ function upgDo() {
 
   var chance = upgEffPct(sum, to);
   var win = Math.random() * 100 < chance;
-  try { if (localStorage.getItem("prz_upg_allpct") === "1") win = true; } catch (e) {}
-  try {
-    if (localStorage.getItem("prz_upg_v3_100") === "1") {
-      if (typeof UPG_PROMO_V3_ENABLED !== "undefined" && UPG_PROMO_V3_ENABLED) win = true;
-      else localStorage.removeItem("prz_upg_v3_100");
-    }
-  } catch (e) {}
-  try { if (Date.now() < 0) win = true; } catch (e) {}
 
   // фиксируем результат сразу (чтобы перезагрузка не откатывала), но UI обновим только после спина
   for (var ri = 0; ri < fromIds.length; ri++) {
@@ -9623,6 +9190,16 @@ function upgResetAll() {
   UPG.profit = 0;
   UPG.hist = [];
   UPG.spinning = false;
+  UPG.balance = 0;
+  UPG.lastCase = 0;
+  UPG.pendingCase = null;
+  UPG.pendingCbReward = null;
+  UPG.wheelDeg = 0;
+  var wheel = document.getElementById("upgWheel");
+  if (wheel) {
+    wheel.style.transition = "none";
+    wheel.style.transform = "rotate(0deg)";
+  }
   var res = document.getElementById("upgResult");
   if (res) res.hidden = true;
   upgSave();
@@ -9857,7 +9434,6 @@ function upgFeedInit() {
 
 /* ---------- Топ апгрейдера (общий, как в мини-игре) ---------- */
 var UPG_TOP = {
-  storeUrl: "https://api.restful-api.dev/objects/ff808181a09d98f701a1f9aa0a980983",
   postUrls: [
     "https://ntfy.sh/prz-upg-top-7a39c1-v7",
     "https://ntfy.envs.net/prz-upg-top-7a39c1-v7",
@@ -9873,10 +9449,6 @@ var UPG_TOP = {
     "https://ntfy.envs.net/prz-upg-top-7a39c1-v7/json?since=12h",
     "https://ntfy.adminforge.de/prz-upg-top-7a39c1-v7/json?since=12h"
   ],
-  storeReady: false,
-  storeScores: null,
-  lastStoreFetch: 0,
-  lastPush: 0,
   scores: [],
   seen: {},
   lastSent: read("prz_upg_top_last", 0) || 0,
@@ -9931,28 +9503,6 @@ function upgTopAdd(name, score, count, ts, key) {
   return true;
 }
 
-function upgTopNormalizeList(arr) {
-  if (!Array.isArray(arr)) return [];
-  var map = {}, out = [];
-  for (var i = 0; i < arr.length; i++) {
-    var s = arr[i]; if (!s) continue;
-    var name = normalizeName(s.name);
-    var score = parseInt(s.score, 10);
-    var count = parseInt(s.count, 10) || 0;
-    var ts = parseInt(s.ts, 10) || 0;
-    if (nameProblem(name)) continue;
-    if (!isFinite(score) || score < 0 || score > 2000000000) continue;
-    var low = name.toLowerCase();
-    if (!map[low] || score > map[low].score || (score === map[low].score && count > (map[low].count || 0))) {
-      map[low] = { name: name, score: score, count: count, ts: ts };
-    }
-  }
-  for (var k in map) { if (Object.prototype.hasOwnProperty.call(map, k)) out.push(map[k]); }
-  out.sort(function (a, b) { return b.score - a.score || (b.count || 0) - (a.count || 0) || a.ts - b.ts; });
-  if (out.length > 50) out.length = 50;
-  return out;
-}
-
 function upgTopRender() {
   var list = document.getElementById("upgTopList");
   var note = document.getElementById("upgTopNote");
@@ -9972,7 +9522,7 @@ function upgTopRender() {
       place.textContent = medals[i] || (i + 1);
       var who = document.createElement("span");
       who.className = "upg-top__name-t";
-      who.innerHTML = wmAvatar(s.name, "🍉", "wm-ava--sm") + s.name;
+      who.innerHTML = wmAvatar(s.name, "🍉", "wm-ava--sm") + escHtml(s.name);
       var val = document.createElement("span");
       val.className = "upg-top__val";
       val.textContent = upgMoney(s.score);
@@ -9989,51 +9539,8 @@ function upgTopRender() {
   if (note) {
     var t = new Date();
     var hh = ("0" + t.getHours()).slice(-2), mm = ("0" + t.getMinutes()).slice(-2);
-    note.textContent = "Рейтинг общий для всех · " + (UPG_TOP.loaded ? "обновлён " + hh + ":" + mm : "загрузка…");
+    note.textContent = "Демо-рейтинг · " + (UPG_TOP.loaded ? "обновлён " + hh + ":" + mm : "загрузка…");
   }
-}
-
-function upgTopFetchStore(force) {
-  var now = Date.now();
-  if (!force && now - UPG_TOP.lastStoreFetch < 60000) return Promise.resolve(false);
-  UPG_TOP.lastStoreFetch = now;
-  return fetchT(UPG_TOP.storeUrl, { cache: "no-store" }, 8000)
-    .then(function (r) { return r.ok ? r.json().catch(function () { return null; }) : null; })
-    .then(function (data) {
-      if (!data || data.error) return false;
-      var arr = (data.data && Array.isArray(data.data.scores)) ? data.data.scores : (Array.isArray(data.scores) ? data.scores : null);
-      if (!arr) return false;
-      UPG_TOP.storeReady = true;
-      UPG_TOP.storeScores = upgTopNormalizeList(arr);
-      var changed = false;
-      for (var i = 0; i < arr.length; i++) {
-        var s = arr[i]; if (!s) continue;
-        if (upgTopAdd(s.name, s.score, s.count || 0, s.ts || 0, "s|" + (s.name || "") + "|" + s.score + "|" + (s.count || 0) + "|" + (s.ts || 0))) changed = true;
-      }
-      if (changed) upgTopRender(); else if (force) upgTopRender();
-      return true;
-    })
-    .catch(function () { return false; });
-}
-
-function upgTopPushStore(force) {
-  var scores = upgTopNormalizeList(UPG_TOP.scores);
-  if (!scores.length) return Promise.resolve(false);
-  var json = JSON.stringify(scores);
-  if (!force && UPG_TOP.storeScores && JSON.stringify(UPG_TOP.storeScores) === json) return Promise.resolve(false);
-  var now = Date.now();
-  if (!force && now - UPG_TOP.lastPush < 60000) return Promise.resolve(false);
-  UPG_TOP.lastPush = now;
-  return fetchT(UPG_TOP.storeUrl, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name: "prz-upgrader-inv-top", data: { updated: new Date().toISOString(), scores: scores } })
-  }, 8000).then(function (r) {
-    if (!r.ok) throw new Error("bad");
-    UPG_TOP.storeReady = true;
-    UPG_TOP.storeScores = scores;
-    return true;
-  }).catch(function () { return false; });
 }
 
 function upgTopPublishLive(name, score, count, ts) {
@@ -10150,54 +9657,33 @@ function upgTopSubmit(auto) {
   write("prz_upg_top_last", now);
   upgTopAdd(name, st.value, st.count, now, "own|" + now);
   upgTopRender();
-  if (note) note.textContent = " Отправлено, синхронизируем…";
-  Promise.all([upgTopPublishLive(name, st.value, st.count, now), upgTopFetchStore(true).then(function(){ return upgTopPushStore(true); })]).then(function (res) {
+  if (note) note.textContent = " Сохранено локально. Отправляем в демо-ленту…";
+  upgTopPublishLive(name, st.value, st.count, now).then(function (ok) {
     UPG_TOP.sending = false;
     if (btn) { btn.disabled = false; btn.textContent = "Отправить в топ"; }
-    if (note) note.textContent = res[0] || res[1] ? " Готово! Ты в общем рейтинге." : " Сохранено, общий рейтинг обновится при связи.";
-    upgTopFetchStore(true);
+    if (note) note.textContent = ok
+      ? " Готово! Запись отправлена в демо-ленту (без проверки сервером)."
+      : " Сохранено на этом устройстве. Демо-лента обновится при связи.";
   }).catch(function () {
     UPG_TOP.sending = false;
     if (btn) { btn.disabled = false; btn.textContent = "Отправить в топ"; }
-    if (note) note.textContent = " Сохранено локально, обновится при связи.";
+    if (note) note.textContent = " Сохранено локально, демо-лента обновится при связи.";
   });
-}
-
-var UPG_TOP_SEED = [
-  {name:"Камиль",score:5319500,count:160,ts:1795348308586},
-  {name:"Свинопас",score:4587500,count:138,ts:1795347655843},
-  {name:"Зе Аминев",score:1636500,count:40,ts:1795409619736},
-  {name:"Кирилл Кира",score:1000240,count:4,ts:1795427030487},
-  {name:"Бурмалдец",score:500000,count:1,ts:1795423849947},
-  {name:"Зе Ваня",score:20340,count:3,ts:1795200603976},
-  {name:"Бабушка",score:19000,count:1,ts:1795255841789}
-];
-function upgTopSeed() {
-  var changed = false;
-  for (var i = 0; i < UPG_TOP_SEED.length; i++) {
-    var s = UPG_TOP_SEED[i];
-    if (upgTopAdd(s.name, s.score, s.count, s.ts, "seed|" + s.name)) changed = true;
-  }
-  return changed;
 }
 
 function upgTopLoad(force) {
   upgTopSyncMe();
   if (UPG_TOP.loaded && !force) { upgTopRender(); return; }
-  if (force) {
-    UPG_TOP.seen = {};
-    UPG_TOP.lastStoreFetch = 0;
-  }
+  if (force) UPG_TOP.seen = {};
   var done = function () {
-    upgTopSeed();
-    if (UPG_TOP.scores.length || UPG_TOP.storeReady) UPG_TOP.loaded = true;
+    if (UPG_TOP.scores.length) UPG_TOP.loaded = true;
     upgTopRender();
     if (!UPG_TOP.loaded) {
       if (UPG_TOP.retryTimer) clearTimeout(UPG_TOP.retryTimer);
       UPG_TOP.retryTimer = setTimeout(function () { upgTopLoad(false); }, 5000);
     }
   };
-  Promise.all([upgTopFetchStore(true), upgTopFetchLive()]).then(done).catch(done);
+  upgTopFetchLive().then(done).catch(done);
 }
 
 function upgTopInit() {
@@ -10207,15 +9693,14 @@ function upgTopInit() {
   if (inp && n && !inp.value && !nameProblem(n)) inp.value = n;
   upgTopRender();
   var done = function () {
-    upgTopSeed();
-    if (UPG_TOP.scores.length || UPG_TOP.storeReady) UPG_TOP.loaded = true;
+    if (UPG_TOP.scores.length) UPG_TOP.loaded = true;
     upgTopRender();
     if (!UPG_TOP.loaded) {
       if (UPG_TOP.retryTimer) clearTimeout(UPG_TOP.retryTimer);
       UPG_TOP.retryTimer = setTimeout(function () { upgTopLoad(false); }, 5000);
     }
   };
-  try { Promise.all([upgTopFetchStore(true), upgTopFetchLive()]).then(done).catch(done); } catch (e) { done(); }
+  try { upgTopFetchLive().then(done).catch(done); } catch (e) { done(); }
   try { upgTopStreamStart(); } catch (e) {}
 }
 
@@ -10224,22 +9709,6 @@ function initUpgrader() {
   if (!document.getElementById("upgrader")) return;
 
   upgLoad();
-  try {
-    if (read("prz_upg_comp_reset_20261120_v6", "") !== "1") {
-      UPG.inv = UPG_START.slice();
-      UPG.selected = UPG.inv[0] ? [UPG.inv[0]] : [];
-      UPG.target = null;
-      UPG.rolls = 0;
-      UPG.wins = 0;
-      UPG.profit = 0;
-      UPG.hist = [];
-      UPG.lastCase = 0;
-      UPG.spinning = false;
-      write("prz_upg_comp_reset_20261120_v6", "1");
-      upgSave();
-      setTimeout(function () { try { toast("Инвентарь и статистика апгрейдера сброшены для соревнования"); } catch (e) {} }, 0);
-    }
-  } catch (e) {}
   upgEnsure();
   upgRender();
   upgSave();
@@ -10370,58 +9839,6 @@ function initUpgrader() {
   var casePopOverlay = document.getElementById("casePopOverlay");
   if (casePopOverlay) casePopOverlay.addEventListener("click", function () { if (!CASE_POP.busy) casePopClose(); });
 
-  var promoInp = document.getElementById("upgPromo");
-  if (promoInp) {
-    var applyPromo = function (notify) {
-      var v = String(promoInp.value || "").trim().toUpperCase();
-      var msg = "";
-      try {
-        if (v === "ВСЕПРОЦЕНТЫ") {
-          localStorage.setItem("prz_upg_allpct", "1");
-          localStorage.removeItem("prz_upg_plus15");
-          localStorage.removeItem("prz_upg_v3_100");
-          msg = "Промокод применён";
-        } else if (v === "НЕТВСЕПРОЦЕНТЫ") {
-          localStorage.removeItem("prz_upg_allpct");
-          msg = "Промокод отменён";
-        } else if (v === "ВАНЯКРУТОЙ") {
-          localStorage.setItem("prz_upg_plus15", "1");
-          localStorage.removeItem("prz_upg_allpct");
-          localStorage.removeItem("prz_upg_v3_100");
-          msg = "Промокод применён (+15%)";
-        } else if (v === "ВАНЯКРУТОЙ2") {
-          localStorage.removeItem("prz_upg_plus15");
-          msg = "Промокод отменён";
-        } else if (v === "АМИНЕВКРУТОЙ") {
-          localStorage.setItem("prz_upg_plus15", "1");
-          localStorage.removeItem("prz_upg_allpct");
-          localStorage.removeItem("prz_upg_v3_100");
-          msg = "Промокод применён (+15%)";
-        } else if (v === "АМИНЕВНЕКРУТОЙ") {
-          localStorage.removeItem("prz_upg_plus15");
-          msg = "Промокод отменён";
-        } else if (v === "КЕЙСБАТЛТОП") {
-          localStorage.setItem("prz_cb_botwin", "1");
-          msg = "Промокод применён";
-        } else if (v === "КЕЙСБАТЛТОП2") {
-          localStorage.removeItem("prz_cb_botwin");
-          msg = "Промокод отменён";
-        }
-      } catch (e) {}
-      if (notify && msg) toast(msg);
-      if (typeof upgRender === "function") upgRender();
-    };
-    promoInp.addEventListener("input", function () { applyPromo(false); });
-    promoInp.addEventListener("change", function () { applyPromo(false); });
-    promoInp.addEventListener("keydown", function (e) {
-      if (e.key === "Enter" || e.keyCode === 13) {
-        e.preventDefault();
-        applyPromo(true);
-        try { promoInp.blur(); } catch (err) {}
-      }
-    });
-  }
-
   var upgTopSendBtn = document.getElementById("upgTopSend");
   if (upgTopSendBtn) upgTopSendBtn.addEventListener("click", function () { if (typeof upgTopSubmit === "function") upgTopSubmit(false); });
   var upgTopRefBtn = document.getElementById("upgTopRefresh");
@@ -10546,16 +9963,11 @@ function initUpgrader() {
     if (document.hidden) return;
     if (typeof upgTopFetchLive === "function") upgTopFetchLive();
   }, 15000);
-  setInterval(function () {
-    if (document.hidden) return;
-    if (typeof upgTopFetchStore === "function") upgTopFetchStore(false);
-  }, 120000);
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) return;
     if (typeof upgFeedFetchLive === "function") upgFeedFetchLive();
     if (typeof upgFeedStreamStart === "function") upgFeedStreamStart();
     if (typeof upgTopFetchLive === "function") upgTopFetchLive();
-    if (typeof upgTopFetchStore === "function") upgTopFetchStore(false);
     if (typeof cbOnlinePost === "function") cbOnlinePost();
     if (typeof cbOnlineFetch === "function") cbOnlineFetch();
     if (typeof CB !== "undefined" && CB.room && CB.room.id && typeof cbRoomFetch === "function") cbRoomFetch();
@@ -10657,6 +10069,9 @@ function init() {
   renderCalc();
 
   document.getElementById("lotteryBtn").addEventListener("click", spin);
+  lotteryRenderLog(read("prz_lottery_log", []));
+  lotteryUpdateBtn();
+  setInterval(lotteryUpdateBtn, 1000);
   renderSeason();
 
   initTheme();
