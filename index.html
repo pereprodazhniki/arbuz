@@ -1464,6 +1464,8 @@ body.light .jobform__cooldown { background: #f2fff7; border-color: #12803c; colo
   font-size: 11px;
   font-weight: 900;
 }
+.upg-item__seln { font-size: 10px; font-weight: 800; color: var(--lime); letter-spacing: .2px; }
+.upg-item.is-sel .upg-item__count { background: #fff; color: #06210f; }
 .upg-chance { font-style: normal; font-size: 12px; font-weight: 900; color: var(--muted); }
 .upg-chance--low { color: #ff8f8f; }
 .upg-chance--mid { color: #ffc15e; }
@@ -1514,9 +1516,14 @@ body.light .jobform__cooldown { background: #f2fff7; border-color: #12803c; colo
   box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
 }
 .upg-tile__icon { font-size: 44px; line-height: 1; }
+.upg-tile__icons { display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap; }
+.upg-tile__mini { font-size: 28px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,.25)); }
+.upg-tile__mini .wm-ava { font-size: .52em; }
 .upg-tile__name { font-size: 12.5px; font-weight: 800; color: #fff; line-height: 1.2; }
+.upg-tile__sub { font-size: 10.5px; color: var(--muted); line-height: 1.25; max-height: 2.5em; overflow: hidden; }
 .upg-tile__price { font-size: 12px; font-weight: 800; color: var(--lime); }
 .upg-tile__empty { font-size: 12px; color: var(--muted); line-height: 1.3; }
+.upg-tile--multi .upg-tile__name { color: var(--lime); }
 
 .upg-ring {
   --p: 0;
@@ -2105,6 +2112,8 @@ body.light .upg-top__name { background: #fff; border-color: #bfe4cc; color: #0d2
   .upg-ring__in b { font-size: 18px; }
   .upg-tile { min-height: 104px; border-radius: 16px; }
   .upg-tile__icon { font-size: 32px; }
+  .upg-tile__mini { font-size: 22px; }
+  .upg-tile__sub { font-size: 10px; max-height: 2.2em; }
   .upg-feed__row { grid-template-columns: minmax(56px, 84px) auto minmax(0, 1fr) auto; gap: 6px 7px; font-size: 12px; padding: 7px 9px; }
   .upg-top { padding: 14px; border-radius: 24px; }
   .upg-top__row { grid-template-columns: 34px minmax(0,1fr) auto; gap: 4px 8px; padding: 10px 11px; }
@@ -2695,7 +2704,7 @@ body.light .upg-feed__who { color: #0d2b19; }
 
       <div class="upg__grid">
         <aside class="upg-panel">
-          <div class="upg-panel__head"><b>Твой инвентарь</b><span id="upgInvHint">выбери предмет</span></div>
+          <div class="upg-panel__head"><b>Твой инвентарь</b><span id="upgInvHint">выбери до 3 предметов</span></div>
           <div class="upg-list" id="upgInv"></div>
         </aside>
 
@@ -2723,7 +2732,7 @@ body.light .upg-feed__who { color: #0d2b19; }
           <div class="upg-result" id="upgResult" hidden></div>
 
           <button class="btn btn--big btn--full upg-go" id="upgGo" type="button" disabled>Апгрейд</button>
-          <p class="upg-note">Шанс = цена твоего предмета / цена цели × 92%. Остальное — бабушке на варенье. Апгрейд необратим: проиграл — предмет ушёл.</p>
+          <p class="upg-note">Можно выбрать от 1 до 3 предметов. Шанс = сумма цен выбранных / цена цели × 92%. Цель должна быть круче всех выбранных предметов. Проиграл — все выбранные предметы ушли бабушке.</p>
         </div>
 
         <aside class="upg-panel">
@@ -3036,7 +3045,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-nearmiss-2";
+var APP_BUILD = "20261124-upg-multi-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -6976,7 +6985,7 @@ var UPG_BALANCE_CASES = [
 
 var UPG = {
   inv: [],
-  selected: null,
+  selected: [],
   target: null,
   rolls: 0,
   wins: 0,
@@ -7005,8 +7014,9 @@ function upgMoney(n) {
 }
 
 function upgPct(from, to) {
-  if (!from || !to || to.price <= from.price) return 0;
-  var c = (from.price / to.price) * 100 * UPG_EDGE;
+  var fromPrice = (from && typeof from === "object") ? from.price : Number(from) || 0;
+  if (!fromPrice || !to || to.price <= fromPrice) return 0;
+  var c = (fromPrice / to.price) * 100 * UPG_EDGE;
   if (c > 95) c = 95;
   return c;
 }
@@ -7016,6 +7026,41 @@ function upgEffPct(from, to) {
   try { if (c > 0 && localStorage.getItem("prz_upg_plus15") === "1") c += c * 0.15; } catch (e) {}
   if (c > 100) c = 100;
   return c;
+}
+
+function upgSelectedIds() {
+  return Array.isArray(UPG.selected) ? UPG.selected.slice() : (UPG.selected ? [UPG.selected] : []);
+}
+
+function upgSelectedItems() {
+  var ids = upgSelectedIds();
+  var out = [];
+  for (var i = 0; i < ids.length; i++) {
+    var it = upgItem(ids[i]);
+    if (it) out.push(it);
+  }
+  return out;
+}
+
+function upgSelectedSum() {
+  var items = upgSelectedItems();
+  var sum = 0;
+  for (var i = 0; i < items.length; i++) sum += items[i].price;
+  return sum;
+}
+
+function upgSelectedMaxPrice() {
+  var items = upgSelectedItems();
+  var m = 0;
+  for (var i = 0; i < items.length; i++) if (items[i].price > m) m = items[i].price;
+  return m;
+}
+
+function upgSelectedLabel() {
+  var items = upgSelectedItems();
+  if (!items.length) return "";
+  if (items.length === 1) return items[0].name;
+  return items.length + " предмета";
 }
 
 function upgChanceText(v) {
@@ -7059,11 +7104,11 @@ function upgLoad() {
 
   if (bannedPromoUsed) {
     UPG.inv = [];
-    UPG.selected = null;
+    UPG.selected = [];
     UPG.target = null;
     UPG.assortOpen = false;
     UPG.bcasesOpen = false;
-    try { write(UPG_KEY, { inv: [], selected: null, target: null, rolls: 0, wins: 0, profit: 0, hist: [], lastCase: 0, balance: 0, pendingCase: null, pendingCbReward: null }); } catch (e) {}
+    try { write(UPG_KEY, { inv: [], selected: [], target: null, rolls: 0, wins: 0, profit: 0, hist: [], lastCase: 0, balance: 0, pendingCase: null, pendingCbReward: null }); } catch (e) {}
     try { localStorage.setItem("prz_upg_v3_wiped", "1"); } catch (e) {}
     setTimeout(function () { try { toast("Баланс и инвентарь обнулены: использован запрещённый промокод"); } catch (e) {} }, 1200);
     return;
@@ -7085,9 +7130,12 @@ function upgLoad() {
     if (Array.isArray(d.hist)) {
       for (var j = 0; j < d.hist.length && UPG.hist.length < 20; j++) {
         var h = d.hist[j];
-        if (h && upgItem(h.from) && upgItem(h.to)) {
-          UPG.hist.push({ win: !!h.win, from: h.from, to: h.to, who: String(h.who || "Ты") });
-        }
+        if (!h || !upgItem(h.to)) continue;
+        var hf = [];
+        if (Array.isArray(h.from)) { for (var hj = 0; hj < h.from.length; hj++) if (upgItem(h.from[hj])) hf.push(h.from[hj]); }
+        else if (upgItem(h.from)) hf.push(h.from);
+        if (!hf.length) continue;
+        UPG.hist.push({ win: !!h.win, from: hf.length === 1 ? hf[0] : hf, to: h.to, who: String(h.who || "Ты") });
       }
     }
     if (d.pendingCase && upgItem(d.pendingCase.id)) {
@@ -7103,7 +7151,7 @@ function upgLoad() {
   var recoveredPending = false;
   if (UPG.pendingCase && upgItem(UPG.pendingCase.id)) {
     UPG.inv.push(UPG.pendingCase.id);
-    UPG.selected = UPG.pendingCase.id;
+    UPG.selected = [UPG.pendingCase.id];
     UPG.pendingCase = null;
     recoveredPending = true;
   }
@@ -7111,16 +7159,35 @@ function upgLoad() {
     for (var pcri = 0; pcri < UPG.pendingCbReward.length; pcri++) {
       if (upgItem(UPG.pendingCbReward[pcri])) UPG.inv.push(UPG.pendingCbReward[pcri]);
     }
-    UPG.selected = UPG.pendingCbReward[UPG.pendingCbReward.length - 1] || UPG.selected;
+    var lastCb = UPG.pendingCbReward[UPG.pendingCbReward.length - 1];
+    UPG.selected = lastCb && upgItem(lastCb) ? [lastCb] : UPG.selected;
     UPG.pendingCbReward = null;
     recoveredPending = true;
   }
 
-  var sel = d && upgItem(d.selected) ? d.selected : null;
+  var rawSel = d ? d.selected : null;
+  var selArr = [];
+  if (Array.isArray(rawSel)) selArr = rawSel;
+  else if (typeof rawSel === "string" && rawSel) selArr = [rawSel];
   if (!recoveredPending) {
-    UPG.selected = sel && UPG.inv.indexOf(sel) >= 0 ? sel : (UPG.inv[0] || null);
-  } else if (UPG.selected && UPG.inv.indexOf(UPG.selected) < 0) {
-    UPG.selected = UPG.inv[0] || null;
+    UPG.selected = [];
+    var invCopy = UPG.inv.slice();
+    for (var si = 0; si < selArr.length && UPG.selected.length < 3; si++) {
+      var sid = selArr[si];
+      var sidx = invCopy.indexOf(sid);
+      if (sidx >= 0 && upgItem(sid)) { UPG.selected.push(sid); invCopy.splice(sidx, 1); }
+    }
+    if (!UPG.selected.length && UPG.inv.length) UPG.selected = [UPG.inv[0]];
+  } else {
+    if (!Array.isArray(UPG.selected)) UPG.selected = UPG.selected ? [UPG.selected] : [];
+    var invCopy2 = UPG.inv.slice();
+    var okSel = [];
+    for (var si2 = 0; si2 < UPG.selected.length && okSel.length < 3; si2++) {
+      var sid2 = UPG.selected[si2];
+      var sidx2 = invCopy2.indexOf(sid2);
+      if (sidx2 >= 0 && upgItem(sid2)) { okSel.push(sid2); invCopy2.splice(sidx2, 1); }
+    }
+    UPG.selected = okSel.length ? okSel : (UPG.inv.length ? [UPG.inv[0]] : []);
   }
   UPG.target = d && upgItem(d.target) ? d.target : null;
   UPG.assortOpen = false; /* по умолчанию скрыт при заходе */
@@ -7128,19 +7195,32 @@ function upgLoad() {
   if (recoveredPending) upgSave();
 }
 
-function upgEnsure() {
-  if (UPG.selected && UPG.inv.indexOf(UPG.selected) < 0) UPG.selected = null;
-  if (!UPG.selected && UPG.inv.length) UPG.selected = UPG.inv[0];
+function upgNormalizeSelected() {
+  var raw = Array.isArray(UPG.selected) ? UPG.selected : (UPG.selected ? [UPG.selected] : []);
+  var invCopy = UPG.inv.slice();
+  var out = [];
+  for (var i = 0; i < raw.length && out.length < 3; i++) {
+    var id = raw[i];
+    var idx = invCopy.indexOf(id);
+    if (idx >= 0 && upgItem(id)) { out.push(id); invCopy.splice(idx, 1); }
+  }
+  UPG.selected = out;
+}
 
-  var from = upgItem(UPG.selected);
-  if (!from) { UPG.target = null; return; }
+function upgEnsure() {
+  upgNormalizeSelected();
+  if (!UPG.selected.length && UPG.inv.length) UPG.selected = [UPG.inv[0]];
+
+  var maxP = upgSelectedMaxPrice();
+  var sum = upgSelectedSum();
+  if (!UPG.selected.length || !sum) { UPG.target = null; return; }
 
   var tgt = upgItem(UPG.target);
-  if (!tgt || tgt.price <= from.price) {
+  if (!tgt || tgt.price <= maxP) {
     var best = null;
     for (var i = 0; i < UPG_ITEMS.length; i++) {
       var it = UPG_ITEMS[i];
-      if (it.price > from.price && (!best || it.price < best.price)) best = it;
+      if (it.price > maxP && (!best || it.price < best.price)) best = it;
     }
     UPG.target = best ? best.id : null;
   }
@@ -7170,21 +7250,27 @@ function upgRenderInv() {
     var id = UPG.inv[i];
     groups[id] = (groups[id] || 0) + 1;
   }
+  var selCounts = {};
+  var selArr = upgSelectedIds();
+  for (var s = 0; s < selArr.length; s++) selCounts[selArr[s]] = (selCounts[selArr[s]] || 0) + 1;
+  var totalSel = selArr.length;
   var ids = Object.keys(groups).sort(function (a, b) { return upgItem(b).price - upgItem(a).price; });
 
   var html = "";
   for (var k = 0; k < ids.length; k++) {
     var it = upgItem(ids[k]);
     var n = groups[ids[k]];
-    var sel = ids[k] === UPG.selected;
-    html += '<button class="upg-item upg-item--' + it.rarity + (sel ? " is-sel" : "") + '" type="button" data-id="' + it.id + '">' +
+    var selN = selCounts[ids[k]] || 0;
+    var canAdd = selN < n && totalSel < 3;
+    html += '<button class="upg-item upg-item--' + it.rarity + (selN > 0 ? " is-sel" : "") + (canAdd ? " can-add" : "") + '" type="button" data-id="' + it.id + '">' +
       '<span class="upg-item__icon">' + wmAvatar(it.id, it.icon) + '</span>' +
       '<span class="upg-item__body"><b>' + it.name + '</b><small class="upg-r">' + UPG_RARITY[it.rarity].name + '</small></span>' +
-      '<span class="upg-item__side"><b>' + upgMoney(it.price) + '</b></span>' +
+      '<span class="upg-item__side"><b>' + upgMoney(it.price) + '</b>' + (selN > 0 ? '<small class="upg-item__seln">выбрано ' + selN + '</small>' : '') + '</span>' +
       (n > 1 ? '<span class="upg-item__count">x' + n + '</span>' : '') +
       '</button>';
   }
   box.innerHTML = html;
+  if (hint) hint.textContent = totalSel ? ("выбрано " + totalSel + "/3") : "выбери до 3 предметов";
 }
 
 function upgRenderTargets() {
@@ -7194,15 +7280,17 @@ function upgRenderTargets() {
   var countEl = document.getElementById("upgAssortCount");
   var toggle = document.getElementById("upgAssortToggle");
   if (!box) return;
-  var from = upgItem(UPG.selected);
+  var maxP = upgSelectedMaxPrice();
+  var sum = upgSelectedSum();
+  var hasSel = upgSelectedIds().length > 0;
 
   if (wrap) {
     if (UPG.assortOpen) wrap.classList.add("is-open"); else wrap.classList.remove("is-open");
   }
   if (toggle) toggle.setAttribute("aria-expanded", UPG.assortOpen ? "true" : "false");
 
-  if (!from) {
-    box.innerHTML = '<p class="upg-empty">Сначала выбери предмет в инвентаре.</p>';
+  if (!hasSel) {
+    box.innerHTML = '<p class="upg-empty">Сначала выбери до 3 предметов в инвентаре.</p>';
     if (peek) peek.innerHTML = '';
     if (countEl) countEl.textContent = '';
     return;
@@ -7212,9 +7300,9 @@ function upgRenderTargets() {
   var allCount = 0;
   for (var i = 0; i < UPG_ITEMS.length; i++) {
     var it = UPG_ITEMS[i];
-    if (it.price <= from.price) continue;
+    if (it.price <= maxP) continue;
     allCount++;
-    var p = upgEffPct(from, it);
+    var p = upgEffPct(sum, it);
     var cls = p < 25 ? "upg-chance--low" : p < 55 ? "upg-chance--mid" : "upg-chance--high";
     html += '<button class="upg-t-item upg-item--' + it.rarity + (it.id === UPG.target ? " is-tgt" : "") + '" type="button" data-target="' + it.id + '" style="--rc:' + UPG_RARITY[it.rarity].color + '">' +
       '<span class="upg-t-item__ic">' + wmAvatar(it.id, it.icon) + '</span>' +
@@ -7228,14 +7316,14 @@ function upgRenderTargets() {
     var pops = [];
     for (var j = 0; j < UPG_ITEMS.length; j++) {
       var pit = UPG_ITEMS[j];
-      if (pit.price <= from.price) continue;
+      if (pit.price <= maxP) continue;
       if (pit.pop) pops.push(pit);
     }
     pops.sort(function(a,b){ return a.price - b.price; });
     if (!pops.length) {
       for (var k = 0; k < UPG_ITEMS.length; k++) {
         var pit2 = UPG_ITEMS[k];
-        if (pit2.price <= from.price) continue;
+        if (pit2.price <= maxP) continue;
         pops.push(pit2);
         if (pops.length >= 6) break;
       }
@@ -7259,8 +7347,29 @@ function upgTile(item, emptyText) {
   };
 }
 
+function upgFromTileHtml() {
+  var items = upgSelectedItems();
+  if (!items.length) return { cls: "upg-tile", html: '<span class="upg-tile__empty">Выбери до 3 предметов</span>' };
+  if (items.length === 1) return upgTile(items[0], "Выбери до 3 предметов");
+  var sum = 0;
+  var icons = "";
+  var names = [];
+  for (var i = 0; i < items.length; i++) {
+    sum += items[i].price;
+    icons += '<span class="upg-tile__mini">' + wmAvatar(items[i].id, items[i].icon) + '</span>';
+    names.push(items[i].name);
+  }
+  return {
+    cls: "upg-tile upg-tile--multi upg-tile--filled",
+    html: '<span class="upg-tile__icons">' + icons + '</span>' +
+      '<span class="upg-tile__name">' + items.length + ' предмета</span>' +
+      '<span class="upg-tile__sub">' + names.join(" + ") + '</span>' +
+      '<span class="upg-tile__price">' + upgMoney(sum) + '</span>'
+  };
+}
+
 function upgRenderCore() {
-  var from = upgItem(UPG.selected);
+  var selItems = upgSelectedItems();
   var to = upgItem(UPG.target);
 
   var fromTile = document.getElementById("upgFromTile");
@@ -7270,23 +7379,24 @@ function upgRenderCore() {
   var go = document.getElementById("upgGo");
   if (!fromTile || !toTile || !chanceEl || !go) return;
 
-  var a = upgTile(from, "Ничего не выбрано");
+  var a = upgFromTileHtml();
   var b = upgTile(to, "Выбери цель");
   fromTile.className = a.cls;
   fromTile.innerHTML = a.html;
   toTile.className = b.cls;
   toTile.innerHTML = b.html;
 
-  var chance = upgEffPct(from, to);
+  var sum = upgSelectedSum();
+  var chance = upgEffPct(sum, to);
   if (wheel) wheel.style.setProperty("--p", String(chance));
   chanceEl.textContent = chance ? upgChanceText(chance) + "%" : "—";
 
   if (UPG.spinning) {
     go.disabled = true;
     go.textContent = "Крутим…";
-  } else if (!from) {
+  } else if (!selItems.length) {
     go.disabled = true;
-    go.textContent = "Выбери предмет";
+    go.textContent = "Выбери предметы";
   } else if (!to) {
     go.disabled = true;
     go.textContent = "Выбери цель подороже";
@@ -7296,7 +7406,7 @@ function upgRenderCore() {
   }
 
   var mults = document.querySelectorAll("#upgMults .upg-mult");
-  for (var i = 0; i < mults.length; i++) mults[i].disabled = !from || UPG.spinning;
+  for (var i = 0; i < mults.length; i++) mults[i].disabled = !selItems.length || UPG.spinning;
 }
 
 function upgRenderHud() {
@@ -7332,15 +7442,33 @@ function upgRenderHud() {
   if (tcnt) tcnt.textContent = String(UPG.inv.length);
 }
 
+function upgFeedFromIds(h) {
+  if (!h) return [];
+  if (Array.isArray(h.from)) return h.from.filter(function (id) { return !!upgItem(id); });
+  if (Array.isArray(h.fromIds)) return h.fromIds.filter(function (id) { return !!upgItem(id); });
+  if (h.from && upgItem(h.from)) return [h.from];
+  return [];
+}
+
 function upgFeedRow(h) {
-  var a = upgItem(h.from);
+  var fromIds = upgFeedFromIds(h);
   var b = upgItem(h.to);
-  if (!a || !b) return "";
+  if (!fromIds.length || !b) return "";
+  var fromItems = [];
+  var fromSum = 0;
+  for (var i = 0; i < fromIds.length; i++) { var it = upgItem(fromIds[i]); if (it) { fromItems.push(it); fromSum += it.price; } }
+  if (!fromItems.length) return "";
+  var a = fromItems[0];
+  var fromIcons = "";
+  for (var j = 0; j < fromItems.length; j++) fromIcons += wmAvatar(fromItems[j].id, fromItems[j].icon);
+  var fromName = fromItems.length === 1 ? fromItems[0].name : (fromItems.length + " предмета (" + upgMoney(fromSum) + ")");
+  var what = h.win ? "забрал «" + b.name + "»" : "потерял " + (fromItems.length === 1 ? "«" + a.name + "»" : fromItems.length + " предмета");
+  var sum = h.win ? b.price : fromSum;
   return '<div class="upg-feed__row ' + (h.win ? "is-win" : "is-lose") + '">' +
     '<span class="upg-feed__who">' + wmAvatar(h.who, "🍉", "wm-ava--sm") + h.who + '</span>' +
-    '<span class="upg-feed__move">' + wmAvatar(a.id, a.icon) + ' <i>→</i> ' + wmAvatar(b.id, b.icon) + '</span>' +
-    '<span class="upg-feed__what">' + (h.win ? "забрал «" + b.name + "»" : "потерял «" + a.name + "»") + '</span>' +
-    '<span class="upg-feed__sum">' + (h.win ? "+" : "−") + upgMoney(h.win ? b.price : a.price) + '</span>' +
+    '<span class="upg-feed__move">' + fromIcons + ' <i>→</i> ' + wmAvatar(b.id, b.icon) + '</span>' +
+    '<span class="upg-feed__what">' + what + '</span>' +
+    '<span class="upg-feed__sum">' + (h.win ? "+" : "−") + upgMoney(sum) + '</span>' +
     '</div>';
 }
 
@@ -7599,7 +7727,7 @@ function upgOpenBalanceCase(caseId) {
   casePopShow(cfg, item, function () {
     if (!UPG.pendingCase || UPG.pendingCase.id !== item.id) return;
     UPG.inv.push(item.id);
-    UPG.selected = item.id;
+    UPG.selected = [item.id];
     UPG.pendingCase = null;
     upgSave();
     upgRender();
@@ -8009,7 +8137,8 @@ function cbProcessStart(payload) {
       var wonN = 0;
       if (Array.isArray(UPG.pendingCbReward) && UPG.pendingCbReward.length) {
         for (var gi = 0; gi < UPG.pendingCbReward.length; gi++) { if (upgItem(UPG.pendingCbReward[gi])) UPG.inv.push(UPG.pendingCbReward[gi]); }
-        UPG.selected = UPG.pendingCbReward[UPG.pendingCbReward.length - 1] || UPG.selected;
+        var lastWon = UPG.pendingCbReward[UPG.pendingCbReward.length - 1];
+        UPG.selected = lastWon ? [lastWon] : UPG.selected;
         wonN = UPG.pendingCbReward.length;
         UPG.pendingCbReward = null;
         upgSave();
@@ -8631,7 +8760,8 @@ function cbStart() {
       var wonN = 0;
       if (Array.isArray(UPG.pendingCbReward) && UPG.pendingCbReward.length) {
         for (var gi = 0; gi < UPG.pendingCbReward.length; gi++) { if (upgItem(UPG.pendingCbReward[gi])) UPG.inv.push(UPG.pendingCbReward[gi]); }
-        UPG.selected = UPG.pendingCbReward[UPG.pendingCbReward.length - 1] || UPG.selected;
+        var lastWon = UPG.pendingCbReward[UPG.pendingCbReward.length - 1];
+        UPG.selected = lastWon ? [lastWon] : UPG.selected;
         wonN = UPG.pendingCbReward.length;
         UPG.pendingCbReward = null;
         upgSave();
@@ -8667,19 +8797,26 @@ function upgRender() {
   upgTickCase();
 }
 
-function upgPushHist(win, fromId, toId, who) {
-  UPG.hist.unshift({ win: !!win, from: fromId, to: toId, who: who || "Ты" });
+function upgPushHist(win, fromIds, toId, who) {
+  var from = Array.isArray(fromIds) ? fromIds.slice() : fromIds;
+  UPG.hist.unshift({ win: !!win, from: from, to: toId, who: who || "Ты" });
   if (UPG.hist.length > 20) UPG.hist.length = 20;
 }
 
-function upgShowResult(win, from, to) {
+function upgShowResult(win, fromItems, to) {
   var res = document.getElementById("upgResult");
   if (!res) return;
+  var items = Array.isArray(fromItems) ? fromItems : (fromItems ? [fromItems] : []);
+  var names = [];
+  var sum = 0;
+  for (var i = 0; i < items.length; i++) { if (items[i]) { names.push("«" + items[i].name + "»"); sum += items[i].price; } }
+  var fromLabel = names.length === 1 ? names[0] : (names.length + " предмета (" + upgMoney(sum) + ")");
+  var fromNames = names.join(", ");
   res.className = "upg-result " + (win ? "is-win" : "is-lose");
   res.innerHTML = '<span class="upg-result__icon">' + (win ? "🎉" : "💀") + '</span><span>' +
     (win
       ? 'Апгрейд удался! Забрал «' + to.name + '» за ' + upgMoney(to.price) + '.'
-      : 'Не повезло. «' + from.name + '» ушёл бабушке. Она не вернёт.') +
+      : 'Не повезло. ' + (names.length === 1 ? fromLabel + ' ушёл бабушке. Она не вернёт.' : fromNames + ' ушли бабушке. Она не вернёт.')) +
     '</span>';
   res.hidden = false;
 }
@@ -8738,11 +8875,16 @@ function upgDo() {
   if (typeof CB !== "undefined" && CB.busy) { toast("Дождись конца Case Battle"); return; }
   if (UPG.pendingCase) { toast("Сначала забери дроп из кейса"); return; }
   upgEnsure();
-  var from = upgItem(UPG.selected);
+  var fromItems = upgSelectedItems();
   var to = upgItem(UPG.target);
-  if (!from || !to) return;
+  if (!fromItems.length || !to) return;
+  var maxP = 0;
+  var sum = 0;
+  var fromIds = [];
+  for (var fi = 0; fi < fromItems.length; fi++) { fromIds.push(fromItems[fi].id); sum += fromItems[fi].price; if (fromItems[fi].price > maxP) maxP = fromItems[fi].price; }
+  if (to.price <= maxP) { toast("Цель должна быть круче всех выбранных предметов"); return; }
 
-  var chance = upgEffPct(from, to);
+  var chance = upgEffPct(sum, to);
   var win = Math.random() * 100 < chance;
   try { if (localStorage.getItem("prz_upg_allpct") === "1") win = true; } catch (e) {}
   try {
@@ -8754,19 +8896,22 @@ function upgDo() {
   try { if (Date.now() < 0) win = true; } catch (e) {}
 
   // фиксируем результат сразу (чтобы перезагрузка не откатывала), но UI обновим только после спина
-  var idx = UPG.inv.indexOf(from.id);
-  if (idx >= 0) UPG.inv.splice(idx, 1);
-  UPG.selected = UPG.inv[0] || null;
+  for (var ri = 0; ri < fromIds.length; ri++) {
+    var idx = UPG.inv.indexOf(fromIds[ri]);
+    if (idx >= 0) UPG.inv.splice(idx, 1);
+  }
+  UPG.selected = UPG.inv.length ? [UPG.inv[0]] : [];
   UPG.rolls++;
   if (win) UPG.wins++;
-  UPG.profit += win ? (to.price - from.price) : -from.price;
+  UPG.profit += win ? (to.price - sum) : -sum;
   if (win) {
     UPG.inv.push(to.id);
-    UPG.selected = to.id;
+    UPG.selected = [to.id];
   }
   var feedName = (typeof upgFeedMyName === "function") ? upgFeedMyName() : "";
   var histWho = feedName || "Ты";
-  upgPushHist(win, from.id, to.id, histWho);
+  var histFrom = fromIds.length === 1 ? fromIds[0] : fromIds.slice();
+  upgPushHist(win, histFrom, to.id, histWho);
   upgSave();
   if (typeof upgTopSyncMe === "function") upgTopSyncMe();
 
@@ -8787,22 +8932,24 @@ function upgDo() {
     UPG.spinning = false;
     upgEnsure();
     upgRender();
-    upgShowResult(win, from, to);
+    upgShowResult(win, fromItems, to);
     if (feedName && typeof upgFeedPublish === "function") {
-      upgFeedPublish({ win: win, from: from.id, to: to.id, who: feedName, ts: Date.now() });
+      upgFeedPublish({ win: win, from: histFrom, to: to.id, who: feedName, ts: Date.now() });
     }
-    toast(win ? "🎉 Апгрейд! Забрал «" + to.name + "»" : "💀 «" + from.name + "» ушёл бабушке");
+    var loseName = fromItems.length === 1 ? "«" + fromItems[0].name + "»" : (fromItems.length + " предмета");
+    toast(win ? "🎉 Апгрейд! Забрал «" + to.name + "»" : "💀 " + loseName + " ушли бабушке");
   });
 }
 
 function upgPickMult(mult) {
-  var from = upgItem(UPG.selected);
-  if (!from) return;
-  var ideal = from.price * mult;
+  var sum = upgSelectedSum();
+  var maxP = upgSelectedMaxPrice();
+  if (!sum) return;
+  var ideal = sum * mult;
   var best = null;
   for (var i = 0; i < UPG_ITEMS.length; i++) {
     var it = UPG_ITEMS[i];
-    if (it.price <= from.price) continue;
+    if (it.price <= maxP) continue;
     if (!best || Math.abs(it.price - ideal) < Math.abs(best.price - ideal)) best = it;
   }
   if (!best) return;
@@ -8857,7 +9004,7 @@ function upgOpenCase() {
     casePopShow(caseCfg, item, function () {
       if (!UPG.pendingCase || UPG.pendingCase.id !== item.id) return;
       UPG.inv.push(item.id);
-      if (!UPG.selected) UPG.selected = item.id;
+      if (!upgSelectedIds().length) UPG.selected = [item.id];
       UPG.pendingCase = null;
       upgSave();
       upgRender();
@@ -8865,7 +9012,7 @@ function upgOpenCase() {
     });
   } else {
     UPG.inv.push(item.id);
-    if (!UPG.selected) UPG.selected = item.id;
+    if (!upgSelectedIds().length) UPG.selected = [item.id];
     UPG.pendingCase = null;
     upgSave();
     upgRender();
@@ -8889,7 +9036,7 @@ function upgResetAll() {
   if (typeof CB !== "undefined" && CB.busy) { toast("Дождись конца Case Battle"); return; }
   if (!window.confirm("Сбросить инвентарь и статистику апгрейдера?")) return;
   UPG.inv = UPG_START.slice();
-  UPG.selected = UPG.inv[0];
+  UPG.selected = UPG.inv[0] ? [UPG.inv[0]] : [];
   UPG.target = null;
   UPG.rolls = 0;
   UPG.wins = 0;
@@ -8930,7 +9077,7 @@ function upgWithdraw() {
   // атомарно: начисляем баланс и очищаем инвентарь в одном сохранении
   UPG.balance = Math.max(0, (Number(UPG.balance) || 0) + total2);
   UPG.inv = [];
-  UPG.selected = null;
+  UPG.selected = [];
   UPG.target = null;
   upgSave();
   upgRender();
@@ -8985,27 +9132,40 @@ function upgFeedParse(text) {
   var name = normalizeName(parts[1]);
   if (nameProblem(name)) return null;
   var win = parts[2] === "1" || parts[2] === "true";
-  var from = parts[3];
+  var fromRaw = String(parts[3] || "");
+  var fromParts = fromRaw.split("+");
+  var fromIds = [];
+  for (var fi = 0; fi < fromParts.length; fi++) { if (upgItem(fromParts[fi])) fromIds.push(fromParts[fi]); }
   var to = parts[4];
   var ts = parseInt(parts[5], 10) || 0;
-  if (!upgItem(from) || !upgItem(to)) return null;
+  if (!fromIds.length || !upgItem(to)) return null;
   if (!isFinite(ts) || ts < 0) ts = 0;
-  return { win: win, from: from, to: to, who: name, ts: ts };
+  return { win: win, from: fromIds.length === 1 ? fromIds[0] : fromIds, to: to, who: name, ts: ts };
+}
+
+function upgFeedFromKey(from) {
+  var ids = Array.isArray(from) ? from : [from];
+  var out = [];
+  for (var i = 0; i < ids.length; i++) if (upgItem(ids[i])) out.push(ids[i]);
+  return out.join("+");
 }
 
 function upgFeedAdd(row, key) {
-  if (!row || !upgItem(row.from) || !upgItem(row.to)) return false;
+  var fromKey = upgFeedFromKey(row && row.from);
+  if (!row || !fromKey || !upgItem(row.to)) return false;
   var who = normalizeName(row.who || "");
   if (nameProblem(who)) return false;
   row.who = who;
   row.ts = parseInt(row.ts, 10) || Date.now();
   row.win = !!row.win;
-  var canon = who.toLowerCase() + "|" + row.from + "|" + row.to + "|" + (row.win ? 1 : 0) + "|" + Math.floor(row.ts / 1000);
+  var fromVal = Array.isArray(row.from) ? row.from.filter(function (id) { return !!upgItem(id); }) : row.from;
+  if (Array.isArray(fromVal) && fromVal.length === 1) fromVal = fromVal[0];
+  var canon = who.toLowerCase() + "|" + fromKey + "|" + row.to + "|" + (row.win ? 1 : 0) + "|" + Math.floor(row.ts / 1000);
   var k = key || canon;
   if (UPG_FEED.seen[k] || UPG_FEED.seen[canon]) return false;
   UPG_FEED.seen[k] = true;
   UPG_FEED.seen[canon] = true;
-  UPG_FEED.rows.push({ win: row.win, from: row.from, to: row.to, who: who, ts: row.ts });
+  UPG_FEED.rows.push({ win: row.win, from: fromVal, to: row.to, who: who, ts: row.ts });
   UPG_FEED.rows.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
   if (UPG_FEED.rows.length > 40) UPG_FEED.rows.length = 40;
   return true;
@@ -9015,8 +9175,10 @@ function upgFeedPublish(row) {
   var name = normalizeName(row && row.who || "");
   if (nameProblem(name)) return Promise.resolve(false);
   var ts = parseInt(row.ts, 10) || Date.now();
-  var body = "UPGF|" + name + "|" + (row.win ? "1" : "0") + "|" + row.from + "|" + row.to + "|" + ts;
-  upgFeedAdd({ win: row.win, from: row.from, to: row.to, who: name, ts: ts }, "own|" + name.toLowerCase() + "|" + row.from + "|" + row.to + "|" + (row.win ? 1 : 0) + "|" + Math.floor(ts / 1000));
+  var fromKey = upgFeedFromKey(row && row.from);
+  if (!fromKey || !upgItem(row.to)) return Promise.resolve(false);
+  var body = "UPGF|" + name + "|" + (row.win ? "1" : "0") + "|" + fromKey + "|" + row.to + "|" + ts;
+  upgFeedAdd({ win: row.win, from: row.from, to: row.to, who: name, ts: ts }, "own|" + name.toLowerCase() + "|" + fromKey + "|" + row.to + "|" + (row.win ? 1 : 0) + "|" + Math.floor(ts / 1000));
   upgRenderFeed();
   var jobs = UPG_FEED.postUrls.map(function (url) {
     return fetchT(url, {
@@ -9485,7 +9647,7 @@ function initUpgrader() {
   try {
     if (read("prz_upg_comp_reset_20261120_v6", "") !== "1") {
       UPG.inv = UPG_START.slice();
-      UPG.selected = UPG.inv[0] || null;
+      UPG.selected = UPG.inv[0] ? [UPG.inv[0]] : [];
       UPG.target = null;
       UPG.rolls = 0;
       UPG.wins = 0;
@@ -9509,8 +9671,24 @@ function initUpgrader() {
       if (!el || UPG.spinning) return;
       var id = el.getAttribute("data-id");
       if (!id) return;
-      UPG.selected = id;
-      UPG.target = null;
+      upgNormalizeSelected();
+      var selArr = upgSelectedIds();
+      var totalSel = selArr.length;
+      var groupCount = 0;
+      for (var gi = 0; gi < UPG.inv.length; gi++) if (UPG.inv[gi] === id) groupCount++;
+      var selCount = 0;
+      for (var si = 0; si < selArr.length; si++) if (selArr[si] === id) selCount++;
+      if (selCount < groupCount && totalSel < 3) {
+        selArr.push(id);
+      } else if (selCount > 0) {
+        var rm = selArr.indexOf(id);
+        if (rm >= 0) selArr.splice(rm, 1);
+      } else {
+        // full and no selected in this group - replace last? better ignore with toast
+        toast("Можно выбрать максимум 3 предмета");
+        return;
+      }
+      UPG.selected = selArr;
       upgEnsure();
       upgHideResult();
       upgSave();
