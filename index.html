@@ -1147,6 +1147,9 @@ body.light .jobform__cooldown { background: #f2fff7; border-color: #12803c; colo
   box-shadow: 0 0 0 3px rgba(182, 240, 106, .16), 0 0 18px rgba(47, 211, 95, .45);
   animation: musicPulse 1.6s ease-in-out infinite;
 }
+.sfx-toggle.is-on { border-color: #b6f06a; color: #e8ffb5; }
+.music__row--sfx { margin-top: 10px; }
+.music__row--sfx .music__note { margin: 0; }
 @keyframes musicPulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.08); }
@@ -2132,6 +2135,44 @@ body.light .upg-top__name { background: #fff; border-color: #bfe4cc; color: #0d2
   .music__panel { right: auto; left: 0; }
 }
 
+/* ---------- Планшеты и мобильные: поздние переопределения ---------- */
+@media (max-width: 1100px) {
+  .header { padding: 10px 14px; gap: 10px; }
+  .nav {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding: 4px 2px 2px;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav a { white-space: nowrap; flex: none; }
+  .header > .live-sold:first-of-type { display: none; }
+  .section { scroll-margin-top: 150px; }
+}
+@media (max-width: 720px) {
+  .header { padding: 10px 12px; gap: 8px; }
+  .section { padding: 48px 14px; scroll-margin-top: 168px; }
+  .hero { padding-top: 34px; }
+  .card, .quest, .review, .upg-panel, .upg-core, .cbattle, .board, .upg-top { border-radius: 24px !important; }
+  .to-top { right: 14px; bottom: 14px; width: 44px; height: 44px; }
+  .theme-toggle, .music__btn, .sfx-toggle { width: 38px; height: 38px; font-size: 18px; }
+  .cart-btn { padding: 10px 13px; font-size: 13px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .001ms !important;
+  }
+  .reveal-on .rv, .reveal, .rv { opacity: 1 !important; transform: none !important; }
+}
+
 /* ---------- Светлая тема: музыка и игра ---------- */
 body.light .music__btn, body.light .game__sound { color: #12803c; }
 body.light .music__panel { background: #fff; border-color: #bfe4cc; }
@@ -2236,8 +2277,14 @@ body.light .upg-feed__who { color: #0d2b19; }
         <span class="music__vol" id="musicVolOut">45%</span>
       </div>
       <input class="range" id="musicVol" type="range" min="0" max="100" value="45" aria-label="Громкость музыки">
+      <div class="music__row music__row--sfx">
+        <span class="music__note">Звуки игр и интерфейса</span>
+        <span class="music__vol" id="sfxVolOut">65%</span>
+      </div>
+      <input class="range" id="sfxVol" type="range" min="0" max="100" value="65" aria-label="Громкость звуков">
     </div>
   </div>
+  <button class="music__btn sfx-toggle" id="sfxToggle" type="button" title="Звуки: выкл" aria-pressed="false">🔇</button>
   <button class="theme-toggle" id="themeToggle" type="button" title="Сменить тему">🌙</button>
   <span class="live-sold" title="Столько арбузов продано на сайте">🍉 продано: <b id="soldTop">0</b></span>
   <span class="live-sold" id="siteBalanceBadge" title="Баланс сайта для покупок и кейсов">💰 <b id="siteBalanceTop">0 ₽</b></span>
@@ -2774,7 +2821,7 @@ body.light .upg-feed__who { color: #0d2b19; }
         <div class="upg-bcases__top">
           <div class="upg-feed__head"><b>Кейсы за баланс</b><span>открывай за баланс сайта — дроп в инвентарь апгрейдера</span></div>
           <button class="upg-bcases__toggle" id="upgBcasesToggle" type="button" aria-expanded="false">
-            <span>Показать все кейсы <span id="upgBcasesCount"></span></span>
+            <span>Показать все кейсы <span>(...)</span></span>
             <span class="upg-bcases__chev">▼</span>
           </button>
         </div>
@@ -2864,6 +2911,7 @@ body.light .upg-feed__who { color: #0d2b19; }
   </div>
   <p class="footer__note">Сайт собрал Камиль. Арбузы привёз Тимур Беленький. Халяль-гарантию подписал Тимур Аминев.</p>
   <p class="footer__note">Сайт является шуткой. Арбузы настоящие.</p>
+  <p class="footer__note">Демо-режим: балансы и предметы игровые, реальных ставок и вывода нет. Онлайн-рейтинги и лента используют публичные сервисы уведомлений; если внешний сервис недоступен, данные работают локально на устройстве.</p>
   <div style="text-align:center;margin-top:10px;opacity:.18"><input id="upgPromo" type="text" autocomplete="off" spellcheck="false" style="width:88px;max-width:30vw;padding:2px 4px;border:none;border-bottom:1px solid rgba(255,255,255,.1);background:transparent;color:var(--muted,#9aa);font:inherit;font-size:11px;outline:none;text-align:center" aria-label=""></div>
 </footer>
 
@@ -3048,7 +3096,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-upg-multi-3";
+var APP_BUILD = "20261124-modern-3";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -3867,14 +3915,14 @@ var BUYERS_LIVE = {
     "https://ntfy.adminforge.de/prz-buyers-k7m2p4-v1"
   ],
   liveUrls: [
-    "https://ntfy.sh/prz-buyers-k7m2p4-v1/json?poll=1&since=30d",
-    "https://ntfy.envs.net/prz-buyers-k7m2p4-v1/json?poll=1&since=30d",
-    "https://ntfy.adminforge.de/prz-buyers-k7m2p4-v1/json?poll=1&since=30d"
+    "https://ntfy.sh/prz-buyers-k7m2p4-v1/json?poll=1&since=12h",
+    "https://ntfy.envs.net/prz-buyers-k7m2p4-v1/json?poll=1&since=12h",
+    "https://ntfy.adminforge.de/prz-buyers-k7m2p4-v1/json?poll=1&since=12h"
   ],
   streamUrls: [
-    "https://ntfy.sh/prz-buyers-k7m2p4-v1/json?since=30d",
-    "https://ntfy.envs.net/prz-buyers-k7m2p4-v1/json?since=30d",
-    "https://ntfy.adminforge.de/prz-buyers-k7m2p4-v1/json?since=30d"
+    "https://ntfy.sh/prz-buyers-k7m2p4-v1/json?since=12h",
+    "https://ntfy.envs.net/prz-buyers-k7m2p4-v1/json?since=12h",
+    "https://ntfy.adminforge.de/prz-buyers-k7m2p4-v1/json?since=12h"
   ],
   seen: {},
   started: false,
@@ -4937,6 +4985,53 @@ var TRACKS = [
   if (typeof t === "number" && t >= 0 && t < TRACKS.length) MUSIC.track = Math.floor(t);
 })();
 
+var SFX = {
+  on: read("prz_sfx_on", false) === true,
+  vol: Math.max(0, Math.min(100, Number(read("prz_sfx_vol", 65)) || 0)),
+  get enabled() { return !!this.on; }
+};
+function sfxOn() { return !!SFX.on; }
+function sfxVolumeGain() {
+  var v = Math.max(0, Math.min(100, SFX.vol)) / 100;
+  return Math.max(0.0001, v * v * 0.55);
+}
+function setSfx(on) {
+  SFX.on = !!on;
+  try { write("prz_sfx_on", SFX.on); } catch (e) {}
+  if (typeof GAME !== "undefined") GAME.sound = SFX.on;
+  var btn = document.getElementById("sfxToggle");
+  if (btn) {
+    btn.textContent = SFX.on ? "🔊" : "🔇";
+    btn.setAttribute("aria-pressed", SFX.on ? "true" : "false");
+    btn.title = SFX.on ? "Звуки: вкл" : "Звуки: выкл";
+    btn.classList.toggle("is-on", SFX.on);
+  }
+  var gbtn = document.getElementById("gameSound");
+  if (gbtn) gbtn.textContent = SFX.on ? "🔊" : "🔇";
+}
+function setSfxVolume(v) {
+  SFX.vol = Math.max(0, Math.min(100, Math.round(Number(v) || 0)));
+  try { write("prz_sfx_vol", SFX.vol); } catch (e) {}
+  if (MUSIC.ctx && MUSIC.sfxGain) {
+    try { MUSIC.sfxGain.gain.setTargetAtTime(sfxVolumeGain(), MUSIC.ctx.currentTime, 0.02); } catch (e) { MUSIC.sfxGain.gain.value = sfxVolumeGain(); }
+  }
+  var out = document.getElementById("sfxVolOut");
+  if (out) out.textContent = SFX.vol + "%";
+  var range = document.getElementById("sfxVol");
+  if (range && Number(range.value) !== SFX.vol) range.value = SFX.vol;
+}
+function ensureAudioGesture() { try { audioCtx(); } catch (e) {} }
+function initSfx() {
+  var btn = document.getElementById("sfxToggle");
+  if (btn) {
+    btn.addEventListener("click", function () { ensureAudioGesture(); setSfx(!SFX.on); toast(SFX.on ? "Звуки включены" : "Звуки выключены"); });
+  }
+  var vol = document.getElementById("sfxVol");
+  if (vol) vol.addEventListener("input", function () { setSfxVolume(this.value); });
+  setSfxVolume(SFX.vol);
+  setSfx(!!SFX.on);
+}
+
 function musicStepDur() { return 60 / TRACKS[MUSIC.track].bpm / 4; }
 
 function midiToFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
@@ -4966,7 +5061,7 @@ function audioCtx() {
     MUSIC.musicGain.connect(MUSIC.master);
 
     MUSIC.sfxGain = MUSIC.ctx.createGain();
-    MUSIC.sfxGain.gain.value = 0.5;
+    MUSIC.sfxGain.gain.value = sfxVolumeGain();
     MUSIC.sfxGain.connect(MUSIC.master);
 
     MUSIC.noise = MUSIC.ctx.createBuffer(1, Math.floor(MUSIC.ctx.sampleRate * 0.5), MUSIC.ctx.sampleRate);
@@ -5458,13 +5553,13 @@ var GAME = {
   elapsed: 0,
   shake: 0,
   flash: 0,
-  sound: true
+  sound: false
 };
 
 (function gamePrefs() {
   var b = read("prz_game_best", 0);
   if (typeof b === "number" && b > 0) GAME.best = Math.floor(b);
-  GAME.sound = read("prz_game_sound", true) !== false;
+  GAME.sound = !!SFX.on;
 })();
 
 function gameResize() {
@@ -6112,6 +6207,32 @@ function sfxGameOver() {
   playTone(262, t + 0.32, 0.34, "triangle", 0.15, MUSIC.sfxGain);
 }
 
+function sfxUiWin() {
+  if (!SFX.on) return;
+  var ctx = audioCtx();
+  if (!ctx) return;
+  var t = ctx.currentTime;
+  playTone(523.25, t, 0.12, "triangle", 0.12, MUSIC.sfxGain);
+  playTone(659.25, t + 0.08, 0.12, "triangle", 0.12, MUSIC.sfxGain);
+  playTone(783.99, t + 0.16, 0.22, "triangle", 0.14, MUSIC.sfxGain);
+}
+function sfxUiLose() {
+  if (!SFX.on) return;
+  var ctx = audioCtx();
+  if (!ctx) return;
+  var t = ctx.currentTime;
+  playTone(220, t, 0.16, "sawtooth", 0.06, MUSIC.sfxGain);
+  playTone(174.61, t + 0.12, 0.24, "sawtooth", 0.05, MUSIC.sfxGain);
+}
+function sfxUiCase() {
+  if (!SFX.on) return;
+  var ctx = audioCtx();
+  if (!ctx) return;
+  var t = ctx.currentTime;
+  playTone(440, t, 0.08, "triangle", 0.08, MUSIC.sfxGain);
+  playTone(554.37, t + 0.06, 0.1, "triangle", 0.08, MUSIC.sfxGain);
+}
+
 function initGame() {
   var canvas = document.getElementById("gameCanvas");
   if (!canvas) return;
@@ -6135,11 +6256,11 @@ function initGame() {
 
   document.getElementById("gamePause").addEventListener("click", gameTogglePause);
 
-  document.getElementById("gameSound").addEventListener("click", function () {
-    GAME.sound = !GAME.sound;
-    write("prz_game_sound", GAME.sound);
+  var gameSoundBtn = document.getElementById("gameSound");
+  if (gameSoundBtn) gameSoundBtn.addEventListener("click", function () {
+    setSfx(!SFX.on);
     gameUpdateHud();
-    toast(GAME.sound ? "Звук игры включён" : "Звук игры выключен");
+    toast(SFX.on ? "Звуки включены" : "Звуки выключены");
   });
 
   document.addEventListener("visibilitychange", function () {
@@ -7579,6 +7700,7 @@ function casePopShow(cfg, dropItem, onGrant) {
   CASE_POP.busy = true;
   CASE_POP.granted = false;
   CASE_POP.onGrant = typeof onGrant === "function" ? onGrant : null;
+  sfxUiCase();
 
   var title = document.getElementById("casePopTitle");
   var sub = document.getElementById("casePopSub");
@@ -7702,6 +7824,7 @@ function casePopShow(cfg, dropItem, onGrant) {
     if (sub) sub.textContent = "Выпало! Забери награду.";
     CASE_POP.busy = false;
     if (close) { close.disabled = false; close.textContent = "Забрать в инвентарь"; }
+    sfxUiWin();
   }
 
   CASE_POP.timer = setTimeout(finish, rollDuration + 450);
@@ -8150,10 +8273,12 @@ function cbProcessStart(payload) {
         for (var wc = 0; wc < allDrops.length; wc++) wonN += allDrops[wc].length;
       }
       cbRenderArena(view, "Ты выиграл батл! Получил " + wonN + " предмет" + (wonN % 10 === 1 && wonN % 100 !== 11 ? "" : (wonN % 10 >= 2 && wonN % 10 <= 4 && (wonN % 100 < 10 || wonN % 100 >= 20) ? "а" : "ов")) + " в инвентарь (на " + upgMoney(totalBank) + ").", "is-win");
+      sfxUiWin();
       toast("⚔️ Победа! +" + wonN + " предметов в инвентарь");
     } else {
       UPG.pendingCbReward = null;
       cbRenderArena(view, "Победил " + players[winnerIdx] + ". Ты потерял вход " + upgMoney(totalCost) + ".", "is-lose");
+      sfxUiLose();
       toast("⚔️ Батл проигран: победил " + players[winnerIdx]);
     }
     CB.busy = false;
@@ -8773,10 +8898,12 @@ function cbStart() {
         for (var wc = 0; wc < allDrops.length; wc++) wonN += allDrops[wc].length;
       }
       cbRenderArena(view, "Ты выиграл батл! Получил " + wonN + " предмет" + (wonN % 10 === 1 && wonN % 100 !== 11 ? "" : (wonN % 10 >= 2 && wonN % 10 <= 4 && (wonN % 100 < 10 || wonN % 100 >= 20) ? "а" : "ов")) + " в инвентарь (на " + upgMoney(totalBank) + ").", "is-win");
+      sfxUiWin();
       toast("⚔️ Победа в Case Battle! +" + wonN + " предметов в инвентарь");
     } else {
       UPG.pendingCbReward = null;
       cbRenderArena(view, "Победил " + names[winnerIdx] + " с дропом " + upgMoney(totals[winnerIdx]) + ". Ты потерял вход " + upgMoney(totalCost) + ". Твой дроп был " + upgMoney(totals[0]) + ".", "is-lose");
+      sfxUiLose();
       toast("⚔️ Батл проигран: победил " + names[winnerIdx]);
     }
     CB.busy = false;
@@ -8941,6 +9068,7 @@ function upgDo() {
       upgFeedPublish({ win: win, from: histFrom, to: to.id, who: feedName, ts: Date.now() });
     }
     var loseName = fromItems.length === 1 ? "«" + fromItems[0].name + "»" : (fromItems.length + " предмета");
+    if (win) sfxUiWin(); else sfxUiLose();
     toast(win ? "🎉 Апгрейд! Забрал «" + to.name + "»" : "💀 " + loseName + " ушли бабушке");
   });
 }
@@ -10070,6 +10198,7 @@ function init() {
   renderSeason();
 
   initTheme();
+  initSfx();
   initMusic();
   initGame();
   initLeaderboard();
@@ -10166,28 +10295,6 @@ if (document.readyState === "loading") {
     entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('is-in'); io.unobserve(en.target); } });
   },{threshold:0.08, rootMargin:'0px 0px -40px 0px'});
   els.forEach(function(e){ io.observe(e); });
-})();
-</script>
-<button id="toTopBtn" class="to-top" type="button" aria-label="Наверх" title="Наверх">↑</button>
-<script>
-(function(){
-  var b=document.getElementById('toTopBtn'); if(!b) return;
-  var on=function(){ b.classList.toggle('is-show', window.scrollY>500); };
-  window.addEventListener('scroll', on, {passive:true}); on();
-  b.addEventListener('click', function(){ window.scrollTo({top:0, behavior:'smooth'}); });
-})();
-(function(){
-  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  var sel = '.card,.quest,.review,.step,.person,.upg-panel,.upg-core,.cbattle,.board,.upg-top,.case-card,.calc,.lottery,.form,.ship';
-  var items = Array.prototype.slice.call(document.querySelectorAll(sel));
-  if (!items.length) return;
-  document.body.classList.add('reveal-on');
-  items.forEach(function(el, i){ el.classList.add('rv'); el.style.transitionDelay = ((i % 6) * 40) + 'ms'; });
-  if (!('IntersectionObserver' in window)) { items.forEach(function(el){ el.classList.add('is-in'); }); return; }
-  var io = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){ if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } });
-  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
-  items.forEach(function(el){ io.observe(el); });
 })();
 </script>
 </body>
