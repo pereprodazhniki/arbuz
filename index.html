@@ -1836,6 +1836,8 @@ body.light .casepop__close { background: linear-gradient(180deg,#e8ffe8,#d4f0d8)
   height: 136px;
   border-radius: 50%;
   position: relative;
+  transform: rotate(0deg);
+  will-change: transform;
   background: conic-gradient(#2fd35f 0 calc(var(--p, 0) * 1%), #ff4d5a calc(var(--p, 0) * 1%) 100%);
   box-shadow: 0 0 0 7px rgba(0,0,0,.22), 0 0 0 1px rgba(182,240,106,.12), 0 0 40px rgba(47,211,95,.12), inset 0 0 20px rgba(0,0,0,.1);
 }
@@ -1850,47 +1852,46 @@ body.light .casepop__close { background: linear-gradient(180deg,#e8ffe8,#d4f0d8)
 }
 .upg-wheel__center {
   position: absolute;
-  inset: 0;
+  inset: 6px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  z-index: 2;
+  z-index: 3;
   pointer-events: none;
 }
 .upg-wheel__center b { font-size: 24px; line-height: 1; color: #fff; }
 .upg-wheel__center span { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
 .upg-arrow {
   position: absolute;
-  inset: 0;
+  inset: -2px;
   z-index: 4;
   pointer-events: none;
-  transform: rotate(0deg);
-  will-change: transform;
 }
 .upg-arrow::before {
-  content: "";
-  position: absolute;
-  top: -4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0; height: 0;
-  border-left: 12px solid transparent;
-  border-right: 12px solid transparent;
-  border-top: 22px solid #fff48a;
-  filter: drop-shadow(0 2px 5px rgba(0,0,0,.7));
-}
-.upg-arrow::after {
   content: "";
   position: absolute;
   top: -10px;
   left: 50%;
   transform: translateX(-50%);
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #fff, #ffcc4d 60%, #c97a00);
-  box-shadow: 0 1px 4px rgba(0,0,0,.5);
+  width: 0;
+  height: 0;
+  border-left: 11px solid transparent;
+  border-right: 11px solid transparent;
+  border-top: 20px solid #f4fff8;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,.45));
+}
+.upg-arrow::after {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 13px solid var(--lime);
 }
 
 /* ---------- Ассортимент апгрейдера (сворачиваемый) ---------- */
@@ -2774,10 +2775,9 @@ body.light .upg-feed__who { color: #0d2b19; }
           <div class="upg-core__top">
             <div class="upg-tile" id="upgFromTile"></div>
             <div class="upg-wheel-wrap" id="upgWheelWrap">
+              <div class="upg-wheel" id="upgWheel" style="--p:0"></div>
+              <div class="upg-wheel__center"><b id="upgChance">—</b><span>шанс</span></div>
               <div class="upg-arrow" id="upgArrow"></div>
-              <div class="upg-wheel" id="upgWheel" style="--p:0">
-                <div class="upg-wheel__center"><b id="upgChance">—</b><span>шанс</span></div>
-              </div>
             </div>
             <div class="upg-tile" id="upgToTile"></div>
           </div>
@@ -3108,7 +3108,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-color-1";
+var APP_BUILD = "20261124-arrow-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7142,7 +7142,7 @@ var UPG = {
   spinning: false,
   assortOpen: false,
   bcasesOpen: false,
-  arrowDeg: 0
+  wheelDeg: 0
 };
 
 
@@ -7543,6 +7543,11 @@ function upgRenderCore() {
   var chance = upgEffPct(sum, to);
   if (wheel) wheel.style.setProperty("--p", String(chance));
   chanceEl.textContent = chance ? upgChanceText(chance) + "%" : "—";
+
+  if (wheel && !UPG.spinning && Number(UPG.wheelDeg)) {
+    wheel.style.transition = "none";
+    wheel.style.transform = "rotate(" + UPG.wheelDeg + "deg)";
+  }
 
   if (UPG.spinning) {
     go.disabled = true;
@@ -8987,8 +8992,8 @@ function upgHideResult() {
 }
 
 function upgSpinWheel(win, chance, ms, done) {
-  var arrow = document.getElementById("upgArrow");
-  if (!arrow) { done(); return; }
+  var wheel = document.getElementById("upgWheel");
+  if (!wheel) { done(); return; }
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   chance = Math.max(0.5, Math.min(99.5, Number(chance) || 50));
   var greenEnd = chance * 3.6;
@@ -9013,20 +9018,25 @@ function upgSpinWheel(win, chance, ms, done) {
       target = redStart + rPad + Math.random() * rSpan;
     }
   }
-  var base = Math.ceil(UPG.arrowDeg / 360) * 360;
-  var next = base + 360 * (4 + Math.floor(Math.random() * 3)) + target;
-  if (next <= UPG.arrowDeg + 360) next += 360;
-  UPG.arrowDeg = next;
+  // Указатель стоит сверху, вращается колесо: нужный сектор должен прийти под него.
+  var cur = Number(UPG.wheelDeg) || 0;
+  var base = Math.floor(cur / 360) * 360;
+  var next = base - 360 * (4 + Math.floor(Math.random() * 3)) - target;
+  if (next >= cur - 360) next -= 360;
+  UPG.wheelDeg = next;
+  var endTransform = "rotate(" + UPG.wheelDeg + "deg)";
   if (reduce) {
-    arrow.style.transition = "none";
-    arrow.style.transform = "rotate(" + UPG.arrowDeg + "deg)";
+    wheel.style.transition = "none";
+    wheel.style.transform = endTransform;
     setTimeout(function () { done(nearMiss); }, 120);
     return;
   }
-  arrow.style.transition = "transform " + ms + "ms cubic-bezier(.12,.72,.08,1)";
-  requestAnimationFrame(function () {
-    arrow.style.transform = "rotate(" + UPG.arrowDeg + "deg)";
-  });
+  // Без requestAnimationFrame: вкладка может быть скрыта, и анимация не запустится.
+  wheel.style.transition = "none";
+  wheel.style.transform = "rotate(" + cur + "deg)";
+  void wheel.offsetWidth;
+  wheel.style.transition = "transform " + ms + "ms cubic-bezier(.12,.72,.08,1)";
+  wheel.style.transform = endTransform;
   setTimeout(function () { done(nearMiss); }, ms + 60);
 }
 
