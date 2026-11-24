@@ -1411,6 +1411,9 @@ body.light .jobform__cooldown { background: #f2fff7; border-color: #12803c; colo
 }
 .upg-panel__head b { font-size: 15px; }
 .upg-panel__head span { font-size: 12px; color: var(--muted); font-weight: 600; }
+.upg-panel__headr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.upg-clear-sel { border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: var(--muted); font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 999px; cursor: pointer; transition: .2s; }
+.upg-clear-sel:hover { color: #fff; border-color: rgba(182,240,106,.35); background: rgba(182,240,106,.08); }
 .upg-list {
   display: flex;
   flex-direction: column;
@@ -2704,7 +2707,7 @@ body.light .upg-feed__who { color: #0d2b19; }
 
       <div class="upg__grid">
         <aside class="upg-panel">
-          <div class="upg-panel__head"><b>Твой инвентарь</b><span id="upgInvHint">выбери до 3 предметов</span></div>
+          <div class="upg-panel__head"><b>Твой инвентарь</b><div class="upg-panel__headr"><span id="upgInvHint">выбери до 3 предметов</span><button class="upg-clear-sel" id="upgClearSel" type="button" hidden>Снять выбор</button></div></div>
           <div class="upg-list" id="upgInv"></div>
         </aside>
 
@@ -3045,7 +3048,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-upg-multi-2";
+var APP_BUILD = "20261124-upg-multi-3";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -7209,7 +7212,6 @@ function upgNormalizeSelected() {
 
 function upgEnsure() {
   upgNormalizeSelected();
-  if (!UPG.selected.length && UPG.inv.length) UPG.selected = [UPG.inv[0]];
 
   var sum = upgSelectedSum();
   if (!UPG.selected.length || !sum) { UPG.target = null; return; }
@@ -7238,9 +7240,11 @@ function upgRenderInv() {
   var hint = document.getElementById("upgInvHint");
   if (!box) return;
 
+  var clr = document.getElementById("upgClearSel");
   if (!UPG.inv.length) {
     box.innerHTML = '<p class="upg-empty">Пусто. Забери бесплатный кейс — бабушка уже несёт.</p>';
     if (hint) hint.textContent = "инвентарь пуст";
+    if (clr) clr.hidden = true;
     return;
   }
 
@@ -7270,6 +7274,8 @@ function upgRenderInv() {
   }
   box.innerHTML = html;
   if (hint) hint.textContent = totalSel ? ("выбрано " + totalSel + "/3") : "выбери до 3 предметов";
+  var clr2 = document.getElementById("upgClearSel");
+  if (clr2) clr2.hidden = !totalSel;
 }
 
 function upgRenderTargets() {
@@ -9675,17 +9681,30 @@ function initUpgrader() {
       for (var gi = 0; gi < UPG.inv.length; gi++) if (UPG.inv[gi] === id) groupCount++;
       var selCount = 0;
       for (var si = 0; si < selArr.length; si++) if (selArr[si] === id) selCount++;
-      if (selCount < groupCount && totalSel < 3) {
-        selArr.push(id);
-      } else if (selCount > 0) {
-        var rm = selArr.indexOf(id);
-        if (rm >= 0) selArr.splice(rm, 1);
-      } else {
-        // full and no selected in this group - replace last? better ignore with toast
+      var otherSel = totalSel - selCount;
+      var maxCan = Math.min(groupCount, 3 - otherSel);
+      if (maxCan <= 0) {
         toast("Можно выбрать максимум 3 предмета");
         return;
       }
-      UPG.selected = selArr;
+      var next = selCount + 1;
+      if (next > maxCan) next = 0;
+      var rebuilt = [];
+      for (var r = 0; r < selArr.length; r++) if (selArr[r] !== id) rebuilt.push(selArr[r]);
+      for (var a2 = 0; a2 < next; a2++) rebuilt.push(id);
+      UPG.selected = rebuilt;
+      upgEnsure();
+      upgHideResult();
+      upgSave();
+      upgRender();
+    });
+  }
+  var clearSelBtn = document.getElementById("upgClearSel");
+  if (clearSelBtn) {
+    clearSelBtn.addEventListener("click", function () {
+      if (UPG.spinning) return;
+      UPG.selected = [];
+      UPG.target = null;
       upgEnsure();
       upgHideResult();
       upgSave();
