@@ -2351,8 +2351,55 @@ body.light .upg-feed__who { color: #0d2b19; }
 body.light .hub__status { background: #fff; }
 body.light .hub-links a { background: rgba(18,128,60,.06); }
 
+.profile__layout { display: grid; gap: var(--space-3); }
+.profile__hero {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap;
+  padding: 24px; border: 1px solid var(--line-strong); border-radius: 28px;
+  background: var(--surface-glass); box-shadow: var(--shadow-soft); position: relative; overflow: hidden;
+}
+.profile__hero::before {
+  content: ""; position: absolute; inset: -60% auto auto -10%; width: 460px; height: 460px; pointer-events: none;
+  background: radial-gradient(circle, rgba(182,240,106,.18), transparent 65%);
+}
+.profile__id { display: flex; align-items: center; gap: 18px; position: relative; z-index: 1; }
+.profile__avatar .wm-ava { font-size: 48px; box-shadow: 0 14px 34px rgba(0,0,0,.3); }
+.profile__eyebrow { margin: 0 0 4px; color: var(--lime); font-size: 10px; font-weight: 900; letter-spacing: 1.8px; text-transform: uppercase; }
+.profile__name { margin: 0; font-family: var(--font-display); font-size: clamp(24px, 3vw, 34px); line-height: 1.1; letter-spacing: -.8px; }
+.profile__level { margin: 6px 0 10px; color: var(--muted); font-size: 13px; font-weight: 700; }
+.profile__level b { color: var(--lime); }
+.profile__bar { width: min(280px, 60vw); height: 7px; border-radius: 999px; background: rgba(0,0,0,.3); overflow: hidden; border: 1px solid var(--line); }
+.profile__bar span { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--green), var(--lime)); box-shadow: 0 0 14px rgba(182,240,106,.45); transition: width .5s var(--ease-out); }
+.profile__wallet { position: relative; z-index: 1; display: grid; gap: 8px; justify-items: flex-start; }
+.profile__wallet span { color: var(--muted); font-size: 12px; font-weight: 700; }
+.profile__wallet b { font-family: var(--font-display); font-size: clamp(30px, 4vw, 42px); line-height: 1; color: var(--lime); }
+.profile__stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.profile-stat { padding: 16px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); }
+.profile-stat b { display: block; font-family: var(--font-display); font-size: 24px; color: var(--text); }
+.profile-stat span { color: var(--muted); font-size: 11px; font-weight: 700; }
+.profile__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.profile__panel { padding: 20px; border: 1px solid var(--line); border-radius: 24px; background: var(--surface); }
+.profile__panel--wide { grid-column: 1 / -1; }
+.profile__panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.profile__panel-head h3 { margin: 0; font-family: var(--font-display); font-size: 16px; font-weight: 900; }
+.profile__panel-head span { color: var(--muted); font-size: 11px; font-weight: 700; }
+.profile__badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.profile-badge { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line-strong); background: rgba(182,240,106,.08); color: var(--text); font-size: 12px; font-weight: 800; }
+.profile-badge.is-locked { border-color: var(--line); background: rgba(0,0,0,.14); color: var(--muted); opacity: .65; }
+.profile__inventory { display: flex; flex-wrap: wrap; gap: 8px; min-height: 54px; }
+.profile-item { display: inline-flex; align-items: center; gap: 7px; padding: 7px 11px; border-radius: 14px; background: rgba(0,0,0,.16); border: 1px solid var(--line); font-size: 12px; font-weight: 700; }
+.profile-item i { font-style: normal; font-size: 18px; }
+.profile-item b { color: var(--lime); font-size: 11px; }
+.profile__empty { color: var(--muted); font-size: 13px; }
+.profile__history { display: grid; gap: 7px; }
+.profile-hist { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 12px; background: rgba(0,0,0,.14); font-size: 12px; }
+.profile-hist__mark { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; background: var(--red); }
+.profile-hist.is-win .profile-hist__mark { background: var(--lime); box-shadow: 0 0 10px rgba(182,240,106,.5); }
+.profile-hist__who { color: var(--muted); margin-left: auto; font-size: 11px; }
+body.light .profile-stat, body.light .profile__panel { background: #fff; }
+
 @media (max-width: 900px) {
-  .hub__side { grid-template-columns: 1fr; }
+  .hub__side, .profile__grid { grid-template-columns: 1fr; }
+  .profile__panel--wide { grid-column: auto; }
 }
 @media (max-width: 720px) {
   .section { scroll-margin-top: 158px; }
@@ -2361,6 +2408,10 @@ body.light .hub-links a { background: rgba(18,128,60,.06); }
   .hub__status { width: 100%; justify-content: flex-start; }
   .hub__grid { grid-template-columns: 1fr; }
   .game-card { min-height: 190px; padding: 18px; }
+  .profile__hero { align-items: flex-start; padding: 18px; }
+  .profile__id { width: 100%; align-items: flex-start; }
+  .profile__avatar .wm-ava { font-size: 38px; }
+  .profile__wallet { width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .game-card, .game-card::before, .hub-links a { transition: none; }
@@ -2387,6 +2438,7 @@ body.light .hub-links a { background: rgba(18,128,60,.06); }
   </a>
   <nav class="nav" aria-label="Основная навигация">
     <a class="nav__hub" href="#hub">Хаб</a>
+    <a href="#profile">Профиль</a>
     <a href="#catalog">Каталог</a>
     <a href="#game">Игра</a>
     <a href="#upgrader">Апгрейдер</a>
@@ -2512,6 +2564,7 @@ body.light .hub-links a { background: rgba(18,128,60,.06); }
       <article class="hub-panel">
         <div class="hub-panel__head"><h3>Активность платформы</h3><span>короткие пути</span></div>
         <ul class="hub-links">
+          <li><a href="#profile"><i aria-hidden="true">👤</i> Мой профиль <small>уровень и достижения</small></a></li>
           <li><a href="#upgFeed"><i aria-hidden="true">📡</i> Последние события <small>лента апгрейдов</small></a></li>
           <li><a href="#upgTop"><i aria-hidden="true">🏆</i> Рейтинг игроков <small>локальный топ</small></a></li>
           <li><a href="#boardPanel"><i aria-hidden="true">🔪</i> Рекорды Slicer <small>таблица лидеров</small></a></li>
@@ -2527,6 +2580,45 @@ body.light .hub-links a { background: rgba(18,128,60,.06); }
           <li><a href="#upgrader"><i aria-hidden="true">💱</i> Обменять очки <small>внутри апгрейдера</small></a></li>
         </ul>
       </article>
+    </div>
+  </section>
+
+  <section class="section profile" id="profile" aria-labelledby="profileTitle">
+    <div class="profile__layout">
+      <article class="profile__hero">
+        <div class="profile__id">
+          <div class="profile__avatar" id="profileAvatar" aria-hidden="true"></div>
+          <div class="profile__idtext">
+            <p class="profile__eyebrow">Игрок · локальный профиль</p>
+            <h2 class="profile__name" id="profileTitle"><span id="profileName">Игрок</span></h2>
+            <p class="profile__level">Уровень <b id="profileLevel">1</b> · <span id="profileExp">0</span> XP</p>
+            <div class="profile__bar" role="progressbar" aria-label="Прогресс уровня" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="profileBarBox"><span id="profileBar"></span></div>
+          </div>
+        </div>
+        <div class="profile__wallet">
+          <span>Виртуальный баланс</span>
+          <b id="profileBalance">0 ₽</b>
+          <a class="btn btn--ghost" href="#upgrader">Потратить в игре</a>
+        </div>
+      </article>
+
+      <div class="profile__stats" id="profileStats"></div>
+
+      <div class="profile__grid">
+        <article class="profile__panel">
+          <div class="profile__panel-head"><h3>Достижения</h3><span>открываются по игре</span></div>
+          <div class="profile__badges" id="profileBadges"></div>
+        </article>
+        <article class="profile__panel">
+          <div class="profile__panel-head"><h3>Инвентарь</h3><span><span id="profileInvCount">0</span> предметов</span></div>
+          <div class="profile__inventory" id="profileInventory"></div>
+        </article>
+        <article class="profile__panel profile__panel--wide">
+          <div class="profile__panel-head"><h3>История апгрейдов</h3><span>последние попытки</span></div>
+          <div class="profile__history" id="profileHistory"></div>
+          <p class="hub__fineprint">История Case Battle публикуется в общей ленте событий и не хранится отдельно в этом браузере.</p>
+        </article>
+      </div>
     </div>
   </section>
 
@@ -3288,7 +3380,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-arbuz2-hub-1";
+var APP_BUILD = "20261124-arbuz2-profile-1";
 
 var cart = read(STORE.cart, {});
 if (!cart || typeof cart !== "object" || Array.isArray(cart)) cart = {};
@@ -9136,9 +9228,138 @@ function cbStart() {
   setTimeout(revealRound, 500);
 }
 
+function renderProfile() {
+  var nameEl = document.getElementById("profileName");
+  if (!nameEl) return;
+  var name = (typeof upgFeedMyName === "function" && upgFeedMyName()) || "Игрок";
+  nameEl.textContent = name;
+  var av = document.getElementById("profileAvatar");
+  if (av) av.innerHTML = wmAvatar(name);
+
+  var rolls = Number(UPG.rolls) || 0;
+  var wins = Number(UPG.wins) || 0;
+  var bal = Number(UPG.balance) || 0;
+  var best = (typeof GAME !== "undefined" && Number(GAME.best) > 0) ? Math.floor(GAME.best) : 0;
+  var inv = Array.isArray(UPG.inv) ? UPG.inv : [];
+  var invVal = 0;
+  for (var i = 0; i < inv.length; i++) { var it = upgItem(inv[i]); if (it) invVal += it.price; }
+
+  var xp = wins * 120 + rolls * 25 + Math.floor(best / 10);
+  var level = Math.max(1, Math.floor(Math.sqrt(xp / 150)) + 1);
+  var prev = 150 * (level - 1) * (level - 1);
+  var next = 150 * level * level;
+  var pct = Math.min(100, Math.max(0, (xp - prev) / Math.max(1, next - prev) * 100));
+  var lvlEl = document.getElementById("profileLevel");
+  if (lvlEl) lvlEl.textContent = String(level);
+  var expEl = document.getElementById("profileExp");
+  if (expEl) expEl.textContent = String(xp);
+  var bar = document.getElementById("profileBar");
+  if (bar) bar.style.width = pct.toFixed(1) + "%";
+  var barBox = document.getElementById("profileBarBox");
+  if (barBox) barBox.setAttribute("aria-valuenow", String(Math.round(pct)));
+  var balEl = document.getElementById("profileBalance");
+  if (balEl) balEl.textContent = upgMoney(bal);
+
+  var stats = [
+    { label: "Апгрейдов", value: String(rolls) },
+    { label: "Побед", value: String(wins) },
+    { label: "Винрейт", value: (rolls ? Math.round(wins / rolls * 100) : 0) + "%" },
+    { label: "Рекорд Slicer", value: String(best) },
+    { label: "Инвентарь", value: upgMoney(invVal) },
+    { label: "Профит", value: (Number(UPG.profit) > 0 ? "+" : "") + upgMoney(UPG.profit || 0) }
+  ];
+  var statsBox = document.getElementById("profileStats");
+  if (statsBox) {
+    statsBox.innerHTML = "";
+    for (var s = 0; s < stats.length; s++) {
+      var cell = document.createElement("div");
+      cell.className = "profile-stat";
+      var b = document.createElement("b"); b.textContent = stats[s].value;
+      var sp = document.createElement("span"); sp.textContent = stats[s].label;
+      cell.appendChild(b); cell.appendChild(sp); statsBox.appendChild(cell);
+    }
+  }
+
+  var badges = [
+    { icon: "🎯", label: "Первый апгрейд", ok: rolls >= 1 },
+    { icon: "🏆", label: "3 победы", ok: wins >= 3 },
+    { icon: "🔪", label: "Слайсер 100", ok: best >= 100 },
+    { icon: "📦", label: "Коллекционер", ok: inv.length >= 5 },
+    { icon: "💰", label: "Баланс 1000", ok: bal >= 1000 }
+  ];
+  var bBox = document.getElementById("profileBadges");
+  if (bBox) {
+    bBox.innerHTML = "";
+    for (var g = 0; g < badges.length; g++) {
+      var chip = document.createElement("span");
+      chip.className = "profile-badge" + (badges[g].ok ? "" : " is-locked");
+      chip.textContent = badges[g].icon + " " + badges[g].label;
+      bBox.appendChild(chip);
+    }
+  }
+
+  var invBox = document.getElementById("profileInventory");
+  if (invBox) {
+    invBox.innerHTML = "";
+    if (!inv.length) {
+      var empty = document.createElement("span");
+      empty.className = "profile__empty";
+      empty.textContent = "Пока пусто. Открой бесплатный кейс в апгрейдере.";
+      invBox.appendChild(empty);
+    } else {
+      for (var k = 0; k < Math.min(inv.length, 8); k++) {
+        var item = upgItem(inv[k]);
+        if (!item) continue;
+        var tag = document.createElement("span");
+        tag.className = "profile-item";
+        var ic = document.createElement("i"); ic.textContent = item.icon;
+        var nm = document.createElement("span"); nm.textContent = item.name;
+        var pr = document.createElement("b"); pr.textContent = upgMoney(item.price);
+        tag.appendChild(ic); tag.appendChild(nm); tag.appendChild(pr); invBox.appendChild(tag);
+      }
+      if (inv.length > 8) {
+        var more = document.createElement("span");
+        more.className = "profile__empty";
+        more.textContent = "и ещё " + (inv.length - 8);
+        invBox.appendChild(more);
+      }
+    }
+  }
+  var invCnt = document.getElementById("profileInvCount");
+  if (invCnt) invCnt.textContent = String(inv.length);
+
+  var histBox = document.getElementById("profileHistory");
+  if (histBox) {
+    histBox.innerHTML = "";
+    var hist = Array.isArray(UPG.hist) ? UPG.hist.slice(0, 6) : [];
+    if (!hist.length) {
+      var hEmpty = document.createElement("div");
+      hEmpty.className = "profile__empty";
+      hEmpty.textContent = "История появится после первого апгрейда.";
+      histBox.appendChild(hEmpty);
+    } else {
+      for (var h = 0; h < hist.length; h++) {
+        var row = hist[h];
+        var line = document.createElement("div");
+        line.className = "profile-hist" + (row.win ? " is-win" : "");
+        var mark = document.createElement("span"); mark.className = "profile-hist__mark";
+        var text = document.createElement("span");
+        var to = upgItem(row.to);
+        text.textContent = (row.win ? "Победа → " : "Проигрыш → ") + (to ? to.name : "—");
+        var who = document.createElement("span");
+        who.className = "profile-hist__who";
+        who.textContent = row.who || "Ты";
+        line.appendChild(mark); line.appendChild(text); line.appendChild(who);
+        histBox.appendChild(line);
+      }
+    }
+  }
+}
+
 function upgRender() {
   upgEnsure();
   upgRenderHud();
+  renderProfile();
   upgRenderInv();
   upgRenderTargets();
   upgRenderCore();
