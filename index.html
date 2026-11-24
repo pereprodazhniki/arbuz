@@ -734,6 +734,46 @@ body.light .cert p { color: #3d6b52; }
 }
 .theme-toggle:hover { background: rgba(47, 211, 95, .15); }
 
+/* ---------- Демо-аккаунт ---------- */
+.auth-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  max-width: 150px; padding: 9px 13px; border: 2px solid var(--green);
+  border-radius: 12px; background: transparent; color: var(--lime);
+  font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.auth-btn:hover { background: rgba(47, 211, 95, .15); }
+.auth-btn.is-in { border-color: var(--lime); background: rgba(182, 240, 106, .12); }
+.auth { position: fixed; inset: 0; z-index: 1300; display: grid; place-items: center; padding: 16px; }
+.auth[hidden] { display: none !important; }
+.auth__overlay { position: absolute; inset: 0; background: rgba(3, 8, 5, .72); backdrop-filter: blur(6px); }
+.auth__panel {
+  position: relative; z-index: 1; width: min(100%, 440px);
+  max-height: calc(100vh - 32px); overflow: auto; padding: 24px;
+  border-radius: 24px; border: 1px solid rgba(182, 240, 106, .22);
+  background: linear-gradient(180deg, #17361f, #0a1d12);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .5);
+}
+.auth__close { position: absolute; top: 10px; right: 14px; border: 0; background: transparent; color: var(--muted); font-size: 26px; cursor: pointer; }
+.auth__panel h2 { margin: 0 0 6px; font-size: 24px; color: #fff; }
+.auth__note { margin: 0 0 14px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.auth__tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+.auth__tab {
+  flex: 1; padding: 8px 6px; border-radius: 999px;
+  border: 1px solid rgba(182, 240, 106, .15); background: rgba(255, 255, 255, .03);
+  color: var(--muted); font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer;
+}
+.auth__tab.is-active { background: rgba(182, 240, 106, .14); border-color: rgba(182, 240, 106, .4); color: var(--lime); }
+.auth__body { display: grid; gap: 10px; }
+.auth__body[hidden] { display: none; }
+.auth__body .input { font-size: 15px; }
+.auth__msg { margin: 0; min-height: 18px; font-size: 13px; color: var(--lime); }
+.auth__msg.is-bad { color: #ff8e98; }
+.auth__link { margin-top: 12px; padding: 0; border: 0; background: transparent; color: var(--lime); text-decoration: underline; cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit; }
+.auth__link[hidden] { display: none; }
+body.light .auth__panel { background: #fff; border-color: #bfe4cc; }
+body.light .auth__panel h2 { color: #0d2b19; }
+
 /* ---------- Калькулятор ---------- */
 .calc {
   background: linear-gradient(180deg, rgba(22,53,31,.78), rgba(14,36,22,.72));
@@ -2192,6 +2232,7 @@ body.light .upg-top__name { background: #fff; border-color: #bfe4cc; color: #0d2
   .to-top { right: 14px; bottom: 14px; width: 44px; height: 44px; }
   .theme-toggle, .music__btn, .sfx-toggle { width: 38px; height: 38px; font-size: 18px; }
   .cart-btn { padding: 10px 13px; font-size: 13px; }
+  .auth-btn { max-width: 108px; padding: 8px 10px; font-size: 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2322,6 +2363,7 @@ body.light .upg-feed__who { color: #0d2b19; }
   <button class="theme-toggle" id="themeToggle" type="button" title="Сменить тему">🌙</button>
   <span class="live-sold" title="Столько арбузов продано на сайте">🍉 продано: <b id="soldTop">0</b></span>
   <span class="live-sold" id="siteBalanceBadge" title="Баланс сайта для покупок и кейсов">💰 <b id="siteBalanceTop">0 ₽</b></span>
+  <button class="auth-btn" id="authBtn" type="button" aria-haspopup="dialog" aria-controls="authModal">Войти</button>
   <button class="cart-btn" id="cartOpen" type="button" onclick="openCart()">
     Корзина <span class="cart-btn__count" id="cartCount">0</span>
   </button>
@@ -2954,7 +2996,7 @@ body.light .upg-feed__who { color: #0d2b19; }
   </div>
   <p class="footer__note">Сайт собрал Камиль. Арбузы привёз Тимур Беленький. Халяль-гарантию подписал Тимур Аминев.</p>
   <p class="footer__note">Сайт является шуткой. Арбузы настоящие.</p>
-  <p class="footer__note">Демо-режим: балансы и предметы игровые, реальных ставок и вывода нет. Онлайн-рейтинги и лента используют публичные сервисы уведомлений; если внешний сервис недоступен, данные работают локально на устройстве.</p>
+  <p class="footer__note">Демо-режим: балансы и предметы игровые, реальных ставок и вывода нет. Вход по логину и паролю — локальный демо-аккаунт: ник подставляется в топы, пароль никуда не отправляется, для другого устройства есть код переноса. Онлайн-рейтинги и лента используют публичные сервисы уведомлений; если внешний сервис недоступен, данные работают локально на устройстве.</p>
 </footer>
 
 <!-- Корзина -->
@@ -3033,6 +3075,43 @@ body.light .upg-feed__who { color: #0d2b19; }
     <div class="casepop__actions">
       <button class="casepop__close" id="casePopClose" type="button" disabled>Забрать</button>
     </div>
+  </div>
+</div>
+
+<div class="auth" id="authModal" hidden>
+  <div class="auth__overlay" id="authOverlay"></div>
+  <div class="auth__panel" role="dialog" aria-modal="true" aria-labelledby="authTitle" tabindex="-1" id="authPanel">
+    <button class="auth__close" id="authClose" type="button" aria-label="Закрыть">×</button>
+    <h2 id="authTitle">Демо-аккаунт 🍉</h2>
+    <p class="auth__note">Логин сразу используется как Ник в топах, поэтому он должен быть настоящим русским именем. Пароль хранится только на этом устройстве в виде хэша и никуда не отправляется.</p>
+    <div class="auth__tabs" role="tablist">
+      <button class="auth__tab is-active" data-tab="login" type="button" role="tab">Вход</button>
+      <button class="auth__tab" data-tab="register" type="button" role="tab">Регистрация</button>
+      <button class="auth__tab" data-tab="transfer" type="button" role="tab">Перенос</button>
+    </div>
+    <form class="auth__body" id="authLoginForm" autocomplete="on">
+      <label>Логин<input class="input" id="authLoginUser" type="text" autocomplete="username" maxlength="30"></label>
+      <label>Пароль<input class="input" id="authLoginPass" type="password" autocomplete="current-password" maxlength="64"></label>
+      <p class="auth__msg" id="authLoginMsg" aria-live="polite"></p>
+      <button class="btn btn--full" type="submit">Войти</button>
+    </form>
+    <form class="auth__body" id="authRegForm" hidden>
+      <label>Логин — как тебя зовут<input class="input" id="authRegUser" type="text" autocomplete="username" maxlength="30" placeholder="Например, Никита"></label>
+      <label>Пароль (от 6 символов)<input class="input" id="authRegPass" type="password" autocomplete="new-password" maxlength="64"></label>
+      <label>Повтори пароль<input class="input" id="authRegPass2" type="password" autocomplete="new-password" maxlength="64"></label>
+      <p class="auth__msg" id="authRegMsg" aria-live="polite"></p>
+      <button class="btn btn--full" type="submit">Создать аккаунт</button>
+    </form>
+    <form class="auth__body" id="authTransferForm" hidden>
+      <p class="auth__note">На другом устройстве вставь код переноса и введи свой пароль — аккаунт восстановится с тем же логином. Код лучше не публиковать: по нему можно подобрать пароль.</p>
+      <label>Код переноса<textarea class="input" id="authTransferCode" rows="3" spellcheck="false"></textarea></label>
+      <label>Пароль<input class="input" id="authTransferPass" type="password" autocomplete="current-password" maxlength="64"></label>
+      <p class="auth__msg" id="authTransferMsg" aria-live="polite"></p>
+      <button class="btn btn--full" type="submit">Войти по коду</button>
+      <button class="auth__link" id="authExportBtn" type="button">Показать код этого аккаунта</button>
+      <textarea class="input" id="authExportCode" rows="3" readonly hidden aria-label="Код переноса"></textarea>
+    </form>
+    <button class="auth__link" id="authLogout" type="button" hidden>Выйти из аккаунта</button>
   </div>
 </div>
 
@@ -3138,7 +3217,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-arrow-pretty-1";
+var APP_BUILD = "20261124-auth-demo-1";
 
 var cart = read(STORE.cart, {});
 if (!cart || typeof cart !== "object" || Array.isArray(cart)) cart = {};
@@ -3255,6 +3334,297 @@ function toast(text) {
   el.hidden = false;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function () { el.hidden = true; }, 3200);
+}
+
+/* ---------- Демо-аккаунт ----------
+   Пароль не хранится и не отправляется: в localStorage лежит только соль,
+   PBKDF2-хэш и контрольный код для переноса на другое устройство. */
+var AUTH_KEY = "prz_auth_accounts_v1";
+var AUTH_SESSION_KEY = "prz_auth_session_v1";
+var AUTH = { accounts: [], sessionId: "", failCount: 0, failUntil: 0 };
+
+function authSubtle() { return (window.crypto && window.crypto.subtle) ? window.crypto.subtle : null; }
+function authHex(arr) {
+  var out = "";
+  for (var i = 0; i < arr.length; i++) out += ("0" + arr[i].toString(16)).slice(-2);
+  return out;
+}
+function authBytes(hex) {
+  var out = new Uint8Array(hex.length / 2);
+  for (var i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
+  return out;
+}
+function authSalt() {
+  var a = new Uint8Array(16);
+  if (window.crypto && window.crypto.getRandomValues) window.crypto.getRandomValues(a);
+  else { for (var i = 0; i < a.length; i++) a[i] = Math.floor(Math.random() * 256); }
+  return authHex(a);
+}
+function authHash(password, saltHex) {
+  var sub = authSubtle();
+  if (!sub) return Promise.reject(new Error("Для входа нужна HTTPS-страница или localhost."));
+  return sub.importKey("raw", new TextEncoder().encode(String(password)), "PBKDF2", false, ["deriveBits"])
+    .then(function (key) {
+      return sub.deriveBits({ name: "PBKDF2", salt: authBytes(saltHex), iterations: 120000, hash: "SHA-256" }, key, 256);
+    })
+    .then(function (bits) { return authHex(new Uint8Array(bits)); });
+}
+function authVerifier(hashHex, login) {
+  var sub = authSubtle();
+  if (!sub) return Promise.reject(new Error("Для входа нужна HTTPS-страница или localhost."));
+  return sub.digest("SHA-256", new TextEncoder().encode(hashHex + "|" + login.toLowerCase()))
+    .then(function (d) { return authHex(new Uint8Array(d)); });
+}
+function authEq(a, b) {
+  a = String(a || ""); b = String(b || "");
+  if (a.length !== b.length) return false;
+  var d = 0;
+  for (var i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return d === 0;
+}
+function authLoad() {
+  var list = read(AUTH_KEY, []);
+  AUTH.accounts = [];
+  if (Array.isArray(list)) {
+    for (var i = 0; i < list.length; i++) {
+      var a = list[i];
+      if (!a || typeof a !== "object") continue;
+      var login = normalizeName(a.login || "");
+      var salt = String(a.salt || "");
+      var hash = String(a.hash || "");
+      var ver = String(a.verifier || "");
+      if (nameProblem(login) || !/^[0-9a-f]{32}$/.test(salt)) continue;
+      if (!/^[0-9a-f]{64}$/.test(hash) || !/^[0-9a-f]{64}$/.test(ver)) continue;
+      AUTH.accounts.push({ id: salt, login: login, salt: salt, hash: hash, verifier: ver, created: Number(a.created) || Date.now() });
+    }
+  }
+  AUTH.sessionId = String(read(AUTH_SESSION_KEY, "") || "");
+  if (AUTH.sessionId && !authById(AUTH.sessionId)) AUTH.sessionId = "";
+}
+function authSave() { write(AUTH_KEY, AUTH.accounts); }
+function authById(id) {
+  for (var i = 0; i < AUTH.accounts.length; i++) if (AUTH.accounts[i].id === id) return AUTH.accounts[i];
+  return null;
+}
+function authByLogin(login) {
+  var low = normalizeName(login).toLowerCase();
+  for (var i = 0; i < AUTH.accounts.length; i++) if (AUTH.accounts[i].login.toLowerCase() === low) return AUTH.accounts[i];
+  return null;
+}
+function authCurrent() { return AUTH.sessionId ? authById(AUTH.sessionId) : null; }
+function authName() { var a = authCurrent(); return a ? a.login : ""; }
+function authSetSession(id) {
+  AUTH.sessionId = id;
+  write(AUTH_SESSION_KEY, id);
+  authApplyUI();
+}
+function authFail() {
+  AUTH.failCount++;
+  if (AUTH.failCount >= 5) { AUTH.failUntil = Date.now() + 30000; AUTH.failCount = 0; }
+}
+function authMsg(id, text, bad) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text || "";
+  el.classList.toggle("is-bad", !!bad);
+}
+function authApplyUI() {
+  var a = authCurrent();
+  var btn = document.getElementById("authBtn");
+  if (btn) {
+    btn.textContent = a ? "👤 " + a.login : "Войти";
+    btn.title = a ? "Аккаунт: " + a.login : "Вход и регистрация";
+    btn.classList.toggle("is-in", !!a);
+  }
+  var logout = document.getElementById("authLogout");
+  if (logout) logout.hidden = !a;
+  var expBtn = document.getElementById("authExportBtn");
+  if (expBtn) expBtn.hidden = !a;
+  var expCode = document.getElementById("authExportCode");
+  if (expCode && !a) { expCode.hidden = true; expCode.value = ""; }
+  var upgIn = document.getElementById("upgTopName");
+  if (upgIn) {
+    if (a) { upgIn.value = a.login; upgIn.readOnly = true; }
+    else upgIn.readOnly = false;
+  }
+  var gameIn = document.getElementById("gameName");
+  if (gameIn && a) { gameIn.value = a.login; gameIn.readOnly = true; }
+  if (a) {
+    write("prz_lb_name", a.login);
+    write("prz_upg_top_name", a.login);
+    if (typeof LB !== "undefined") LB.name = a.login;
+  }
+  if (typeof lbNameHint === "function") lbNameHint(true);
+  if (typeof upgNameHint === "function") upgNameHint();
+}
+function authRegister(loginRaw, pass, pass2) {
+  if (!authSubtle()) return Promise.resolve({ error: "Для входа нужна HTTPS-страница или localhost." });
+  var login = normalizeName(loginRaw);
+  var err = nameProblem(login);
+  if (err) return Promise.resolve({ error: err });
+  if (String(pass).length < 6 || String(pass).length > 64) return Promise.resolve({ error: "Пароль должен быть от 6 до 64 символов." });
+  if (pass !== pass2) return Promise.resolve({ error: "Пароли не совпадают." });
+  if (authByLogin(login)) return Promise.resolve({ error: "Такой логин уже есть. Войди или придумай другое имя." });
+  var salt = authSalt();
+  return authHash(pass, salt).then(function (hash) {
+    return authVerifier(hash, login).then(function (ver) {
+      var acc = { id: salt, login: login, salt: salt, hash: hash, verifier: ver, created: Date.now() };
+      AUTH.accounts.push(acc);
+      authSave();
+      authSetSession(salt);
+      return { ok: true };
+    });
+  });
+}
+function authLogin(loginRaw, pass) {
+  if (!authSubtle()) return Promise.resolve({ error: "Для входа нужна HTTPS-страница или localhost." });
+  if (Date.now() < AUTH.failUntil) return Promise.resolve({ error: "Слишком много попыток. Подожди " + Math.ceil((AUTH.failUntil - Date.now()) / 1000) + " с." });
+  var acc = authByLogin(normalizeName(loginRaw));
+  if (!acc) { authFail(); return Promise.resolve({ error: "Аккаунт не найден." }); }
+  return authHash(pass, acc.salt).then(function (hash) {
+    if (!authEq(hash, acc.hash)) { authFail(); return { error: "Неверный пароль." }; }
+    AUTH.failCount = 0; AUTH.failUntil = 0;
+    authSetSession(acc.id);
+    return { ok: true };
+  });
+}
+function authLogout() {
+  AUTH.sessionId = "";
+  write(AUTH_SESSION_KEY, "");
+  authApplyUI();
+  toast("Ты вышел из аккаунта");
+}
+function authExport() {
+  var a = authCurrent();
+  if (!a) return "";
+  var json = JSON.stringify({ v: 1, u: a.login, s: a.salt, k: a.verifier });
+  var bytes = new TextEncoder().encode(json);
+  var bin = "";
+  for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function authImport(code, pass) {
+  if (!authSubtle()) return Promise.resolve({ error: "Для входа нужна HTTPS-страница или localhost." });
+  var obj = null;
+  try {
+    var b64 = String(code || "").trim().replace(/-/g, "+").replace(/_/g, "/");
+    while (b64.length % 4) b64 += "=";
+    var bin = atob(b64);
+    var arr = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    obj = JSON.parse(new TextDecoder().decode(arr));
+  } catch (e) { obj = null; }
+  if (!obj || obj.v !== 1 || !/^[0-9a-f]{32}$/.test(obj.s || "") || !/^[0-9a-f]{64}$/.test(obj.k || "")) {
+    return Promise.resolve({ error: "Код переноса не читается." });
+  }
+  var login = normalizeName(obj.u || "");
+  var err = nameProblem(login);
+  if (err) return Promise.resolve({ error: "В коде неверный логин: " + err });
+  var existing = authByLogin(login);
+  if (existing && existing.salt !== obj.s) return Promise.resolve({ error: "Этот логин уже занят на этом устройстве." });
+  return authHash(pass, obj.s).then(function (hash) {
+    return authVerifier(hash, login).then(function (ver) {
+      if (!authEq(ver, obj.k)) return { error: "Пароль не подходит к коду переноса." };
+      var acc = existing || { id: obj.s, login: login, salt: obj.s, created: Date.now() };
+      acc.hash = hash; acc.verifier = ver;
+      if (!authById(acc.id)) AUTH.accounts.push(acc);
+      authSave();
+      authSetSession(acc.id);
+      return { ok: true };
+    });
+  });
+}
+function authTab(name) {
+  var map = { login: "authLoginForm", register: "authRegForm", transfer: "authTransferForm" };
+  for (var t in map) {
+    if (!Object.prototype.hasOwnProperty.call(map, t)) continue;
+    var tab = document.querySelector('.auth__tab[data-tab="' + t + '"]');
+    var form = document.getElementById(map[t]);
+    if (tab) tab.classList.toggle("is-active", t === name);
+    if (form) form.hidden = t !== name;
+  }
+  authMsg("authLoginMsg", "");
+  authMsg("authRegMsg", "");
+  authMsg("authTransferMsg", "");
+  var code = document.getElementById("authExportCode");
+  if (code) code.hidden = true;
+}
+function authOpen(tab) {
+  var m = document.getElementById("authModal");
+  if (!m) return;
+  m.hidden = false;
+  document.body.style.overflow = "hidden";
+  authTab(tab || (authCurrent() ? "transfer" : "login"));
+  var panel = document.getElementById("authPanel");
+  if (panel && panel.focus) panel.focus();
+}
+function authClose() {
+  var m = document.getElementById("authModal");
+  if (!m || m.hidden) return;
+  m.hidden = true;
+  document.body.style.overflow = "";
+}
+function authSubmit(formId, msgId, run, okText) {
+  var form = document.getElementById(formId);
+  if (!form) return;
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var btn = form.querySelector('button[type="submit"]');
+    if (btn) btn.disabled = true;
+    authMsg(msgId, "Проверяем…");
+    Promise.resolve().then(run).then(function (res) {
+      if (btn) btn.disabled = false;
+      if (res && res.ok) {
+        authMsg(msgId, okText || "Готово.");
+        toast(okText || "Готово.");
+        setTimeout(authClose, 600);
+      } else {
+        authMsg(msgId, (res && res.error) || "Не получилось. Попробуй ещё раз.", true);
+      }
+    }).catch(function (err) {
+      if (btn) btn.disabled = false;
+      authMsg(msgId, err && err.message ? err.message : "Не получилось. Попробуй ещё раз.", true);
+    });
+  });
+}
+function authInit() {
+  authLoad();
+  var btn = document.getElementById("authBtn");
+  if (btn) btn.addEventListener("click", function () { authOpen(authCurrent() ? "transfer" : "login"); });
+  var close = document.getElementById("authClose");
+  if (close) close.addEventListener("click", authClose);
+  var overlay = document.getElementById("authOverlay");
+  if (overlay) overlay.addEventListener("click", authClose);
+  var tabs = document.querySelectorAll(".auth__tab");
+  for (var i = 0; i < tabs.length; i++) {
+    tabs[i].addEventListener("click", function () { authTab(this.getAttribute("data-tab")); });
+  }
+  authSubmit("authLoginForm", "authLoginMsg", function () {
+    return authLogin(document.getElementById("authLoginUser").value, document.getElementById("authLoginPass").value);
+  }, "Ты вошёл. Ник в топах подставлен автоматически.");
+  authSubmit("authRegForm", "authRegMsg", function () {
+    return authRegister(
+      document.getElementById("authRegUser").value,
+      document.getElementById("authRegPass").value,
+      document.getElementById("authRegPass2").value
+    );
+  }, "Аккаунт создан. Ник в топах подставлен автоматически.");
+  authSubmit("authTransferForm", "authTransferMsg", function () {
+    return authImport(document.getElementById("authTransferCode").value, document.getElementById("authTransferPass").value);
+  }, "Аккаунт перенесён на это устройство.");
+  var exp = document.getElementById("authExportBtn");
+  if (exp) exp.addEventListener("click", function () {
+    var code = document.getElementById("authExportCode");
+    if (!code) return;
+    code.value = authExport();
+    code.hidden = false;
+    code.focus();
+    code.select();
+    authMsg("authTransferMsg", "Скопируй этот код и введи его на другом устройстве вместе с паролем.");
+  });
+  var logout = document.getElementById("authLogout");
+  if (logout) logout.addEventListener("click", function () { authClose(); authLogout(); });
+  authApplyUI();
 }
 
 function wmHash(s) {
@@ -6671,6 +7041,8 @@ function lbHideSend() {
 
 /* имя берём из поля ввода, а если оно пустое — из сохранённого */
 function lbCurrentName() {
+  var auth = (typeof authName === "function") ? authName() : "";
+  if (auth && !nameProblem(auth)) return auth;
   var input = document.getElementById("gameName");
   var value = input ? normalizeName(input.value) : "";
   return value || LB.name;
@@ -6709,8 +7081,8 @@ function lbShowSend(auto) {
   }
 
   box.hidden = false;
-  var own = lbOwn();
-  var name = own ? own.name : lbCurrentName();
+  var own = (typeof authName === "function" && authName()) ? null : lbOwn();
+  var name = lbCurrentName();
   var saved = name && !nameProblem(name);
 
   /* устройство уже отметилось, а результат хуже — обновлять нечего */
@@ -6795,8 +7167,7 @@ function lbSendScore(score, auto) {
 
   var note = document.getElementById("gameSendNote");
   var btn = document.getElementById("gameSend");
-  var own = lbOwn();
-  var name = own ? own.name : normalizeName(LB.name);
+  var name = lbCurrentName();
   var err = nameProblem(name);
 
   if (err) {
@@ -6900,6 +7271,15 @@ function lbNameHint(soft) {
   var input = document.getElementById("gameName");
   var hint = document.getElementById("gameNameHint");
   if (!input || !hint) return;
+
+  var accName = (typeof authName === "function") ? authName() : "";
+  if (accName && !nameProblem(accName)) {
+    input.readOnly = true;
+    input.value = accName;
+    hint.textContent = "Ты вошёл как «" + accName + "». Ник подставлен автоматически.";
+    hint.className = "game__namehint is-ok";
+    return;
+  }
 
   var own = lbOwn();
   if (own) {
@@ -9287,7 +9667,8 @@ var UPG_FEED = {
 };
 
 function upgFeedMyName() {
-  var name = "";
+  var name = (typeof authName === "function") ? authName() : "";
+  if (name && !nameProblem(name)) return name;
   try {
     var inp = document.getElementById("upgTopName");
     if (inp) name = normalizeName(inp.value);
@@ -9659,7 +10040,8 @@ function upgTopSubmit(auto) {
   var input = document.getElementById("upgTopName");
   var note = document.getElementById("upgTopHint");
   var btn = document.getElementById("upgTopSend");
-  var name = normalizeName(input ? input.value : (read("prz_upg_top_name", "") || (typeof LB !== "undefined" ? LB.name : "")));
+  var name = (typeof authName === "function") ? authName() : "";
+  if (!name) name = normalizeName(input ? input.value : (read("prz_upg_top_name", "") || (typeof LB !== "undefined" ? LB.name : "")));
   if (input) input.value = name;
   var err = nameProblem(name);
   if (err) { if (!auto && note) note.textContent = " " + err; return; }
@@ -9868,7 +10250,9 @@ function initUpgrader() {
   });
   var upgTopNameIn = document.getElementById("upgTopName");
   if (upgTopNameIn) {
-    if (typeof LB !== "undefined" && LB.name && !nameProblem(LB.name)) upgTopNameIn.value = LB.name;
+    var authN = (typeof authName === "function") ? authName() : "";
+    if (authN && !nameProblem(authN)) upgTopNameIn.value = authN;
+    else if (typeof LB !== "undefined" && LB.name && !nameProblem(LB.name)) upgTopNameIn.value = LB.name;
     var upgNameHint = function () {
       var hint = document.getElementById("upgTopHint");
       if (!hint) return;
@@ -10096,8 +10480,10 @@ function init() {
   initSfx();
   initMusic();
   initGame();
+  if (typeof authInit === "function") authInit();
   initLeaderboard();
   initUpgrader();
+  if (typeof authApplyUI === "function") authApplyUI();
 
   /* чек */
   document.getElementById("receiptCopy").addEventListener("click", function () {
@@ -10161,6 +10547,7 @@ function init() {
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") {
       closeCart();
+      if (typeof authClose === "function") authClose();
       if (typeof CASE_POP !== "undefined" && !CASE_POP.busy && typeof casePopClose === "function") casePopClose();
     }
   });
