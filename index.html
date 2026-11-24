@@ -2845,7 +2845,7 @@ body.light .upg-feed__who { color: #0d2b19; }
 
   <section class="section" id="upgrader">
     <h2 class="section__title">Арбузный апгрейдер</h2>
-    <p class="section__sub">Обменяй арбузный подарок на подарок подороже. Шанс честный: сумма цен твоих предметов делится на цену цели, бабушка берёт 25% на варенье, максимум 60%. Баланс и предметы виртуальные. Выводи инвентарь в баланс сайта, покупай кейсы за баланс или расплачивайся им в каталоге.</p>
+    <p class="section__sub">Обменяй арбузный подарок на подарок подороже. Шанс честный: сумма цен твоих предметов делится на цену цели, бабушка берёт 25% на варенье, максимум 60%. Баланс и предметы виртуальные. В ассортименте есть арбузы до 2 млн ₽. Выводи инвентарь в баланс сайта, покупай кейсы за баланс или расплачивайся им в каталоге.</p>
 
     <div class="upg">
       <div class="upg__hud">
@@ -3247,7 +3247,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-upg-fair-chance-1";
+var APP_BUILD = "20261124-upg-assort-2m-1";
 
 var cart = read(STORE.cart, {});
 if (!cart || typeof cart !== "object" || Array.isArray(cart)) cart = {};
@@ -7525,7 +7525,14 @@ var UPG_ITEMS = [
   { id: "galaxy", name: "Галактический арбуз", icon: "🌌", price: 80000, rarity: "mythic" },
   { id: "planet", name: "Арбуз вселенной", icon: "🪐", price: 120000, rarity: "mythic" },
   { id: "god", name: "Бог арбузов", icon: "🔱", price: 250000, rarity: "mythic" },
-  { id: "emperor", name: "Императорский арбуз", icon: "💫", price: 500000, rarity: "mythic" }
+  { id: "emperor", name: "Императорский арбуз", icon: "💫", price: 500000, rarity: "mythic" },
+  { id: "olymp", name: "Олимпийский арбуз", icon: "🏅", price: 650000, rarity: "mythic" },
+  { id: "titan", name: "Арбуз-титан", icon: "🗿", price: 800000, rarity: "mythic" },
+  { id: "million", name: "Арбуз-миллионер", icon: "💸", price: 1000000, rarity: "mythic", pop: 1 },
+  { id: "phoenix", name: "Арбуз-феникс", icon: "🔥", price: 1250000, rarity: "mythic" },
+  { id: "eternity", name: "Арбуз вечности", icon: "⏳", price: 1500000, rarity: "mythic", pop: 1 },
+  { id: "diamondcore", name: "Алмазный арбуз", icon: "💠", price: 1750000, rarity: "mythic" },
+  { id: "infinity", name: "Арбуз бесконечности", icon: "♾️", price: 2000000, rarity: "mythic", pop: 1 }
 ];
 
 var UPG_START = ["classic", "pig", "seed"];
