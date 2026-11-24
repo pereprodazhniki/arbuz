@@ -3012,7 +3012,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-cb-promo-1";
+var APP_BUILD = "20261124-cb-reward-delay-1";
 
 var cart = read(STORE.cart, {});
 var ship = read(STORE.ship, "delivery");
@@ -6961,6 +6961,7 @@ var UPG = {
   lastCase: 0,
   balance: 0,
   pendingCase: null,
+  pendingCbReward: null,
   spinning: false,
   assortOpen: false,
   bcasesOpen: false,
@@ -7011,7 +7012,8 @@ function upgSave() {
     hist: UPG.hist.slice(0, 20),
     lastCase: UPG.lastCase,
     balance: UPG.balance,
-    pendingCase: UPG.pendingCase
+    pendingCase: UPG.pendingCase,
+    pendingCbReward: UPG.pendingCbReward
   });
 }
 
@@ -7029,6 +7031,7 @@ function upgLoad() {
   UPG.lastCase = 0;
   UPG.balance = 0;
   UPG.pendingCase = null;
+  UPG.pendingCbReward = null;
 
   if (bannedPromoUsed) {
     UPG.inv = [];
@@ -7036,7 +7039,7 @@ function upgLoad() {
     UPG.target = null;
     UPG.assortOpen = false;
     UPG.bcasesOpen = false;
-    try { write(UPG_KEY, { inv: [], selected: null, target: null, rolls: 0, wins: 0, profit: 0, hist: [], lastCase: 0, balance: 0, pendingCase: null }); } catch (e) {}
+    try { write(UPG_KEY, { inv: [], selected: null, target: null, rolls: 0, wins: 0, profit: 0, hist: [], lastCase: 0, balance: 0, pendingCase: null, pendingCbReward: null }); } catch (e) {}
     try { localStorage.setItem("prz_upg_v3_wiped", "1"); } catch (e) {}
     setTimeout(function () { try { toast("Баланс и инвентарь обнулены: использован запрещённый промокод"); } catch (e) {} }, 1200);
     return;
@@ -7066,6 +7069,11 @@ function upgLoad() {
     if (d.pendingCase && upgItem(d.pendingCase.id)) {
       UPG.pendingCase = { id: d.pendingCase.id, name: String(d.pendingCase.name || "") };
     }
+    if (Array.isArray(d.pendingCbReward)) {
+      var pcr = [];
+      for (var pc = 0; pc < d.pendingCbReward.length; pc++) { if (upgItem(d.pendingCbReward[pc])) pcr.push(d.pendingCbReward[pc]); }
+      if (pcr.length) UPG.pendingCbReward = pcr;
+    }
   }
 
   var recoveredPending = false;
@@ -7073,6 +7081,14 @@ function upgLoad() {
     UPG.inv.push(UPG.pendingCase.id);
     UPG.selected = UPG.pendingCase.id;
     UPG.pendingCase = null;
+    recoveredPending = true;
+  }
+  if (Array.isArray(UPG.pendingCbReward) && UPG.pendingCbReward.length) {
+    for (var pcri = 0; pcri < UPG.pendingCbReward.length; pcri++) {
+      if (upgItem(UPG.pendingCbReward[pcri])) UPG.inv.push(UPG.pendingCbReward[pcri]);
+    }
+    UPG.selected = UPG.pendingCbReward[UPG.pendingCbReward.length - 1] || UPG.selected;
+    UPG.pendingCbReward = null;
     recoveredPending = true;
   }
 
@@ -7887,15 +7903,17 @@ function cbProcessStart(payload) {
 
   // apply outcome atomically
   UPG.balance = bal - totalCost;
-  var wonItems = [];
+  var wonIds = [];
   if (winnerIdx === mySlot) {
     for (var wi = 0; wi < allDrops.length; wi++) {
       for (var wj = 0; wj < allDrops[wi].length; wj++) {
         var wit = allDrops[wi][wj];
-        if (wit && wit.id) { UPG.inv.push(wit.id); wonItems.push(wit); }
+        if (wit && wit.id) wonIds.push(wit.id);
       }
     }
-    if (wonItems.length) UPG.selected = wonItems[wonItems.length - 1].id;
+    UPG.pendingCbReward = wonIds.length ? wonIds.slice() : null;
+  } else {
+    UPG.pendingCbReward = null;
   }
   CB.busy = true;
   CB.reels = null; CB.reel = null;
@@ -7944,16 +7962,26 @@ function cbProcessStart(payload) {
     for (var t = 0; t < view.length; t++) { view[t].total = totals[t]; view[t].win = t === winnerIdx; view[t].lose = t !== winnerIdx; }
     if (winnerIdx === mySlot) {
       var wonN = 0;
-      for (var wc = 0; wc < allDrops.length; wc++) wonN += allDrops[wc].length;
+      if (Array.isArray(UPG.pendingCbReward) && UPG.pendingCbReward.length) {
+        for (var gi = 0; gi < UPG.pendingCbReward.length; gi++) { if (upgItem(UPG.pendingCbReward[gi])) UPG.inv.push(UPG.pendingCbReward[gi]); }
+        UPG.selected = UPG.pendingCbReward[UPG.pendingCbReward.length - 1] || UPG.selected;
+        wonN = UPG.pendingCbReward.length;
+        UPG.pendingCbReward = null;
+        upgSave();
+      } else {
+        for (var wc = 0; wc < allDrops.length; wc++) wonN += allDrops[wc].length;
+      }
       cbRenderArena(view, "Ты выиграл батл! Получил " + wonN + " предмет" + (wonN % 10 === 1 && wonN % 100 !== 11 ? "" : (wonN % 10 >= 2 && wonN % 10 <= 4 && (wonN % 100 < 10 || wonN % 100 >= 20) ? "а" : "ов")) + " в инвентарь (на " + upgMoney(totalBank) + ").", "is-win");
       toast("⚔️ Победа! +" + wonN + " предметов в инвентарь");
     } else {
+      UPG.pendingCbReward = null;
       cbRenderArena(view, "Победил " + players[winnerIdx] + ". Ты потерял вход " + upgMoney(totalCost) + ".", "is-lose");
       toast("⚔️ Батл проигран: победил " + players[winnerIdx]);
     }
     CB.busy = false;
     CB.room.hostReady = false;
     CB.room.guestReady = false;
+    upgRender();
     cbRenderAll();
     cbRoomRender();
     if (CB.room.host) cbRoomPost("state", { host: CB.room.hostName, guest: CB.room.guestName, picks: CB.picks, hostReady: false, guestReady: false, hostBalance: Math.max(0, Number(UPG.balance) || 0), guestBalance: CB.room.guestBalance });
@@ -8474,15 +8502,17 @@ function cbStart() {
 
   // apply outcome atomically (reload-safe)
   UPG.balance = bal - totalCost;
-  var wonItems = [];
+  var wonIds = [];
   if (winnerIdx === 0) {
     for (var wi = 0; wi < allDrops.length; wi++) {
       for (var wj = 0; wj < allDrops[wi].length; wj++) {
         var wit = allDrops[wi][wj];
-        if (wit && wit.id) { UPG.inv.push(wit.id); wonItems.push(wit); }
+        if (wit && wit.id) wonIds.push(wit.id);
       }
     }
-    if (wonItems.length) UPG.selected = wonItems[wonItems.length - 1].id;
+    UPG.pendingCbReward = wonIds.length ? wonIds.slice() : null;
+  } else {
+    UPG.pendingCbReward = null;
   }
   CB.busy = true;
   CB.reels = null; CB.reel = null;
@@ -8533,14 +8563,24 @@ function cbStart() {
     }
     if (winnerIdx === 0) {
       var wonN = 0;
-      for (var wc = 0; wc < allDrops.length; wc++) wonN += allDrops[wc].length;
+      if (Array.isArray(UPG.pendingCbReward) && UPG.pendingCbReward.length) {
+        for (var gi = 0; gi < UPG.pendingCbReward.length; gi++) { if (upgItem(UPG.pendingCbReward[gi])) UPG.inv.push(UPG.pendingCbReward[gi]); }
+        UPG.selected = UPG.pendingCbReward[UPG.pendingCbReward.length - 1] || UPG.selected;
+        wonN = UPG.pendingCbReward.length;
+        UPG.pendingCbReward = null;
+        upgSave();
+      } else {
+        for (var wc = 0; wc < allDrops.length; wc++) wonN += allDrops[wc].length;
+      }
       cbRenderArena(view, "Ты выиграл батл! Получил " + wonN + " предмет" + (wonN % 10 === 1 && wonN % 100 !== 11 ? "" : (wonN % 10 >= 2 && wonN % 10 <= 4 && (wonN % 100 < 10 || wonN % 100 >= 20) ? "а" : "ов")) + " в инвентарь (на " + upgMoney(totalBank) + ").", "is-win");
       toast("⚔️ Победа в Case Battle! +" + wonN + " предметов в инвентарь");
     } else {
+      UPG.pendingCbReward = null;
       cbRenderArena(view, "Победил " + names[winnerIdx] + " с дропом " + upgMoney(totals[winnerIdx]) + ". Ты потерял вход " + upgMoney(totalCost) + ". Твой дроп был " + upgMoney(totals[0]) + ".", "is-lose");
       toast("⚔️ Батл проигран: победил " + names[winnerIdx]);
     }
     CB.busy = false;
+    upgRender();
     cbRenderAll();
   }
 
