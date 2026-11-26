@@ -3295,7 +3295,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261126-allpct-visible-1";
+var APP_BUILD = "20261126-top-send-fix-1";
 
 var cart = read(STORE.cart, {});
 if (!cart || typeof cart !== "object" || Array.isArray(cart)) cart = {};
@@ -10327,14 +10327,15 @@ function upgTopSetMode(mode) {
   upgTopRender();
 }
 
-function upgTopPublishLive(name, score, count, ts) {
+function upgTopPublishLive(name, score, count, ts, ms) {
   var urls = UPG_TOP.postUrls;
+  var timeout = ms || 3500;
   var jobs = urls.map(function (url) {
     return fetchT(url, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=UTF-8" },
       body: "UPGT|" + name + "|" + score + "|" + count + "|" + ts
-    }, 6000).then(function (r) { return !!r.ok; }).catch(function () { return false; });
+    }, timeout).then(function (r) { return !!r.ok; }).catch(function () { return false; });
   });
   return Promise.all(jobs).then(function (res) {
     for (var i = 0; i < res.length; i++) if (res[i]) return true;
@@ -10423,7 +10424,7 @@ function upgTopSyncMe() {
 function upgTopSubmit(auto) {
   if (!authGuard()) return;
   if (UPG_TOP.sending) return;
-  upgTopSyncAccounts();
+  upgTopSyncAccounts(true);
   var input = document.getElementById("upgTopName");
   var note = document.getElementById("upgTopHint");
   var btn = document.getElementById("upgTopSend");
@@ -10435,8 +10436,6 @@ function upgTopSubmit(auto) {
   var st = upgTopInvStats();
   if (st.value <= 0 && st.count <= 0) { if (note) note.textContent = " Сначала собери хоть что-то в инвентарь."; return; }
   var now = Date.now();
-  var wait = 20000 - (now - UPG_TOP.lastSent);
-  if (!auto && wait > 0) { if (note) note.textContent = " Подожди " + Math.ceil(wait / 1000) + " с."; return; }
   write("prz_upg_top_name", name);
   UPG_TOP.sending = true;
   if (btn) { btn.disabled = true; btn.textContent = "Отправляем…"; }
@@ -10474,7 +10473,7 @@ function lbAutoSync() {
   if (own && score <= own.best) return;
   lbSendScore(score, true);
 }
-function upgTopSyncAccounts() {
+function upgTopSyncAccounts(skipCurrentPublish) {
   if (!autoTopReady()) return false;
   if (typeof upgSave === "function") upgSave();
   var accounts = (typeof AUTH !== "undefined" && Array.isArray(AUTH.accounts)) ? AUTH.accounts.slice() : [];
@@ -10494,7 +10493,10 @@ function upgTopSyncAccounts() {
     var added = upgTopAdd(name, st.value, st.count, now, "account|" + acc.id + "|" + st.value + "|" + st.count);
     if (added) {
       pushList("prz_upg_top_local_v1", { name: name, score: st.value, count: st.count, ts: now }, 30);
-      changed.push({ name: name, value: st.value, count: st.count, ts: now });
+      /* текущий аккаунт отправляет сам upgTopSubmit, чтобы не дублировать запросы */
+      if (!skipCurrentPublish || !current || acc.id !== current.id) {
+        changed.push({ name: name, value: st.value, count: st.count, ts: now });
+      }
     }
   }
   if (changed.length) {
