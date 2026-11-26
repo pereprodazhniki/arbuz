@@ -2842,7 +2842,7 @@ body.light .upg-feed__who { color: #0d2b19; }
         <canvas id="gameCanvas" width="900" height="460" tabindex="0" aria-label="Игра: режь арбузы мышью или клавишей Пробел"></canvas>
         <div class="game__overlay" id="gameOverlay">
           <p class="game__big" id="gameOverTitle">Готов резать?</p>
-          <p class="game__hint" id="gameOverHint">Тащи мышкой по арбузам. Свиной 🐷 — не трогай, будет взрыв. Ник берётся из аккаунта, рекорд уходит в топ автоматически раз в минуту.</p>
+          <p class="game__hint" id="gameOverHint">Тащи мышкой по арбузам. Свиной 🐷 — не трогай, будет взрыв. Ник берётся из аккаунта, рекорд уходит в топ автоматически раз в 10 секунд.</p>
           <div class="game__name">
             <label class="game__namelabel" for="gameName">Имя для рейтинга (один раз)</label>
             <input class="input" id="gameName" type="text" maxlength="30" placeholder="Настоящее имя, например: Иван">
@@ -2948,7 +2948,7 @@ body.light .upg-feed__who { color: #0d2b19; }
         <div class="upg-top__head">
           <div class="upg-top__title">
             <b>🏆 Топ арбузного инвентаря</b>
-            <span>Автообновление каждые 5 секунд · по стоимости и по количеству предметов</span>
+            <span>Автообновление каждые 10 секунд · все аккаунты с инвентарём · по стоимости и по количеству предметов</span>
           </div>
           <div class="upg-top__modes" id="upgTopModes">
             <button class="upg-top__mode" type="button" data-top-mode="value">По стоимости</button>
@@ -3160,6 +3160,7 @@ body.light .upg-feed__who { color: #0d2b19; }
       <button class="btn btn--full" type="submit">Войти</button>
     </form>
     <form class="auth__body" id="authRegForm" hidden>
+      <p class="auth__note" id="authRegLimit"></p>
       <label>Логин — как тебя зовут<input class="input" id="authRegUser" type="text" autocomplete="username" maxlength="30" placeholder="Например, Никита"></label>
       <label>Пароль (от 6 символов)<input class="input" id="authRegPass" type="password" autocomplete="new-password" maxlength="64"></label>
       <label>Повтори пароль<input class="input" id="authRegPass2" type="password" autocomplete="new-password" maxlength="64"></label>
@@ -3281,7 +3282,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261126-upg-promo-chances-1";
+var APP_BUILD = "20261126-auth-limit-upgtop-10s-1";
 
 var cart = read(STORE.cart, {});
 if (!cart || typeof cart !== "object" || Array.isArray(cart)) cart = {};
@@ -3418,7 +3419,17 @@ function toast(text) {
    PBKDF2-хэш и контрольный код для переноса на другое устройство. */
 var AUTH_KEY = "prz_auth_accounts_v1";
 var AUTH_SESSION_KEY = "prz_auth_session_v1";
+var AUTH_MAX_ACCOUNTS = 2;
 var AUTH = { accounts: [], sessionId: "", failCount: 0, failUntil: 0, required: false, manualOpen: false };
+
+function authLimitText() {
+  return "На этом устройстве можно максимум " + AUTH_MAX_ACCOUNTS + " аккаунта.";
+}
+function authUpdateLimitNote() {
+  var el = document.getElementById("authRegLimit");
+  if (!el) return;
+  el.textContent = "Аккаунтов на этом устройстве: " + AUTH.accounts.length + " из " + AUTH_MAX_ACCOUNTS + ". Логин уникальный: если имя уже занято, создать ещё раз нельзя.";
+}
 
 function authSubtle() { return (window.crypto && window.crypto.subtle) ? window.crypto.subtle : null; }
 function authHex(arr) {
@@ -3477,8 +3488,9 @@ function authLoad() {
   }
   AUTH.sessionId = String(read(AUTH_SESSION_KEY, "") || "");
   if (AUTH.sessionId && !authById(AUTH.sessionId)) AUTH.sessionId = "";
+  authUpdateLimitNote();
 }
-function authSave() { write(AUTH_KEY, AUTH.accounts); }
+function authSave() { write(AUTH_KEY, AUTH.accounts); authUpdateLimitNote(); }
 function authById(id) {
   for (var i = 0; i < AUTH.accounts.length; i++) if (AUTH.accounts[i].id === id) return AUTH.accounts[i];
   return null;
@@ -3494,6 +3506,7 @@ function authSetSession(id) {
   AUTH.sessionId = id;
   write(AUTH_SESSION_KEY, id);
   authApplyUI();
+  if (typeof upgReloadForAccount === "function") upgReloadForAccount();
   if (typeof autoSyncAll === "function") setTimeout(autoSyncAll, 1500);
 }
 function authFail() {
@@ -3538,6 +3551,7 @@ function authGuard() {
 }
 function authApplyUI() {
   var a = authCurrent();
+  authUpdateLimitNote();
   var btn = document.getElementById("authBtn");
   if (btn) {
     btn.textContent = a ? "👤 " + a.login : "Войти";
@@ -3574,6 +3588,7 @@ function authRegister(loginRaw, pass, pass2) {
   if (String(pass).length < 6 || String(pass).length > 64) return Promise.resolve({ error: "Пароль должен быть от 6 до 64 символов." });
   if (pass !== pass2) return Promise.resolve({ error: "Пароли не совпадают." });
   if (authByLogin(login)) return Promise.resolve({ error: "Такой логин уже есть. Войди или придумай другое имя." });
+  if (AUTH.accounts.length >= AUTH_MAX_ACCOUNTS) return Promise.resolve({ error: authLimitText() });
   var salt = authSalt();
   return authHash(pass, salt).then(function (hash) {
     return authVerifier(hash, login).then(function (ver) {
@@ -3631,6 +3646,7 @@ function authImport(code, pass) {
   if (err) return Promise.resolve({ error: "В коде неверный логин: " + err });
   var existing = authByLogin(login);
   if (existing && existing.salt !== obj.s) return Promise.resolve({ error: "Этот логин уже занят на этом устройстве." });
+  if (!existing && AUTH.accounts.length >= AUTH_MAX_ACCOUNTS) return Promise.resolve({ error: authLimitText() });
   return authHash(pass, obj.s).then(function (hash) {
     return authVerifier(hash, login).then(function (ver) {
       if (!authEq(ver, obj.k)) return { error: "Пароль не подходит к коду переноса." };
@@ -7512,7 +7528,26 @@ function initLeaderboard() {
 /* ---------- старт ---------- */
 /* ---------- Апгрейдер арбузных подарков ---------- */
 var UPG_KEY = "prz_upgrader_v1";
+var UPG_ACCOUNT_PREFIX = "prz_upgrader_v1|a|";
+var UPG_LEGACY_MIGRATED_KEY = "prz_upgrader_legacy_migrated_v1";
 var UPG_CASE_MS = 25000;
+
+function upgStorageKeyForId(id) { return UPG_ACCOUNT_PREFIX + String(id || "guest"); }
+function upgStorageKey() {
+  var a = (typeof authCurrent === "function") ? authCurrent() : null;
+  return a ? upgStorageKeyForId(a.id) : UPG_KEY;
+}
+function upgLoadData() {
+  var a = (typeof authCurrent === "function") ? authCurrent() : null;
+  if (!a) return read(UPG_KEY, null);
+  var d = read(upgStorageKeyForId(a.id), null);
+  if (!read(UPG_LEGACY_MIGRATED_KEY, false)) {
+    /* старый общий инвентарь один раз переезжает к первому вошедшему аккаунту */
+    write(UPG_LEGACY_MIGRATED_KEY, true);
+    if (!d) d = read(UPG_KEY, null);
+  }
+  return d;
+}
 var UPG_EDGE = 0.92;
 
 var UPG_RARITY = {
@@ -7807,7 +7842,7 @@ function upgChanceText(v) {
   return v.toExponential(2).replace(/\.00e/, "e").replace(/0e/, "e").replace(/e\+?(-?\d+)/, "e$1");
 }
 function upgSave() {
-  write(UPG_KEY, {
+  write(upgStorageKey(), {
     inv: UPG.inv,
     selected: UPG.selected,
     target: UPG.target,
@@ -7823,7 +7858,7 @@ function upgSave() {
 }
 
 function upgLoad() {
-  var d = read(UPG_KEY, null);
+  var d = upgLoadData();
 
   /* разово чистим старые скрытые флаги: они больше ничего не включают */
   try {
@@ -7923,6 +7958,16 @@ function upgLoad() {
   UPG.assortOpen = false; /* по умолчанию скрыт при заходе */
   UPG.bcasesOpen = false;
   if (recoveredPending) upgSave();
+}
+
+/* При смене логина инвентарь апгрейдера берётся из хранилища этого аккаунта. */
+function upgReloadForAccount() {
+  if (typeof document !== "undefined" && !document.getElementById("upgrader")) return;
+  upgLoad();
+  upgEnsure();
+  upgRender();
+  if (typeof upgTopSyncMe === "function") upgTopSyncMe();
+  if (typeof upgTopSyncAccounts === "function") upgTopSyncAccounts(true);
 }
 
 function upgNormalizeSelected() {
@@ -10081,6 +10126,17 @@ function upgTopInvStats() {
   return { value: val, count: count };
 }
 
+/* Статистика любого зарегистрированного аккаунта, даже если сейчас другой логин. */
+function upgStatsFromData(d) {
+  var val = 0, count = 0;
+  if (!d || !Array.isArray(d.inv)) return { value: val, count: count };
+  for (var i = 0; i < d.inv.length; i++) {
+    var it = upgItem(d.inv[i]);
+    if (it) { val += it.price; count++; }
+  }
+  return { value: val, count: count };
+}
+
 function upgTopParse(text) {
   var parts = String(text || "").split("|");
   if (parts.length < 5 || parts[0] !== "UPGT") return null;
@@ -10132,7 +10188,7 @@ function upgTopRender() {
     rows.sort(function (a, b) { return b.score - a.score || (b.count || 0) - (a.count || 0) || a.ts - b.ts; });
   }
   if (!rows.length) {
-    list.innerHTML = '<li class="upg-top__empty">Пока пусто. Инвентарь уйдёт в топ автоматически.</li>';
+    list.innerHTML = '<li class="upg-top__empty">Пока пусто. Инвентарь каждого аккаунта уйдёт в топ автоматически.</li>';
   } else {
     var medals = ["🥇", "🥈", "🥉"];
     rows.slice(0, 10).forEach(function (s, i) {
@@ -10161,7 +10217,7 @@ function upgTopRender() {
   if (note) {
     var t = new Date();
     var hh = ("0" + t.getHours()).slice(-2), mm = ("0" + t.getMinutes()).slice(-2);
-    note.textContent = "Демо-рейтинг · обновление каждые 5 сек · " + (countMode ? "по количеству предметов" : "по стоимости инвентаря") + " · " + (UPG_TOP.online ? "связь есть " + hh + ":" + mm : "локально, без связи " + hh + ":" + mm);
+    note.textContent = "Демо-рейтинг · обновление каждые 10 сек · все аккаунты с инвентарём · " + (countMode ? "по количеству предметов" : "по стоимости инвентаря") + " · " + (UPG_TOP.online ? "связь есть " + hh + ":" + mm : "локально, без связи " + hh + ":" + mm);
   }
 }
 
@@ -10272,6 +10328,7 @@ function upgTopSyncMe() {
 function upgTopSubmit(auto) {
   if (!authGuard()) return;
   if (UPG_TOP.sending) return;
+  upgTopSyncAccounts();
   var input = document.getElementById("upgTopName");
   var note = document.getElementById("upgTopHint");
   var btn = document.getElementById("upgTopSend");
@@ -10290,8 +10347,9 @@ function upgTopSubmit(auto) {
   if (btn) { btn.disabled = true; btn.textContent = "Отправляем…"; }
   UPG_TOP.lastSent = now;
   write("prz_upg_top_last", now);
-  upgTopAdd(name, st.value, st.count, now, "own|" + now);
-  pushList("prz_upg_top_local_v1", { name: name, score: st.value, count: st.count, ts: now }, 30);
+  var acc = authCurrent();
+  var added = upgTopAdd(name, st.value, st.count, now, "account|" + (acc ? acc.id : "guest") + "|" + st.value + "|" + st.count);
+  if (added) pushList("prz_upg_top_local_v1", { name: name, score: st.value, count: st.count, ts: now }, 30);
   upgTopRender();
   if (note) note.textContent = " Сохранено локально. Отправляем в демо-ленту…";
   upgTopPublishLive(name, st.value, st.count, now).then(function (ok) {
@@ -10307,9 +10365,9 @@ function upgTopSubmit(auto) {
   });
 }
 
-/* автозапись в топы раз в минуту: без кнопок и без ввода ника.
-   Без вошедшего аккаунта ничего не отправляется. */
-var AUTO_TOP_MS = 5000;
+/* автосинк топов каждые 10 секунд. В топ апгрейдера попадают все зарегистрированные
+   на этом устройстве аккаунты, у которых есть хоть один предмет в инвентаре. */
+var AUTO_TOP_MS = 10000;
 function autoTopReady() {
   return typeof authCurrent === "function" && !!authCurrent() && !document.hidden;
 }
@@ -10321,17 +10379,41 @@ function lbAutoSync() {
   if (own && score <= own.best) return;
   lbSendScore(score, true);
 }
+function upgTopSyncAccounts() {
+  if (!autoTopReady()) return false;
+  if (typeof upgSave === "function") upgSave();
+  var accounts = (typeof AUTH !== "undefined" && Array.isArray(AUTH.accounts)) ? AUTH.accounts.slice() : [];
+  var current = (typeof authCurrent === "function") ? authCurrent() : null;
+  if (!accounts.length && current) accounts.push(current);
+  var now = Date.now();
+  var changed = [];
+  for (var i = 0; i < accounts.length; i++) {
+    var acc = accounts[i];
+    if (!acc) continue;
+    var name = normalizeName(acc.login);
+    if (nameProblem(name)) continue;
+    var st = (current && acc.id === current.id)
+      ? upgTopInvStats()
+      : upgStatsFromData(read(upgStorageKeyForId(acc.id), null));
+    if (st.count <= 0 || st.value <= 0) continue;
+    var added = upgTopAdd(name, st.value, st.count, now, "account|" + acc.id + "|" + st.value + "|" + st.count);
+    if (added) {
+      pushList("prz_upg_top_local_v1", { name: name, score: st.value, count: st.count, ts: now }, 30);
+      changed.push({ name: name, value: st.value, count: st.count, ts: now });
+    }
+  }
+  if (changed.length) {
+    upgTopRender();
+    for (var ci = 0; ci < changed.length; ci++) {
+      var c = changed[ci];
+      upgTopPublishLive(c.name, c.value, c.count, c.ts).catch(function () {});
+    }
+  }
+  return changed.length > 0;
+}
 function upgTopAutoSync() {
   if (!autoTopReady() || UPG_TOP.sending || (typeof UPG !== "undefined" && UPG.spinning)) return;
-  var name = authName();
-  if (!name || nameProblem(name)) return;
-  var st = upgTopInvStats();
-  if (st.value <= 0 && st.count <= 0) return;
-  for (var i = 0; i < UPG_TOP.scores.length; i++) {
-    var s = UPG_TOP.scores[i];
-    if (s.name.toLowerCase() === name.toLowerCase() && s.score >= st.value && (s.count || 0) >= st.count) return;
-  }
-  upgTopSubmit(true);
+  upgTopSyncAccounts();
 }
 function autoSyncAll() {
   lbAutoSync();
