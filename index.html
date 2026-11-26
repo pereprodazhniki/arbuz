@@ -3278,7 +3278,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261126-kamil-cases-promo-1";
+var APP_BUILD = "20261126-all-promos-fix-1";
 
 var cart = read(STORE.cart, {});
 if (!cart || typeof cart !== "object" || Array.isArray(cart)) cart = {};
@@ -4690,7 +4690,21 @@ function cartTotal() {
 
 function applyCoupon(code) {
   var note = document.getElementById("couponNote");
-  var clean = (code || "").trim().toUpperCase();
+  var clean = promoNorm(code);
+
+  /* Промокоды апгрейдера принимаются и в поле корзины: скидки они не дают. */
+  if (clean && upgPromoKind(clean)) {
+    coupon = null;
+    write(STORE.coupon, null);
+    upgApplyPromo(clean, false);
+    var upgPromoInput = document.getElementById("upgPromo");
+    if (upgPromoInput) upgPromoInput.value = String(code || "").trim();
+    note.className = "coupon__note is-ok";
+    note.textContent = "Промокод применён в апгрейдере";
+    renderCart();
+    toast("Промокод применён в апгрейдере");
+    return;
+  }
 
   if (!clean) {
     coupon = null;
@@ -7735,13 +7749,34 @@ function upgMoney(n) {
   return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽";
 }
 
-/* Промокоды апгрейдера: +15% к шансу и «имба»-дроп из кейсов.
-   Только виртуальные предметы, без реальных денег и без 100% победы. */
+/* Промокоды апгрейдера: 100% шанс, +15% к шансу и «имба»-дроп из кейсов.
+   Только виртуальные предметы, без реальных денег. */
 var UPG_PROMO_KEY = "prz_upg_promo15";
 var UPG_PROMO_CASES_KEY = "prz_upg_promo_kamil_cases";
+var UPG_PROMO_ALL_KEY = "prz_upg_promo_allpct";
 var UPG_IMBA_COUNT = 5;
+function promoNorm(raw) {
+  return String(raw || "").replace(/ё/g, "е").toUpperCase().replace(/[\s\-_]/g, "");
+}
+function promoIs(v, list) {
+  for (var i = 0; i < list.length; i++) if (v === promoNorm(list[i])) return true;
+  return false;
+}
+function upgPromoKind(raw) {
+  var v = promoNorm(raw);
+  if (promoIs(v, ["ВСЕПРОЦЕНТЫ", "VSEPROCENTY"])) return "all";
+  if (promoIs(v, ["НЕТВСЕПРОЦЕНТЫ", "VSEPROCENTY_OFF"])) return "alloff";
+  if (promoIs(v, ["ВАНЯКРУТОЙ", "АМИНЕВКРУТОЙ", "VANIAKRUTOY", "VANYAKRUTOY", "AMINEVKRUTOY"])) return "p15";
+  if (promoIs(v, ["ВАНЯКРУТОЙ2", "АМИНЕВНЕКРУТОЙ"])) return "p15off";
+  if (promoIs(v, ["КАМИЛЬ67КЕЙСЫ", "KAMIL67CASES", "KAMIL67KEYS"])) return "cases";
+  if (promoIs(v, ["НЕТКАМИЛЬ67КЕЙСЫ", "KAMIL67CASES_OFF", "KAMIL67KEYS_OFF"])) return "casesoff";
+  return "";
+}
 function upgPromoActive() {
   try { return localStorage.getItem(UPG_PROMO_KEY) === "1"; } catch (e) { return false; }
+}
+function upgAllPctActive() {
+  try { return localStorage.getItem(UPG_PROMO_ALL_KEY) === "1"; } catch (e) { return false; }
 }
 function upgCasePromoActive() {
   try { return localStorage.getItem(UPG_PROMO_CASES_KEY) === "1"; } catch (e) { return false; }
@@ -7776,32 +7811,40 @@ function upgPromoFreePool() {
   return out;
 }
 function upgApplyPromo(raw, notify) {
-  var v = String(raw || "").trim().toUpperCase();
+  var kind = upgPromoKind(raw);
   var msg = "";
   try {
-    if (v === "ВАНЯКРУТОЙ" || v === "АМИНЕВКРУТОЙ") {
+    if (kind === "all") {
+      localStorage.setItem(UPG_PROMO_ALL_KEY, "1");
+      msg = "🏷️ Промокод применён";
+    } else if (kind === "alloff") {
+      localStorage.removeItem(UPG_PROMO_ALL_KEY);
+      msg = "Промокод отменён";
+    } else if (kind === "p15") {
       localStorage.setItem(UPG_PROMO_KEY, "1");
       msg = "🏷️ Промокод применён";
-    } else if (v === "ВАНЯКРУТОЙ2" || v === "АМИНЕВНЕКРУТОЙ") {
+    } else if (kind === "p15off") {
       localStorage.removeItem(UPG_PROMO_KEY);
       msg = "Промокод отменён";
-    } else if (v === "КАМИЛЬ67КЕЙСЫ" || v === "KAMIL67CASES" || v === "KAMIL67KEYS") {
+    } else if (kind === "cases") {
       localStorage.setItem(UPG_PROMO_CASES_KEY, "1");
       msg = "🏷️ Промокод применён";
-    } else if (v === "НЕТКАМИЛЬ67КЕЙСЫ" || v === "KAMIL67CASES_OFF" || v === "KAMIL67KEYS_OFF") {
+    } else if (kind === "casesoff") {
       localStorage.removeItem(UPG_PROMO_CASES_KEY);
       msg = "Промокод отменён";
-    } else if (v) {
+    } else if (String(raw || "").trim()) {
       msg = "Промокод не найден";
     }
   } catch (e) {}
   if (typeof upgRender === "function") upgRender();
   if (notify && msg && typeof toast === "function") toast(msg);
+  return kind;
 }
 
 function upgPct(from, to) {
   var fromPrice = (from && typeof from === "object") ? from.price : Number(from) || 0;
   if (!fromPrice || !to || to.price <= fromPrice) return 0;
+  if (upgAllPctActive()) return 100;
   var c = (fromPrice / to.price) * 100 * UPG_EDGE;
   if (upgPromoActive()) c *= 1.15;
   if (c > 75) c = 75;
