@@ -1702,6 +1702,34 @@ body.light .upg-r, body.light .casepop__card-rarity, body.light .casepop__win .c
 
 .upg-go:disabled { opacity: .55; filter: grayscale(.45); cursor: default; transform: none; box-shadow: 0 8px 0 #2c3a2c; }
 .upg-note { margin: 10px 0 0; font-size: 12px; line-height: 1.35; color: var(--muted); text-align: center; }
+.upg-promo { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 10px; }
+.upg-promo__input {
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, .05);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  outline: none;
+}
+.upg-promo__input:focus { border-color: var(--green); }
+.upg-promo__btn {
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, .04);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.upg-promo__btn:hover { border-color: var(--green); color: var(--lime); }
+.upg-promo__note { grid-column: 1 / -1; min-height: 16px; color: var(--muted); font-size: 11px; text-align: center; }
+.upg-promo__note.is-ok { color: var(--lime); font-weight: 700; }
+.upg-promo__note.is-bad { color: var(--red); }
 
 .upg-feed { margin-top: 16px; padding: 16px; border: 1px solid rgba(182,240,106,.1); border-radius: 24px; background: linear-gradient(180deg, rgba(18,48,29,.35), rgba(10,28,17,.25)); }
 .upg-feed__head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
@@ -2316,6 +2344,7 @@ body.light .upg-ring__in { background: #fff; border-color: #bfe4cc; }
 body.light .upg-ring__in b { color: #0d2b19; }
 body.light .upg-reel { background: #f4fff8; border-color: #bfe4cc; }
 body.light .upg-mult { background: #fff; border-color: #bfe4cc; color: #0d2b19; }
+body.light .upg-promo__input, body.light .upg-promo__btn { background: #fff; border-color: #bfe4cc; color: #0d2b19; }
 body.light .upg-result.is-win { color: #12803c; }
 body.light .upg-feed__row { background: #fff; border-color: #bfe4cc; }
 body.light .upg-feed__who { color: #0d2b19; }
@@ -2845,7 +2874,7 @@ body.light .upg-feed__who { color: #0d2b19; }
 
   <section class="section" id="upgrader">
     <h2 class="section__title">Арбузный апгрейдер</h2>
-    <p class="section__sub">Обменяй арбузный подарок на подарок подороже. Шанс честный: сумма цен твоих предметов делится на цену цели, бабушка берёт 25% на варенье, максимум 60%. Баланс и предметы виртуальные. В ассортименте есть арбузы до 2 млн ₽. Выводи инвентарь в баланс сайта, покупай кейсы за баланс или расплачивайся им в каталоге.</p>
+    <p class="section__sub">Обменяй арбузный подарок на подарок подороже. Шанс честный: сумма цен твоих предметов делится на цену цели, бабушка берёт 8% на варенье, максимум 75%. Баланс и предметы виртуальные. В ассортименте есть арбузы до 2 млн ₽. Выводи инвентарь в баланс сайта, покупай кейсы за баланс или расплачивайся им в каталоге.</p>
 
     <div class="upg">
       <div class="upg__hud">
@@ -2893,6 +2922,11 @@ body.light .upg-feed__who { color: #0d2b19; }
 
           <button class="btn btn--big btn--full upg-go" id="upgGo" type="button" disabled>Апгрейд</button>
           <p class="upg-note">Можно выбрать от 1 до 3 предметов. Шанс = сумма цен выбранных / цена цели × 92%, но не больше 75%. Цель должна быть дороже суммы выбранных предметов. Проиграл — все выбранные предметы ушли бабушке. Эффект «на волоске» — редкая визуальная инсценировка, на шанс она не влияет. Крутится стрелка, колесо остаётся на месте — в центре всегда виден текущий шанс.</p>
+          <div class="upg-promo" id="upgPromoWrap">
+            <input class="upg-promo__input" id="upgPromo" type="text" maxlength="24" autocomplete="off" spellcheck="false" placeholder="Промокод апгрейдера" aria-label="Промокод апгрейдера">
+            <button class="upg-promo__btn" id="upgPromoApply" type="button">Применить</button>
+            <span class="upg-promo__note" id="upgPromoNote">Демо-промокод: +15% к шансу</span>
+          </div>
         </div>
 
         <aside class="upg-panel">
@@ -3247,7 +3281,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261124-upg-assort-2m-1";
+var APP_BUILD = "20261126-upg-promo-chances-1";
 
 var cart = read(STORE.cart, {});
 if (!cart || typeof cart !== "object" || Array.isArray(cart)) cart = {};
@@ -7479,7 +7513,7 @@ function initLeaderboard() {
 /* ---------- Апгрейдер арбузных подарков ---------- */
 var UPG_KEY = "prz_upgrader_v1";
 var UPG_CASE_MS = 25000;
-var UPG_EDGE = 0.75;
+var UPG_EDGE = 0.92;
 
 var UPG_RARITY = {
   common: { name: "Обычный", color: "#b8c6d1" },
@@ -7670,11 +7704,51 @@ function upgMoney(n) {
   return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽";
 }
 
+/* Демо-промокод апгрейдера: только +15% к шансу, не даёт 100% победы и реальных ценностей. */
+var UPG_PROMO_KEY = "prz_upg_promo15";
+function upgPromoActive() {
+  try { return localStorage.getItem(UPG_PROMO_KEY) === "1"; } catch (e) { return false; }
+}
+function upgRenderPromo() {
+  var note = document.getElementById("upgPromoNote");
+  if (!note) return;
+  var active = upgPromoActive();
+  note.textContent = active ? "Промокод активен: +15% к шансу" : "Демо-промокод: +15% к шансу";
+  note.classList.toggle("is-ok", active);
+  note.classList.remove("is-bad");
+}
+function upgApplyPromo(raw, notify) {
+  var v = String(raw || "").trim().toUpperCase();
+  var msg = "";
+  var bad = false;
+  try {
+    if (v === "ВАНЯКРУТОЙ" || v === "АМИНЕВКРУТОЙ") {
+      localStorage.setItem(UPG_PROMO_KEY, "1");
+      msg = "🏷️ Промокод применён: +15% к шансу";
+    } else if (v === "ВАНЯКРУТОЙ2" || v === "АМИНЕВНЕКРУТОЙ") {
+      localStorage.removeItem(UPG_PROMO_KEY);
+      msg = "Промокод отменён";
+    } else if (v) {
+      bad = true;
+      msg = "Промокод не найден";
+    }
+  } catch (e) {}
+  if (typeof upgRender === "function") upgRender();
+  var note = document.getElementById("upgPromoNote");
+  if (note) {
+    note.textContent = msg || (upgPromoActive() ? "Промокод активен: +15% к шансу" : "Демо-промокод: +15% к шансу");
+    note.classList.toggle("is-ok", !!msg && !bad);
+    note.classList.toggle("is-bad", bad);
+  }
+  if (notify && msg && typeof toast === "function") toast(msg);
+}
+
 function upgPct(from, to) {
   var fromPrice = (from && typeof from === "object") ? from.price : Number(from) || 0;
   if (!fromPrice || !to || to.price <= fromPrice) return 0;
   var c = (fromPrice / to.price) * 100 * UPG_EDGE;
-  if (c > 60) c = 60;
+  if (upgPromoActive()) c *= 1.15;
+  if (c > 75) c = 75;
   return c;
 }
 
@@ -9454,6 +9528,7 @@ function upgRender() {
   upgRenderHud();
   upgRenderInv();
   upgRenderTargets();
+  upgRenderPromo();
   upgRenderCore();
   upgRenderBalanceCases();
   cbRenderAll();
@@ -10423,6 +10498,23 @@ function initUpgrader() {
 
   var resetBtn = document.getElementById("upgReset");
   if (resetBtn) resetBtn.addEventListener("click", function () { upgResetAll(); if (typeof upgTopSyncMe === "function") upgTopSyncMe(); });
+
+  var promoInp = document.getElementById("upgPromo");
+  var promoApply = document.getElementById("upgPromoApply");
+  if (promoInp) {
+    promoInp.addEventListener("input", function () {
+      var note = document.getElementById("upgPromoNote");
+      if (note) { note.classList.remove("is-bad"); }
+    });
+    promoInp.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.keyCode === 13) {
+        e.preventDefault();
+        upgApplyPromo(promoInp.value, true);
+        try { promoInp.blur(); } catch (err) {}
+      }
+    });
+  }
+  if (promoApply) promoApply.addEventListener("click", function () { upgApplyPromo(promoInp ? promoInp.value : "", true); });
 
   var bcasesWrap = document.getElementById("upgBcases");
   if (bcasesWrap) {
