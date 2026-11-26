@@ -3278,7 +3278,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261126-promo-hint-removed-1";
+var APP_BUILD = "20261126-kamil-cases-promo-1";
 
 var cart = read(STORE.cart, {});
 if (!cart || typeof cart !== "object" || Array.isArray(cart)) cart = {};
@@ -7735,10 +7735,45 @@ function upgMoney(n) {
   return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽";
 }
 
-/* Промокод апгрейдера: только +15% к шансу, не даёт 100% победы и реальных ценностей. */
+/* Промокоды апгрейдера: +15% к шансу и «имба»-дроп из кейсов.
+   Только виртуальные предметы, без реальных денег и без 100% победы. */
 var UPG_PROMO_KEY = "prz_upg_promo15";
+var UPG_PROMO_CASES_KEY = "prz_upg_promo_kamil_cases";
+var UPG_IMBA_COUNT = 5;
 function upgPromoActive() {
   try { return localStorage.getItem(UPG_PROMO_KEY) === "1"; } catch (e) { return false; }
+}
+function upgCasePromoActive() {
+  try { return localStorage.getItem(UPG_PROMO_CASES_KEY) === "1"; } catch (e) { return false; }
+}
+function upgImbaIds() {
+  var arr = UPG_ITEMS.slice().sort(function (a, b) { return (b.price || 0) - (a.price || 0); });
+  var out = [];
+  for (var i = 0; i < arr.length && out.length < UPG_IMBA_COUNT; i++) out.push(arr[i].id);
+  return out;
+}
+function upgPromoCasePool(pool) {
+  if (!upgCasePromoActive() || !Array.isArray(pool) || !pool.length) return pool;
+  var imba = upgImbaIds();
+  var weights = {};
+  for (var i = 0; i < pool.length; i++) {
+    var id = pool[i] && pool[i].id;
+    if (imba.indexOf(id) >= 0) weights[id] = Math.max(1, Number(pool[i].w) || 1);
+  }
+  var out = [];
+  for (var j = 0; j < imba.length; j++) {
+    out.push({ id: imba[j], w: weights[imba[j]] || 1 });
+  }
+  return out;
+}
+function upgPromoFreePool() {
+  var imba = upgImbaIds();
+  var out = [];
+  for (var i = 0; i < imba.length; i++) {
+    var it = upgItem(imba[i]);
+    if (it) out.push(it);
+  }
+  return out;
 }
 function upgApplyPromo(raw, notify) {
   var v = String(raw || "").trim().toUpperCase();
@@ -7749,6 +7784,12 @@ function upgApplyPromo(raw, notify) {
       msg = "🏷️ Промокод применён";
     } else if (v === "ВАНЯКРУТОЙ2" || v === "АМИНЕВНЕКРУТОЙ") {
       localStorage.removeItem(UPG_PROMO_KEY);
+      msg = "Промокод отменён";
+    } else if (v === "КАМИЛЬ67КЕЙСЫ" || v === "KAMIL67CASES" || v === "KAMIL67KEYS") {
+      localStorage.setItem(UPG_PROMO_CASES_KEY, "1");
+      msg = "🏷️ Промокод применён";
+    } else if (v === "НЕТКАМИЛЬ67КЕЙСЫ" || v === "KAMIL67CASES_OFF" || v === "KAMIL67KEYS_OFF") {
+      localStorage.removeItem(UPG_PROMO_CASES_KEY);
       msg = "Промокод отменён";
     } else if (v) {
       msg = "Промокод не найден";
@@ -8299,6 +8340,7 @@ function upgRenderBalanceCases() {
 }
 
 function upgPickWeighted(pool) {
+  pool = upgPromoCasePool(pool);
   var total = 0;
   for (var i = 0; i < pool.length; i++) total += Math.max(0, Number(pool[i].w) || 0);
   if (total <= 0) return pool[0] ? pool[0].id : null;
@@ -8360,11 +8402,10 @@ function casePopShow(cfg, dropItem, onGrant) {
   if (track) { track.style.transition = "none"; track.style.transform = "translateX(0px)"; track.innerHTML = ""; track.style.opacity = "1"; }
 
   var pool = [];
-  if (cfg && cfg.pool) {
-    for (var i = 0; i < cfg.pool.length; i++) {
-      var it = upgItem(cfg.pool[i].id);
-      if (it) pool.push(it);
-    }
+  var cfgPool = upgPromoCasePool(cfg && cfg.pool ? cfg.pool : []);
+  for (var i = 0; i < cfgPool.length; i++) {
+    var it = upgItem(cfgPool[i].id);
+    if (it) pool.push(it);
   }
   if (!pool.length) pool = [dropItem];
 
@@ -8552,6 +8593,7 @@ function cbSeededRng(seed) {
   };
 }
 function cbPickWeightedSeeded(pool, rnd) {
+  pool = upgPromoCasePool(pool);
   var weights = [];
   var total = 0;
   for (var i = 0; i < pool.length; i++) {
@@ -9338,9 +9380,8 @@ function cbRenderArena(players, statusText, statusCls) {
 
 function cbBuildReel(caseCfg, dropItem, playerName, isMe) {
   var pool = [];
-  if (caseCfg && caseCfg.pool) {
-    for (var i = 0; i < caseCfg.pool.length; i++) { var it = upgItem(caseCfg.pool[i].id); if (it) pool.push(it); }
-  }
+  var cfgPool = upgPromoCasePool(caseCfg && caseCfg.pool ? caseCfg.pool : []);
+  for (var i = 0; i < cfgPool.length; i++) { var it = upgItem(cfgPool[i].id); if (it) pool.push(it); }
   if (!pool.length) pool = [dropItem || { icon: "🍉", name: "Арбуз", price: 0, rarity: "common" }];
   var winIndex = 28;
   var totalCards = winIndex + 6;
@@ -9743,6 +9784,7 @@ function upgOpenCase() {
     pool.push(it);
   }
   if (!pool.length) pool = [UPG_ITEMS[0]];
+  if (upgCasePromoActive()) pool = upgPromoFreePool();
 
   var weights = [];
   var sum = 0;
