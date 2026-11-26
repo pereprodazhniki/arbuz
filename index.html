@@ -1927,6 +1927,22 @@ body.light .casepop__close { background: linear-gradient(180deg,#e8ffe8,#d4f0d8)
   background: conic-gradient(#2fd35f 0 calc(var(--p, 0) * 1%), #ff4d5a calc(var(--p, 0) * 1%) 100%);
   box-shadow: 0 0 0 7px rgba(0,0,0,.22), 0 0 0 1px rgba(182,240,106,.12), 0 0 40px rgba(47,211,95,.12), inset 0 0 20px rgba(0,0,0,.1);
 }
+.upg-wheel__promo {
+  position: absolute;
+  left: 50%;
+  bottom: -19px;
+  transform: translateX(-50%);
+  z-index: 3;
+  padding: 2px 9px;
+  border: 1px solid rgba(182,240,106,.4);
+  border-radius: 999px;
+  background: rgba(8,18,12,.82);
+  color: var(--lime);
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+  pointer-events: none;
+}
 .upg-wheel::after {
   content: "";
   position: absolute;
@@ -2871,7 +2887,7 @@ body.light .upg-feed__who { color: #0d2b19; }
 
   <section class="section" id="upgrader">
     <h2 class="section__title">Арбузный апгрейдер</h2>
-    <p class="section__sub">Обменяй арбузный подарок на подарок подороже. Шанс честный: сумма цен твоих предметов делится на цену цели, бабушка берёт 8% на варенье, максимум 75%. Баланс и предметы виртуальные. В ассортименте есть арбузы до 2 млн ₽. Выводи инвентарь в баланс сайта, покупай кейсы за баланс или расплачивайся им в каталоге.</p>
+    <p class="section__sub" id="upgSectionSub">Обменяй арбузный подарок на подарок подороже. Шанс честный: сумма цен твоих предметов делится на цену цели, бабушка берёт 8% на варенье, максимум 75%. Баланс и предметы виртуальные. В ассортименте есть арбузы до 2 млн ₽. Выводи инвентарь в баланс сайта, покупай кейсы за баланс или расплачивайся им в каталоге.</p>
 
     <div class="upg">
       <div class="upg__hud">
@@ -2897,6 +2913,7 @@ body.light .upg-feed__who { color: #0d2b19; }
             <div class="upg-wheel-wrap" id="upgWheelWrap">
               <div class="upg-wheel" id="upgWheel" style="--p:0"></div>
               <div class="upg-wheel__center"><b id="upgChance">—</b><span>шанс</span></div>
+              <div class="upg-wheel__promo" id="upgPromoBadge" hidden>ВСЕПРОЦЕНТЫ · 100%</div>
               <div class="upg-arrow" id="upgArrow" aria-hidden="true">
                 <span class="upg-arrow__stem"></span>
                 <span class="upg-arrow__needle"></span>
@@ -2918,7 +2935,7 @@ body.light .upg-feed__who { color: #0d2b19; }
           <div class="upg-result" id="upgResult" hidden></div>
 
           <button class="btn btn--big btn--full upg-go" id="upgGo" type="button" disabled>Апгрейд</button>
-          <p class="upg-note">Можно выбрать от 1 до 3 предметов. Шанс = сумма цен выбранных / цена цели × 92%, но не больше 75%. Цель должна быть дороже суммы выбранных предметов. Проиграл — все выбранные предметы ушли бабушке. Эффект «на волоске» — редкая визуальная инсценировка, на шанс она не влияет. Крутится стрелка, колесо остаётся на месте — в центре всегда виден текущий шанс.</p>
+          <p class="upg-note" id="upgRulesNote">Можно выбрать от 1 до 3 предметов. Шанс = сумма цен выбранных / цена цели × 92%, но не больше 75%. Цель должна быть дороже суммы выбранных предметов. Проиграл — все выбранные предметы ушли бабушке. Эффект «на волоске» — редкая визуальная инсценировка, на шанс она не влияет. Крутится стрелка, колесо остаётся на месте — в центре всегда виден текущий шанс.</p>
           <div class="upg-promo" id="upgPromoWrap">
             <input class="upg-promo__input" id="upgPromo" type="text" maxlength="24" autocomplete="off" spellcheck="false" placeholder="Промокод апгрейдера" aria-label="Промокод апгрейдера">
             <button class="upg-promo__btn" id="upgPromoApply" type="button">Применить</button>
@@ -3278,7 +3295,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261126-all-promos-fix-1";
+var APP_BUILD = "20261126-allpct-visible-1";
 
 var cart = read(STORE.cart, {});
 if (!cart || typeof cart !== "object" || Array.isArray(cart)) cart = {};
@@ -7838,7 +7855,20 @@ function upgApplyPromo(raw, notify) {
   } catch (e) {}
   if (typeof upgRender === "function") upgRender();
   if (notify && msg && typeof toast === "function") toast(msg);
+  if (typeof upgRenderPromoStatus === "function") upgRenderPromoStatus();
   return kind;
+}
+
+var UPG_SUB_BASE = "Обменяй арбузный подарок на подарок подороже. Шанс честный: сумма цен твоих предметов делится на цену цели, бабушка берёт 8% на варенье, максимум 75%. Баланс и предметы виртуальные. В ассортименте есть арбузы до 2 млн ₽. Выводи инвентарь в баланс сайта, покупай кейсы за баланс или расплачивайся им в каталоге.";
+var UPG_RULES_BASE = "Можно выбрать от 1 до 3 предметов. Шанс = сумма цен выбранных / цена цели × 92%, но не больше 75%. Цель должна быть дороже суммы выбранных предметов. Проиграл — все выбранные предметы ушли бабушке. Эффект «на волоске» — редкая визуальная инсценировка, на шанс она не влияет. Крутится стрелка, колесо остаётся на месте — в центре всегда виден текущий шанс.";
+function upgRenderPromoStatus() {
+  var on = upgAllPctActive();
+  var sub = document.getElementById("upgSectionSub");
+  var rules = document.getElementById("upgRulesNote");
+  var badge = document.getElementById("upgPromoBadge");
+  if (sub) sub.textContent = (on ? "Промокод ВСЕПРОЦЕНТЫ активен: шанс 100% для любой цели. " : "") + UPG_SUB_BASE;
+  if (rules) rules.textContent = (on ? "Промокод ВСЕПРОЦЕНТЫ активен: шанс 100%, лимит 75% не действует. " : "") + UPG_RULES_BASE;
+  if (badge) badge.hidden = !on;
 }
 
 function upgPct(from, to) {
@@ -8209,6 +8239,7 @@ function upgFromTileHtml() {
 }
 
 function upgRenderCore() {
+  upgRenderPromoStatus();
   var selItems = upgSelectedItems();
   var to = upgItem(UPG.target);
 
