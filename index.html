@@ -1727,9 +1727,6 @@ body.light .upg-r, body.light .casepop__card-rarity, body.light .casepop__win .c
   cursor: pointer;
 }
 .upg-promo__btn:hover { border-color: var(--green); color: var(--lime); }
-.upg-promo__note { grid-column: 1 / -1; min-height: 16px; color: var(--muted); font-size: 11px; text-align: center; }
-.upg-promo__note.is-ok { color: var(--lime); font-weight: 700; }
-.upg-promo__note.is-bad { color: var(--red); }
 
 .upg-feed { margin-top: 16px; padding: 16px; border: 1px solid rgba(182,240,106,.1); border-radius: 24px; background: linear-gradient(180deg, rgba(18,48,29,.35), rgba(10,28,17,.25)); }
 .upg-feed__head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
@@ -2925,7 +2922,6 @@ body.light .upg-feed__who { color: #0d2b19; }
           <div class="upg-promo" id="upgPromoWrap">
             <input class="upg-promo__input" id="upgPromo" type="text" maxlength="24" autocomplete="off" spellcheck="false" placeholder="Промокод апгрейдера" aria-label="Промокод апгрейдера">
             <button class="upg-promo__btn" id="upgPromoApply" type="button">Применить</button>
-            <span class="upg-promo__note" id="upgPromoNote">Демо-промокод: +15% к шансу</span>
           </div>
         </div>
 
@@ -3282,7 +3278,7 @@ var TIPS = [
 
 var SHIP_FEE = 200;
 var STORE = { cart: "prz_cart", ship: "prz_ship", sold: "prz_sold", reviews: "prz_reviews", coupon: "prz_coupon", votes: "prz_votes", voted: "prz_voted", buyers: "prz_buyers", pay: "prz_pay" };
-var APP_BUILD = "20261126-auth-limit-upgtop-10s-1";
+var APP_BUILD = "20261126-promo-hint-removed-1";
 
 var cart = read(STORE.cart, {});
 if (!cart || typeof cart !== "object" || Array.isArray(cart)) cart = {};
@@ -7739,42 +7735,26 @@ function upgMoney(n) {
   return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽";
 }
 
-/* Демо-промокод апгрейдера: только +15% к шансу, не даёт 100% победы и реальных ценностей. */
+/* Промокод апгрейдера: только +15% к шансу, не даёт 100% победы и реальных ценностей. */
 var UPG_PROMO_KEY = "prz_upg_promo15";
 function upgPromoActive() {
   try { return localStorage.getItem(UPG_PROMO_KEY) === "1"; } catch (e) { return false; }
 }
-function upgRenderPromo() {
-  var note = document.getElementById("upgPromoNote");
-  if (!note) return;
-  var active = upgPromoActive();
-  note.textContent = active ? "Промокод активен: +15% к шансу" : "Демо-промокод: +15% к шансу";
-  note.classList.toggle("is-ok", active);
-  note.classList.remove("is-bad");
-}
 function upgApplyPromo(raw, notify) {
   var v = String(raw || "").trim().toUpperCase();
   var msg = "";
-  var bad = false;
   try {
     if (v === "ВАНЯКРУТОЙ" || v === "АМИНЕВКРУТОЙ") {
       localStorage.setItem(UPG_PROMO_KEY, "1");
-      msg = "🏷️ Промокод применён: +15% к шансу";
+      msg = "🏷️ Промокод применён";
     } else if (v === "ВАНЯКРУТОЙ2" || v === "АМИНЕВНЕКРУТОЙ") {
       localStorage.removeItem(UPG_PROMO_KEY);
       msg = "Промокод отменён";
     } else if (v) {
-      bad = true;
       msg = "Промокод не найден";
     }
   } catch (e) {}
   if (typeof upgRender === "function") upgRender();
-  var note = document.getElementById("upgPromoNote");
-  if (note) {
-    note.textContent = msg || (upgPromoActive() ? "Промокод активен: +15% к шансу" : "Демо-промокод: +15% к шансу");
-    note.classList.toggle("is-ok", !!msg && !bad);
-    note.classList.toggle("is-bad", bad);
-  }
   if (notify && msg && typeof toast === "function") toast(msg);
 }
 
@@ -9573,7 +9553,6 @@ function upgRender() {
   upgRenderHud();
   upgRenderInv();
   upgRenderTargets();
-  upgRenderPromo();
   upgRenderCore();
   upgRenderBalanceCases();
   cbRenderAll();
@@ -10584,10 +10563,6 @@ function initUpgrader() {
   var promoInp = document.getElementById("upgPromo");
   var promoApply = document.getElementById("upgPromoApply");
   if (promoInp) {
-    promoInp.addEventListener("input", function () {
-      var note = document.getElementById("upgPromoNote");
-      if (note) { note.classList.remove("is-bad"); }
-    });
     promoInp.addEventListener("keydown", function (e) {
       if (e.key === "Enter" || e.keyCode === 13) {
         e.preventDefault();
