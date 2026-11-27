@@ -10898,7 +10898,7 @@ function adOn(k){try{return sessionStorage.getItem(k)==="1"}catch(e){return fals
 function adSet(k,v){try{sessionStorage.setItem(k,v?"1":"0")}catch(e){}}
 function arbEsc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function arbAdminToggle(){var on=!adOn(ADK);adSet(ADK,on);if(on)arbAdminRender();else{var m=document.getElementById("arbAdminModal");if(m)m.style.display="none"}if(typeof toast==="function")toast(on?"Админ-панель включена":"Админ-панель выключена")}
-function arbOnlineToggle(){var on=!adOn(ONK);adSet(ONK,on);if(on)arbOnlineRender();else{var b=document.getElementById("arbOnBox");if(b)b.hidden=true}if(typeof toast==="function")toast(on?"Онлайн включён — только для тебя":"Онлайн выключен")}
+function arbOnlineToggle(){var on=!adOn(ONK);adSet(ONK,on);if(on){arbOnNet();arbOnlineTick()}else{var b=document.getElementById("arbOnBox");if(b)b.hidden=true}if(typeof toast==="function")toast(on?"Онлайн включён — только для тебя":"Онлайн выключен")}
 function arbAdminRender(){var m=document.getElementById("arbAdminModal"),box=document.getElementById("arbAdminList");if(!m||!box)return;m.style.display="flex";box.innerHTML='<div class="skel" style="height:18px;border-radius:9px;background:linear-gradient(90deg,#123322,#1d5030,#123322);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>';
  var rows=[];try{rows=(typeof AUTH!=="undefined"&&AUTH.accounts)?AUTH.accounts.slice():[]}catch(e){}
  rows.sort(function(a,b){return (b.created||0)-(a.created||0)});
@@ -10909,9 +10909,7 @@ var arbOnId=(function(){try{var v=sessionStorage.getItem("arbOnlineId");if(!v){v
 var arbRot=0;function arbOnFetch(path,opt){var k=arbRot++%ARB_ON_BASE.length,bs=ARB_ON_BASE.slice(k).concat(ARB_ON_BASE.slice(0,k));return bs.reduce(function(p,b){return p.then(function(r){return r?r:fetch(b+path,opt).then(function(x){return x.ok?x:null}).catch(function(){return null})})},Promise.resolve(null))}
 function arbOnPing(){try{arbOnFetch("",{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:"ONLINE|"+arbOnId+"|"+Date.now()})}catch(e){}}
 var arbBusy=false,arbLast=0;function arbOnCount(){if(arbBusy)return Promise.resolve(arbLast);arbBusy=true;return arbOnFetch("/json?poll=1&since=3m",{cache:"no-store"}).then(function(r){if(!r)return arbLast;return r.text().then(function(text){var seen={},t=Date.now(),n=0;String(text||"").split("\n").forEach(function(line){if(!line)return;var ev;try{ev=JSON.parse(line)}catch(e){return}var m=String(ev.message||"").split("|");if(m[0]!=="ONLINE"||!m[1])return;if(t-(+m[2]||0)>90000)return;if(!seen[m[1]]){seen[m[1]]=1;n++}});arbLast=n||1;return arbLast})}).catch(function(){return arbLast}).finally(function(){arbBusy=false})}
-function arbOnlineRender(){var b=document.getElementById("arbOnBox"),v=document.getElementById("arbOnVal");if(!b||!v)return;if(!adOn(ONK)){b.hidden=true;return}b.hidden=false;arbOnCount().then(function(n){v.textContent=String(n||1)})}
-arbOnPing();setInterval(function(){arbOnPing();if(adOn(ONK))arbOnlineRender()},10000);setInterval(function(){if(adOn(ONK))arbOnlineRender()},1000);
-document.addEventListener("visibilitychange",function(){if(!document.hidden){arbOnPing();if(adOn(ONK))arbOnlineRender()}});
+function arbOnNet(){arbOnCount().then(function(n){arbLast=n||1})} function arbOnlineTick(){var b=document.getElementById("arbOnBox"),v=document.getElementById("arbOnVal");if(!b||!v)return;if(!adOn(ONK)){b.hidden=true;return}b.hidden=false;v.textContent=String(arbLast||1)});
 function arbBind(){var x=document.getElementById("arbAdX"),r=document.getElementById("arbAdRefresh");if(x)x.onclick=function(){document.getElementById("arbAdminModal").style.display="none"};if(r)r.onclick=arbAdminRender;}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",arbBind);else arbBind();function init() {
   renderCatalog();
