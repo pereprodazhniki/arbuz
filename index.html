@@ -3519,6 +3519,7 @@ function authSetSession(id) {
   AUTH.sessionId = id;
   write(AUTH_SESSION_KEY, id);
   authApplyUI();
+  if (typeof cbMaybeJoinFromHash === "function") setTimeout(function () { cbMaybeJoinFromHash(); }, 500);
   if (typeof upgReloadForAccount === "function") upgReloadForAccount();
   if (typeof autoSyncAll === "function") setTimeout(autoSyncAll, 1500);
 }
