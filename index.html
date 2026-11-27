@@ -8826,11 +8826,14 @@ function cbRoomPost(type, payload) {
   p.cid = CB.clientId;
   var body = "CBR|1|" + r.id + "|" + type + "|" + cbMyName() + "|" + Date.now() + "|" + JSON.stringify(p);
   var urls = cbRoomUrls(r.id).post;
-  var jobs = urls.map(function (url) {
-    return fetchT(url, { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: body }, 6000)
-      .then(function (res) { return !!res.ok; }).catch(function () { return false; });
-  });
-  return Promise.all(jobs).then(function (res) { for (var i = 0; i < res.length; i++) if (res[i]) return true; return false; });
+  function attempt(i, round) {
+    if (round <= 0) return Promise.resolve(false);
+    if (i >= urls.length) return attempt(0, round - 1);
+    return fetchT(urls[i], { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: body }, 6000)
+      .then(function (res) { return !!res.ok; }).catch(function () { return false; })
+      .then(function (ok) { if (ok) return true; return new Promise(function (res) { setTimeout(function () { res(attempt(i + 1, round)); }, 500); }); });
+  }
+  return attempt(0, 2);
 }
 
 function cbRoomRender() {
@@ -8915,7 +8918,8 @@ function cbProcessStart(payload) {
   players = players.map(function (n, i) { n = normalizeName(n || ""); return n && !nameProblem(n) ? n : (i === 0 ? "Хост" : "Гость"); });
   var myName = cbMyName();
   var mySlot = -1;
-  for (var i = 0; i < players.length; i++) if (players[i].toLowerCase() === myName.toLowerCase()) mySlot = i;
+  if (Array.isArray(payload.cids)) for (var ci = 0; ci < payload.cids.length; ci++) if (payload.cids[ci] && payload.cids[ci] === CB.clientId) { mySlot = ci; break; }
+  if (mySlot < 0) for (var i = 0; i < players.length; i++) if (players[i].toLowerCase() === myName.toLowerCase()) mySlot = i;
   if (mySlot < 0) mySlot = CB.room.host ? 0 : 1;
   var totalCost = 0;
   for (var c = 0; c < picks.length; c++) { var cc = cbCaseById(picks[c]); if (cc) totalCost += cc.price; }
@@ -9529,7 +9533,7 @@ function cbStart() {
     if (guestBalF < totalCostF) { toast("У друга недостаточно баланса для батла (" + upgMoney(totalCostF) + ")"); return; }
     var seed = cbUid() + "-" + Date.now();
     var players = [CB.room.hostName || cbMyName(), CB.room.guestName].map(function (n) { n = normalizeName(n || ""); return n && !nameProblem(n) ? n : "Игрок"; });
-    var payload = { seed: seed, picks: CB.picks.slice(), players: players, ts: Date.now() };
+    var payload = { seed: seed, picks: CB.picks.slice(), players: players, cids: [CB.room.hostCid || "", CB.room.guestCid || ""], ts: Date.now() };
     cbRoomPost("start", payload);
     cbProcessStart(payload); // local, dedupe protects
     return;
