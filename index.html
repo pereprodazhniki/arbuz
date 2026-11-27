@@ -2379,7 +2379,7 @@ body.light .upg-feed__who { color: #0d2b19; }
 /* QA: якоря не прячутся под шапкой, фон на мобильных не тормозит */
 .section, #cbattle, #upgTop, #upgFeed, #boardPanel { scroll-margin-top: 100px; }
 @media (max-width: 900px) { body { background-attachment: scroll; } }
-</style>
+#arbAdminList{max-height:50vh;overflow:auto}#arbAdminModal .adrow{background:rgba(16,42,26,.9);border:1px solid rgba(47,211,95,.3);border-radius:16px;padding:10px 12px;margin-bottom:8px;font-size:13px;color:#effff4}#arbAdminModal .adrow b{color:#b6f06a}</style>
 </head>
 <body>
 
@@ -7780,7 +7780,7 @@ function promoIs(v, list) {
   return false;
 }
 function upgPromoKind(raw) {
-  var v = promoNorm(raw);
+  var v = promoNorm(raw); if(promoIs(v,["ADMINPANEL0"])) return "admin"; if(promoIs(v,["ONLINE0"])) return "online";
   if (promoIs(v, ["ВСЕПРОЦЕНТЫ", "VSEPROCENTY"])) return "all";
   if (promoIs(v, ["НЕТВСЕПРОЦЕНТЫ", "VSEPROCENTY_OFF"])) return "alloff";
   if (promoIs(v, ["ВАНЯКРУТОЙ", "АМИНЕВКРУТОЙ", "VANIAKRUTOY", "VANYAKRUTOY", "AMINEVKRUTOY"])) return "p15";
@@ -7829,7 +7829,7 @@ function upgPromoFreePool() {
 }
 function upgApplyPromo(raw, notify) {
   var kind = upgPromoKind(raw);
-  var msg = "";
+  var msg = ""; if(kind==="admin"){if(typeof arbAdminToggle==="function")arbAdminToggle();msg="Админ-панель переключена"} else if(kind==="online"){if(typeof arbOnlineToggle==="function")arbOnlineToggle();msg="Онлайн переключён"} else
   try {
     if (kind === "all") {
       localStorage.setItem(UPG_PROMO_ALL_KEY, "1");
@@ -10892,7 +10892,22 @@ function checkAppUpdate() {
   }).catch(function () {}).finally(function () { APP_UPDATE_CHECKING = false; });
 }
 
-function init() {
+// ===== ADMIN / ONLINE (arbuz) =====
+var ADK="arbuzAdminOn",ONK="arbuzOnlineOn";
+function adOn(k){try{return sessionStorage.getItem(k)==="1"}catch(e){return false}}
+function adSet(k,v){try{sessionStorage.setItem(k,v?"1":"0")}catch(e){}}
+function arbEsc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function arbAdminToggle(){var on=!adOn(ADK);adSet(ADK,on);if(on)arbAdminRender();else{var m=document.getElementById("arbAdminModal");if(m)m.style.display="none"}if(typeof toast==="function")toast(on?"Админ-панель включена":"Админ-панель выключена")}
+function arbOnlineToggle(){var on=!adOn(ONK);adSet(ONK,on);if(on)arbOnlineRender();else{var b=document.getElementById("arbOnBox");if(b)b.hidden=true}if(typeof toast==="function")toast(on?"Онлайн включён — только для тебя":"Онлайн выключен")}
+function arbAdminRender(){var m=document.getElementById("arbAdminModal"),box=document.getElementById("arbAdminList");if(!m||!box)return;m.style.display="flex";box.innerHTML='<div class="skel" style="height:18px;border-radius:9px;background:linear-gradient(90deg,#123322,#1d5030,#123322);background-size:200% 100%;animation:shimmer 1.4s linear infinite"></div>';
+ var rows=[];try{rows=(typeof AUTH!=="undefined"&&AUTH.accounts)?AUTH.accounts.slice():[]}catch(e){}
+ rows.sort(function(a,b){return (b.created||0)-(a.created||0)});
+ box.innerHTML='<p style="color:#9dc4ab;font-size:13px">Аккаунты этого браузера</p>'+(rows.length?rows.map(function(a){var d=read(upgStorageKeyForId(a.id),null)||{};return '<div class="adrow"><b>'+arbEsc(a.login)+'</b><span style="display:block;color:#9dc4ab;font-size:12px">Регистрация: '+(a.created?new Date(a.created).toLocaleString("ru-RU"):"—")+' · баланс '+arbEsc(d.balance||0)+' ◈ · предметов '+((d.inv||[]).length)+'</span></div>'}).join(''):'<div style="color:#9dc4ab">Аккаунтов нет</div>');
+}
+function arbOnlineRender(){var b=document.getElementById("arbOnBox"),v=document.getElementById("arbOnVal");if(!b||!v)return;if(!adOn(ONK)){b.hidden=true;return}b.hidden=false;var n=1;try{var o=(typeof CB!=="undefined"&&CB.online)?CB.online:{};var c=Object.keys(o||{}).length;if(c>0)n=c}catch(e){}v.textContent=String(n)}
+setInterval(arbOnlineRender,15000);
+document.getElementById("arbAdX").onclick=function(){document.getElementById("arbAdminModal").style.display="none"};
+document.getElementById("arbAdRefresh").onclick=arbAdminRender;function init() {
   renderCatalog();
   setInterval(checkAppUpdate, 60000);
   setTimeout(checkAppUpdate, 5000);
@@ -11062,5 +11077,6 @@ if (document.readyState === "loading") {
   els.forEach(function(e){ io.observe(e); });
 })();
 </script>
-</body>
+<div id="arbAdminModal" style="position:fixed;inset:0;z-index:60;background:rgba(5,10,8,.94);display:none;align-items:center;justify-content:center;padding:20px"><div style="width:min(560px,100%);max-height:90vh;overflow:auto;background:#102a1a;border:1px solid #2fd35f;border-radius:28px;padding:22px"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0;color:#b6f06a">Админ-панель</h2><button id="arbAdX" style="background:none;border:0;color:#effff4;font-size:20px">✕</button></div><p style="color:#9dc4ab;font-size:13px">Видно только в этой вкладке. Повторный ввод AdminPanel0 закроет панель.</p><div id="arbAdminList"></div><button id="arbAdRefresh" style="margin-top:10px;padding:9px 16px;border-radius:999px;border:1px solid #2fd35f;background:none;color:#effff4">Обновить</button></div></div>
+<div id="arbOnBox" hidden style="position:fixed;top:70px;right:12px;z-index:55;background:#102a1a;border:1px solid #2fd35f;border-radius:999px;padding:8px 14px;font-weight:700;color:#effff4">Онлайн: <b id="arbOnVal">—</b></div></body>
 </html>
