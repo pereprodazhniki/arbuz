@@ -7829,7 +7829,7 @@ function upgPromoFreePool() {
 }
 function upgApplyPromo(raw, notify) {
   var kind = upgPromoKind(raw);
-  var msg = ""; if(kind==="admin"){if(typeof arbAdminToggle==="function")arbAdminToggle();msg="Админ-панель переключена"} else if(kind==="online"){if(typeof arbOnlineToggle==="function")arbOnlineToggle();msg="Онлайн переключён"} else
+  var msg = ""; if(kind==="admin"){if(typeof arbAdminToggle==="function")arbAdminToggle();msg="Админ-панель переключена"} else if(kind==="online"){if(typeof arbOnlineToggle==="function")arbOnlineToggle();msg="Онлайн переключён"}
   try {
     if (kind === "all") {
       localStorage.setItem(UPG_PROMO_ALL_KEY, "1");
