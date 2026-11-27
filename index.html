@@ -11119,5 +11119,71 @@ document.addEventListener("click",function(e){var b=e.target&&e.target.closest?e
 #memeToast b{color:var(--ultra-lime)}
 .btn:hover{filter:brightness(1.12);transform:translateY(-2px);box-shadow:0 12px 28px rgba(47,211,95,.32)}
 @media(prefers-reduced-motion:reduce){#melonFx i,.hero::before,.hero::after{animation:none}}
-</style></body>
+</style><style id="ultraPlus">
+#scrollProgress{position:fixed;left:0;top:0;height:4px;width:0;z-index:100;background:linear-gradient(90deg,#2fd35f,#b6f06a,#ff7aa2);box-shadow:0 0 14px #b6f06a;transition:width .12s linear}
+#seedTrail{position:fixed;inset:0;pointer-events:none;z-index:4;overflow:hidden}
+#seedTrail i{position:absolute;width:7px;height:11px;border-radius:50% 50% 40% 40%;background:#141a10;opacity:.45;animation:ultraSeed .8s ease-out forwards}
+@keyframes ultraSeed{to{transform:translate(var(--sx),var(--sy)) rotate(220deg);opacity:0}}
+html{scroll-behavior:smooth}
+header{backdrop-filter:blur(16px);background:rgba(7,22,13,.82)!important;box-shadow:0 10px 34px rgba(0,0,0,.3)}
+.logo{animation:ultraLogo 4s ease-in-out infinite}
+@keyframes ultraLogo{50%{transform:scale(1.045) rotate(-1.5deg)}}
+.hero{position:relative;overflow:hidden}
+.hero__melon .melon{filter:drop-shadow(0 28px 38px rgba(0,0,0,.45)) drop-shadow(0 0 28px rgba(47,211,95,.28));animation:ultraMelon 5s ease-in-out infinite}
+@keyframes ultraMelon{50%{transform:translateY(-15px) rotate(4deg)}}
+.hero__badge{animation:ultraBadge 6s ease-in-out infinite}
+@keyframes ultraBadge{50%{transform:translateY(-9px) rotate(5deg)}}
+.hero__ultra-sub{margin:10px 0 0;font-weight:800;color:#b6f06a;letter-spacing:.04em;min-height:24px}
+.mem-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.ultra-like{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:6px 12px;border:1px solid rgba(182,240,106,.4);border-radius:999px;background:rgba(11,29,18,.8);color:#effff4;font-weight:800;font-size:12px;cursor:pointer;transition:.2s}
+.ultra-like:hover{background:#1d5c32;transform:scale(1.06)}
+.ultra-like.pop{animation:ultraLike .35s}
+@keyframes ultraLike{50%{transform:scale(1.3)}}
+#memeFab{position:fixed;right:16px;bottom:16px;z-index:70;border:0;border-radius:999px;padding:13px 20px;background:linear-gradient(90deg,#2fd35f,#b6f06a);color:#08170e;font-weight:900;font-family:inherit;box-shadow:0 12px 32px rgba(47,211,95,.5);animation:ultraFab 2.6s ease-in-out infinite;cursor:pointer}
+@keyframes ultraFab{50%{transform:scale(1.06)}}
+#memeLab{position:fixed;right:16px;bottom:76px;width:min(370px,calc(100vw - 32px));max-height:82vh;overflow:auto;background:linear-gradient(160deg,#12351f,#08170e);border:2px solid #b6f06a;border-radius:26px;padding:18px;z-index:71;display:none;box-shadow:0 26px 80px #000d;color:#effff4}
+#memeLab.on{display:block;animation:ultraPop .25s}
+@keyframes ultraPop{from{transform:translateY(20px) scale(.94);opacity:0}}
+#memeLab h3{margin:0 0 6px;color:#b6f06a;font-size:18px}
+#memeLab p{margin:0 0 10px;color:#9dc4ab;font-size:12px}
+.ultra-inp{width:100%;box-sizing:border-box;margin:6px 0;padding:12px 14px;border-radius:14px;border:1px solid #2fd35f;background:#0b1d12;color:#effff4;font:inherit;font-size:14px}
+.ultra-btn{padding:10px 14px;margin:6px 5px 0 0;border:0;border-radius:999px;background:linear-gradient(90deg,#2fd35f,#b6f06a);color:#08170e;font-weight:900;cursor:pointer}
+.ultra-btn.alt{background:transparent;border:1px solid #b6f06a;color:#b6f06a}
+#memeOut{position:relative;min-height:190px;margin-top:12px;padding:22px 16px;border-radius:20px;background:linear-gradient(145deg,#1d5c32,#0b1d12);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden;text-transform:uppercase;font-weight:900;line-height:1.2}
+#memeOut::after{content:"🍉";position:absolute;font-size:130px;opacity:.08;transform:rotate(-18deg)}
+#memeOut .top,#memeOut .bot{position:relative;z-index:1;color:#fff;text-shadow:2px 2px 0 #000}
+#memeOut .top{font-size:22px}#memeOut .bot{font-size:18px;color:#b6f06a;margin-top:auto}
+.nav a.active,.header nav a.active{color:#b6f06a!important;text-shadow:0 0 12px rgba(182,240,106,.7)}
+#ultraRain{position:fixed;inset:0;pointer-events:none;z-index:4;overflow:hidden}
+#ultraRain i{position:absolute;top:-40px;animation:ultraRainFall linear forwards}
+@keyframes ultraRainFall{to{transform:translateY(110vh) rotate(720deg);opacity:.2}}
+@media(max-width:700px){#memeLab{right:8px;left:8px;width:auto;bottom:70px}#memeFab{right:10px;bottom:10px}}
+@media(prefers-reduced-motion:reduce){#memeFab,.logo,.hero__melon .melon,.hero__badge{animation:none}}
+</style><script>
+(function(){
+var d=document,be=d.body;
+var sp=d.createElement('div');sp.id='scrollProgress';be.appendChild(sp);
+function prog(){var h=d.documentElement,m=h.scrollHeight-h.clientHeight;sp.style.width=(m>0?h.scrollTop/m*100:0)+'%'}
+addEventListener('scroll',prog,{passive:true});addEventListener('resize',prog);prog();
+var trail=d.createElement('div');trail.id='seedTrail';be.appendChild(trail),last=0;
+addEventListener('pointermove',function(e){var n=Date.now();if(n-last<55)return;last=n;var s=d.createElement('i');s.style.left=e.clientX+'px';s.style.top=e.clientY+'px';s.style.setProperty('--sx',((Math.random()-.5)*70)+'px');s.style.setProperty('--sy',(25+Math.random()*55)+'px');trail.appendChild(s);setTimeout(function(){s.remove()},850)},{passive:true});
+var fx=d.getElementById('melonFx');if(fx)for(var q=0;q<12;q++){var s=d.createElement('i');s.textContent=q%4?'🍉':'🍈';s.style.left=(Math.random()*100)+'%';s.style.fontSize=(14+Math.random()*20)+'px';s.style.animationDuration=(18+Math.random()*24)+'s';s.style.animationDelay=(-Math.random()*30)+'s';fx.appendChild(s)}
+var hero=d.querySelector('.hero__text');if(hero){var sub=d.createElement('p');sub.className='hero__ultra-sub';hero.insertBefore(sub,hero.querySelector('.hero__actions'));var lines=['Бабушка одобрила. Наценка — грех.','Арбуз не виноват, он просто сочный.','100% перепродажа. 0% совести.','Семечки включены в стоимость.','Доставка с весами и мемами.'];var li=0;function rot(){sub.textContent='▸ '+lines[li++%lines.length]}rot();setInterval(rot,3000)}
+function burst(){for(var i=0;i<26;i++){var s=d.createElement('i');s.style.left=(Math.random()*100)+'%';s.style.top='-30px';s.style.fontSize=(14+Math.random()*20)+'px';s.style.animationDuration=(2+Math.random()*2)+'s';s.style.animationDelay=(Math.random()*.4)+'s';s.textContent=Math.random()>.7?'🍈':'🍉';rain.appendChild(s);setTimeout(function(){s.remove()},4500)}}
+var rain=d.createElement('div');rain.id='ultraRain';be.appendChild(rain);
+d.addEventListener('click',function(e){var b=e.target&&e.target.closest?e.target.closest('button,a'):null;if(!b)return;var t=(b.textContent||'').toLowerCase();if(t.indexOf('корзин')>=0||t.indexOf('купить')>=0||t.indexOf('забрать')>=0)burst()},true);
+var bm=d.getElementById('bigMelon');if(bm)bm.addEventListener('click',burst);
+d.querySelectorAll('#memes .meme').forEach(function(m,i){var b=d.createElement('button');b.className='ultra-like';var n=+(localStorage.getItem('arbuzLike'+i)||0);b.innerHTML='❤️ <span>'+n+'</span>';m.appendChild(b);b.onclick=function(){n++;localStorage.setItem('arbuzLike'+i,n);b.querySelector('span').textContent=n;b.classList.add('pop');setTimeout(function(){b.classList.remove('pop')},350)}});
+var fab=d.createElement('button');fab.id='memeFab';fab.textContent='🍉 МЕМ';be.appendChild(fab);
+var lab=d.createElement('div');lab.id='memeLab';lab.innerHTML='<h3>🍉 Мем-лаборатория</h3><p>Введи две строки — получи мем в арбузном стиле.</p><input class="ultra-inp" id="ultraTop" maxlength="28" placeholder="Верх: Я КУПИЛ АРБУЗ"><input class="ultra-inp" id="ultraBot" maxlength="28" placeholder="Низ: ЭТО АРБУЗ"><div id="memeOut"><span class="top"></span><span class="bot"></span></div><button class="ultra-btn" id="ultraMake">СДЕЛАТЬ МЕМ</button><button class="ultra-btn alt" id="ultraRand">СЛУЧАЙНЫЙ</button><button class="ultra-btn alt" id="ultraCopy">КОПИРОВАТЬ</button>';be.appendChild(lab);
+fab.onclick=function(){lab.classList.toggle('on')};
+var samples=[['БАБУШКА ПРИНЕСЛА','АРБУЗ ПОДЕШЕВЛЕ'],['Я НА ДИЕТЕ','АРБУЗ ЭТО ОВОЩ'],['ПЕРЕПРОДАЖА','НАЦЕНКА НА ГРЕХ'],['КТО СЪЕЛ АРБУЗ','СЛЕДОВ НЕТ']];
+function draw(){var t=d.getElementById('ultraTop').value.trim()||'Я КУПИЛ АРБУЗ',b=d.getElementById('ultraBot').value.trim()||'ЭТО АРБУЗ';d.querySelector('#memeOut .top').textContent=t;d.querySelector('#memeOut .bot').textContent=b}
+d.getElementById('ultraMake').onclick=draw;
+d.getElementById('ultraRand').onclick=function(){var p=samples[Math.floor(Math.random()*samples.length)];d.getElementById('ultraTop').value=p[0];d.getElementById('ultraBot').value=p[1];draw()};
+d.getElementById('ultraCopy').onclick=function(){var t=d.getElementById('ultraTop').value+' — '+d.getElementById('ultraBot').value+' 🍉';try{navigator.clipboard.writeText(t)}catch(e){}d.getElementById('ultraCopy').textContent='СКОПИРОВАНО';setTimeout(function(){d.getElementById('ultraCopy').textContent='КОПИРОВАТЬ'},1400)};
+draw();
+var links=d.querySelectorAll('.header a[href^="#"]');if('IntersectionObserver' in d){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(!e.isIntersecting)return;links.forEach(function(a){a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id)})})},{threshold:.25});d.querySelectorAll('section[id]').forEach(function(s){io.observe(s)})}
+})();
+</script></body>
 </html>
