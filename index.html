@@ -11095,5 +11095,29 @@ var memes=document.querySelector("#memes .memes");
 if(memes)memes.insertAdjacentHTML("beforeend",'<figure class="meme"><div class="meme__img meme__img--seed"><span class="meme__big">Я НА ДИЕТЕ</span></div><figcaption class="meme__cap">АРБУЗ — ЭТО ОВОЩ, ПОЧЕМУ-ТО</figcaption></figure><figure class="meme"><div class="meme__img meme__img--green"><span class="meme__big">БАБУШКА ГОВОРИТ</span></div><figcaption class="meme__cap">ЕШЬ, ПОКА НЕ ПОДОРОЖАЛО</figcaption></figure><figure class="meme"><div class="meme__img meme__img--red"><span class="meme__big">Я В КОРЗИНЕ</span></div><figcaption class="meme__cap">НЕ ВЫХОЖУ, ТУТ ВЫГОДНО</figcaption></figure>');
 document.addEventListener("click",function(e){var b=e.target&&e.target.closest?e.target.closest("button,a"):null;if(!b)return;var t=(b.textContent||"").toLowerCase();if(t.indexOf("корзин")>=0||t.indexOf("купить")>=0||t.indexOf("взять")>=0)show()},true);
 })();
-</script></body>
+</script><style id="ultraSkin">
+:root{--ultra-lime:#b6f06a;--ultra-green:#2fd35f}
+.hero{position:relative;overflow:hidden}
+.hero::before,.hero::after{content:"";position:absolute;border-radius:50%;filter:blur(70px);opacity:.32;pointer-events:none;animation:ultraFloat 14s ease-in-out infinite}
+.hero::before{width:380px;height:380px;background:var(--ultra-green);left:-130px;top:-90px}
+.hero::after{width:330px;height:330px;background:#ff7aa2;right:-110px;bottom:-110px;animation-delay:-7s}
+@keyframes ultraFloat{50%{transform:translate(35px,-28px) scale(1.14)}}
+.hero__title{position:relative;text-shadow:0 0 34px rgba(47,211,95,.38),0 4px 0 rgba(0,0,0,.22)}
+.hero__title::after{content:"🍉";position:absolute;right:-.75em;top:-.18em;font-size:.58em;animation:ultraWobble 3s ease-in-out infinite}
+@keyframes ultraWobble{25%{transform:rotate(-13deg)}75%{transform:rotate(13deg)}}
+.card{transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s!important}
+.card:hover{transform:translateY(-8px) rotate(-1deg);box-shadow:0 18px 42px rgba(47,211,95,.28),0 0 0 1px rgba(182,240,106,.45)!important}
+.meme{transition:transform .3s!important}
+.meme:hover{transform:rotate(-2deg) scale(1.045)!important}
+.meme__img{border-radius:20px;box-shadow:inset 0 0 0 3px rgba(182,240,106,.22),0 14px 30px rgba(0,0,0,.4)}
+#melonFx{position:fixed;inset:0;pointer-events:none;z-index:3;overflow:hidden}
+#melonFx i{position:absolute;font-style:normal;opacity:.15;animation:ultraDrift linear infinite;text-shadow:0 4px 12px #0008}
+@keyframes ultraDrift{from{transform:translateY(110vh) rotate(0)}to{transform:translateY(-20vh) rotate(720deg)}}
+#memeToast{position:fixed;left:16px;bottom:16px;z-index:70;max-width:min(390px,90vw);background:linear-gradient(135deg,#12351f,#0a1a10);border:2px solid var(--ultra-lime);border-radius:22px;padding:14px 44px 14px 16px;color:#effff4;font-weight:800;box-shadow:0 20px 54px #000b,0 0 26px rgba(182,240,106,.22);transform:translateY(35px) scale(.9);opacity:0;transition:.35s;pointer-events:none}
+#memeToast.on{opacity:1;transform:none;pointer-events:auto}
+#memeToast small{display:block;color:#9dc4ab;font-weight:600;margin-top:5px;font-size:11px}
+#memeToast b{color:var(--ultra-lime)}
+.btn:hover{filter:brightness(1.12);transform:translateY(-2px);box-shadow:0 12px 28px rgba(47,211,95,.32)}
+@media(prefers-reduced-motion:reduce){#melonFx i,.hero::before,.hero::after{animation:none}}
+</style></body>
 </html>
