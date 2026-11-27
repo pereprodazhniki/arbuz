@@ -11082,5 +11082,18 @@ if (document.readyState === "loading") {
 })();
 </script>
 <div id="arbAdminModal" style="position:fixed;inset:0;z-index:60;background:rgba(5,10,8,.94);display:none;align-items:center;justify-content:center;padding:20px"><div style="width:min(560px,100%);max-height:90vh;overflow:auto;background:#102a1a;border:1px solid #2fd35f;border-radius:28px;padding:22px"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0;color:#b6f06a">Админ-панель</h2><button id="arbAdX" style="background:none;border:0;color:#effff4;font-size:20px">✕</button></div><p style="color:#9dc4ab;font-size:13px">Видно только в этой вкладке. Повторный ввод AdminPanel0 закроет панель.</p><div id="arbAdminList"></div><button id="arbAdRefresh" style="margin-top:10px;padding:9px 16px;border-radius:999px;border:1px solid #2fd35f;background:none;color:#effff4">Обновить</button></div></div>
-<div id="arbOnBox" hidden style="position:fixed;top:70px;right:12px;z-index:55;background:#102a1a;border:1px solid #2fd35f;border-radius:999px;padding:8px 14px;font-weight:700;color:#effff4">Онлайн: <b id="arbOnVal">—</b></div></body>
+<div id="arbOnBox" hidden style="position:fixed;top:70px;right:12px;z-index:55;background:#102a1a;border:1px solid #2fd35f;border-radius:999px;padding:8px 14px;font-weight:700;color:#effff4">Онлайн: <b id="arbOnVal">—</b></div><div id="melonFx"></div><div id="memeToast"></div>
+<script>
+(function(){
+var P=[["АРБУЗ НЕ ВИНОВАТ","он просто сочный"],["БАБУШКА ОДОБРИЛА","значит, законно"],["ОНО САМО","упало в корзину"],["Я ПРОСТО ЕМ","я не перепродаю"],["КТО СЪЕЛ АРБУЗ?","никто. следов нет"],["ЦЕНА КУСАЕТСЯ","арбуз — нет"],["СЕМЕЧКА — БОНУС","за отдельные деньги"],["ПЕРЕПРОДАЖА ЧЕСТНО","наценка на грех"],["АРБУЗНЫЙ СТАРТАП","бабушка — CEO"],["СОЧНОСТЬ ЗАШКАЛИЛА","поздравляем"]];
+var box=document.getElementById("memeToast"),i=0,t;
+function show(){var p=P[i++%P.length];box.innerHTML="<b>"+p[0]+"</b><small>"+p[1]+" · жми 🍉 ещё</small>";box.classList.add("on");clearTimeout(t);t=setTimeout(function(){box.classList.remove("on")},5200)}
+box.onclick=show;setTimeout(show,3500);
+var fx=document.getElementById("melonFx");
+for(var k=0;k<14;k++){var s=document.createElement("i");s.textContent=k%3?"🍉":"🍈";s.style.left=(Math.random()*100)+"%";s.style.fontSize=(16+Math.random()*22)+"px";s.style.animationDuration=(16+Math.random()*22)+"s";s.style.animationDelay=(-Math.random()*30)+"s";fx.appendChild(s)}
+var memes=document.querySelector("#memes .memes");
+if(memes)memes.insertAdjacentHTML("beforeend",'<figure class="meme"><div class="meme__img meme__img--seed"><span class="meme__big">Я НА ДИЕТЕ</span></div><figcaption class="meme__cap">АРБУЗ — ЭТО ОВОЩ, ПОЧЕМУ-ТО</figcaption></figure><figure class="meme"><div class="meme__img meme__img--green"><span class="meme__big">БАБУШКА ГОВОРИТ</span></div><figcaption class="meme__cap">ЕШЬ, ПОКА НЕ ПОДОРОЖАЛО</figcaption></figure><figure class="meme"><div class="meme__img meme__img--red"><span class="meme__big">Я В КОРЗИНЕ</span></div><figcaption class="meme__cap">НЕ ВЫХОЖУ, ТУТ ВЫГОДНО</figcaption></figure>');
+document.addEventListener("click",function(e){var b=e.target&&e.target.closest?e.target.closest("button,a"):null;if(!b)return;var t=(b.textContent||"").toLowerCase();if(t.indexOf("корзин")>=0||t.indexOf("купить")>=0||t.indexOf("взять")>=0)show()},true);
+})();
+</script></body>
 </html>
