@@ -8819,6 +8819,11 @@ function cbRoomUrls(id) {
   };
 }
 
+window.addEventListener("storage", function (e) {
+  if (e && e.key === "cbRoomRelay" && e.newValue) {
+    try { var o = JSON.parse(e.newValue); if (o && o.body) cbRoomHandle({ event: "message", message: o.body }); } catch (err) {}
+  }
+});
 function cbRoomPost(type, payload) {
   var r = CB.room;
   if (!r.id) return Promise.resolve(false);
@@ -8826,6 +8831,7 @@ function cbRoomPost(type, payload) {
   if (payload) for (var k in payload) if (Object.prototype.hasOwnProperty.call(payload, k)) p[k] = payload[k];
   p.cid = CB.clientId;
   var body = "CBR|1|" + r.id + "|" + type + "|" + cbMyName() + "|" + Date.now() + "|" + JSON.stringify(p);
+  try { localStorage.setItem("cbRoomRelay", JSON.stringify({ body: body, ts: Date.now() })); } catch (e) {}
   var urls = cbRoomUrls(r.id).post;
   function attempt(i, round) {
     if (round <= 0) return Promise.resolve(false);
@@ -9196,9 +9202,10 @@ function cbRoomStop() {
 function cbRoomStartSync() {
   cbRoomStop();
   if (!CB.room.id) return;
+  try { var rel = JSON.parse(localStorage.getItem("cbRoomRelay") || "{}"); if (rel.body) cbRoomHandle({ event: "message", message: rel.body }); } catch (e) {}
   cbRoomFetch();
   cbRoomStreamStart();
-  CB.room.pollTimer = setInterval(function () { if (!document.hidden) cbRoomFetch(); }, 5000);
+  CB.room.pollTimer = setInterval(function () { if (!document.hidden) cbRoomFetch(); }, 2000);
 }
 
 function cbRoomCreate() {
