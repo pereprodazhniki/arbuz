@@ -10906,8 +10906,8 @@ function arbAdminRender(){var m=document.getElementById("arbAdminModal"),box=doc
 }
 function arbOnlineRender(){var b=document.getElementById("arbOnBox"),v=document.getElementById("arbOnVal");if(!b||!v)return;if(!adOn(ONK)){b.hidden=true;return}b.hidden=false;var n=1;try{var o=(typeof CB!=="undefined"&&CB.online)?CB.online:{};var c=Object.keys(o||{}).length;if(c>0)n=c}catch(e){}v.textContent=String(n)}
 setInterval(arbOnlineRender,15000);
-document.getElementById("arbAdX").onclick=function(){document.getElementById("arbAdminModal").style.display="none"};
-document.getElementById("arbAdRefresh").onclick=arbAdminRender;function init() {
+function arbBind(){var x=document.getElementById("arbAdX"),r=document.getElementById("arbAdRefresh");if(x)x.onclick=function(){document.getElementById("arbAdminModal").style.display="none"};if(r)r.onclick=arbAdminRender;}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",arbBind);else arbBind();function init() {
   renderCatalog();
   setInterval(checkAppUpdate, 60000);
   setTimeout(checkAppUpdate, 5000);
