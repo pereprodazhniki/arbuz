@@ -11083,7 +11083,7 @@ if (document.readyState === "loading") {
     b.addEventListener('click', function(){ window.scrollTo({top:0, behavior:'smooth'}); });
     onScroll();
   }
-  if(!window.matchMedia || !window.matchMedia('(prefers-reduced-motion: no-preference)').matches) return;
+  /* анимации разделов включены на всех устройствах */
   var els=[].slice.call(document.querySelectorAll('.section, .hero, .footer'));
   if(!('IntersectionObserver' in window)){ els.forEach(function(e){ e.classList.add('is-in'); }); return; }
   els.forEach(function(e){ e.classList.add('reveal'); });
