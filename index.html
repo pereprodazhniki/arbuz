@@ -11237,5 +11237,62 @@ addEventListener("scroll",function(){tt.style.display=scrollY>700?"block":"none"
   #casePopTrack,#casePopRoll,#casePopWin,#casePopWinGlow,.casepop__card,.casepop__track,.casepop__win,.casepop__win-glow{animation-duration:3.2s!important;animation-iteration-count:1!important;transition-duration:3.2s!important}
   .reveal,.vibe-item{opacity:1!important;transform:none!important;animation:none!important;transition:none!important}
 }
-</style></body>
+</style><style id="ultraLive">
+.melon--clickable{position:relative}
+.melon-face{position:absolute;inset:0;pointer-events:none;z-index:3}
+.melon-face .eye{position:absolute;width:13%;height:15%;border-radius:50%;background:#0a1a10;top:37%;left:33%;box-shadow:inset 0 -2px 0 rgba(255,255,255,.12);animation:liveBlink 5s infinite}
+.melon-face .eye.right{left:54%}
+.melon-face .eye::after{content:"";position:absolute;width:38%;height:38%;border-radius:50%;background:#fff;top:16%;left:18%;opacity:.9}
+.melon-face .mouth{position:absolute;top:55%;left:50%;width:24%;height:12%;border-bottom:4px solid #0a1a10;border-radius:0 0 50% 50%;transform:translateX(-50%)}
+.melon-face .leaf{position:absolute;top:-14%;left:52%;font-size:30px;transform-origin:bottom center;animation:liveLeaf 3s ease-in-out infinite}
+@keyframes liveBlink{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.08)}}
+@keyframes liveLeaf{50%{transform:translateX(-50%) rotate(-18deg)}}
+.hero__melon{transform:translate(var(--px,0px),var(--py,0px));transition:transform .18s ease-out}
+.hero__badge{transform:translate(calc(var(--px,0px)*-.5),calc(var(--py,0px)*-.5))}
+#juiceFx{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
+#juiceFx i{position:absolute;border-radius:60% 40% 55% 45%;animation:liveJuice .85s ease-out forwards}
+@keyframes liveJuice{to{transform:translate(var(--jx),var(--jy)) rotate(240deg) scale(.3);opacity:0}}
+.casepop__win{animation:liveWin .45s cubic-bezier(.2,1.6,.4,1)}
+@keyframes liveWin{from{transform:scale(.7) rotate(-8deg);opacity:0}}
+@media(prefers-reduced-motion:reduce){.melon-face .eye,.melon-face .leaf,.casepop__win{animation:none}}
+</style><script>
+(function(){
+var d=document,b=d.body;
+var melon=d.getElementById("bigMelon");
+if(melon&&!melon.querySelector(".melon-face")){
+  melon.insertAdjacentHTML("beforeend",'<div class="melon-face"><span class="leaf">🍃</span><i class="eye left"></i><i class="eye right"></i><b class="mouth"></b></div>');
+  var eyes=melon.querySelectorAll(".eye");
+  addEventListener("pointermove",function(e){
+    var r=melon.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+    var dx=Math.max(-4,Math.min(4,(e.clientX-cx)/40)),dy=Math.max(-3,Math.min(3,(e.clientY-cy)/50));
+    for(var i=0;i<eyes.length;i++)eyes[i].style.transform="translate("+dx+"px,"+dy+"px)";
+    var hx=e.clientX/innerWidth-.5,hy=e.clientY/innerHeight-.5;
+    d.documentElement.style.setProperty("--px",(hx*18)+"px");
+    d.documentElement.style.setProperty("--py",(hy*14)+"px");
+  },{passive:true});
+}
+var fx=d.createElement("div");fx.id="juiceFx";b.appendChild(fx);
+function splash(x,y,big){
+  var n=big?26:12;
+  for(var i=0;i<n;i++){
+    var s=d.createElement("i"),sz=(big?7:5)+Math.random()*(big?14:9);
+    s.style.left=x+"px";s.style.top=y+"px";s.style.width=sz+"px";s.style.height=(sz*1.4)+"px";
+    s.style.background=Math.random()>.55?"#b6f06a":"#ff7aa2";
+    s.style.setProperty("--jx",((Math.random()-.5)*(big?420:180))+"px");
+    s.style.setProperty("--jy",((Math.random()-.5)*(big?420:180))+"px");
+    fx.appendChild(s);setTimeout(function(){s.remove()},900);
+  }
+}
+d.addEventListener("click",function(e){
+  var t=e.target&&e.target.closest?e.target.closest(".btn,.card,.meme,.melon--clickable,.ultra-like"):null;
+  if(t)splash(e.clientX||innerWidth/2,e.clientY||innerHeight/2,!!t.closest(".melon--clickable"));
+},true);
+var win=d.getElementById("casePopWin"),was=false;
+if(win)new MutationObserver(function(){
+  var now=!win.hidden;
+  if(now&&!was){var r=win.getBoundingClientRect();splash(r.left+r.width/2,r.top+r.height/2,true);var mt=d.getElementById("memeToast");if(mt)mt.click()}
+  was=now;
+}).observe(win,{attributes:true,attributeFilter:["hidden"]});
+})();
+</script></body>
 </html>
