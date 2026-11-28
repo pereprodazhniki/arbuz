@@ -11310,5 +11310,43 @@ body::after{opacity:.6!important}
 #melonFx i{opacity:.24!important}
 #juiceFx i{filter:brightness(1.3)}
 .ultra-like{border-color:rgba(220,255,140,.6)!important;background:rgba(24,74,44,.9)!important}
-</style></body>
+</style><style id="mobileComfort">
+@media(max-width:700px){
+  html,body{max-width:100%;overflow-x:hidden}
+  body{padding-bottom:78px!important;font-size:16px}
+  button,input,select,textarea{font-size:16px}
+  .btn,.chip,.ultra-btn,.ultra-like,.auth-btn,#memeFab,#upgGo,#upgCase,#upgWithdraw,#cbReady,#cbRoomCreate,#cbStart{min-height:46px;padding-left:16px;padding-right:16px}
+  .section{padding:42px 16px!important;scroll-margin-top:130px!important}
+  .hero{padding-top:26px!important}
+  .hero__melon{transform:scale(.82)!important;margin-top:-8px}
+  .header{padding:10px 12px!important}
+  .nav{overflow-x:auto!important;scroll-snap-type:x proximity;padding-bottom:6px}
+  .nav a,.nav button{scroll-snap-align:start;white-space:nowrap}
+  .card,.meme,.upg-panel,.cbattle,.board{min-width:0}
+  .grid,.cards,.catalog-grid,.memes{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+  .casepop__panel{max-height:88vh;overflow:auto}
+  #memeToast{left:10px!important;right:10px!important;bottom:86px!important;max-width:none!important}
+  #memeLab{bottom:82px!important;max-height:72vh}
+  #memeFab{bottom:86px!important;right:10px!important}
+  #toTopV{bottom:142px!important}
+  #cursorGlow{display:none}
+  #seedTrail i{opacity:.1}
+}
+@media(max-width:420px){.grid,.cards,.catalog-grid,.memes{grid-template-columns:1fr!important}}
+#mobileDock{position:fixed;left:0;right:0;bottom:0;z-index:74;display:none;align-items:center;justify-content:space-around;gap:2px;padding:7px 6px calc(7px + env(safe-area-inset-bottom));background:rgba(7,22,13,.95);border-top:1px solid rgba(220,255,140,.28);backdrop-filter:blur(16px)}
+#mobileDock a{flex:1;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 2px;border-radius:12px;text-decoration:none;color:#c9efd6;font-size:10px;font-weight:800;line-height:1.2}
+#mobileDock a i{font-size:19px;font-style:normal}
+#mobileDock a.active{color:#dcff90;background:rgba(77,255,125,.14)}
+@media(min-width:701px){#mobileDock{display:none!important}}
+</style><script>
+(function(){
+var d=document,b=d.body;
+var dock=d.createElement("nav");dock.id="mobileDock";
+dock.innerHTML='<a href="#catalog"><i>🍉</i>Каталог</a><a href="#game"><i>🎮</i>Игра</a><a href="#upgrader"><i>⚙️</i>Апгрейд</a><a href="#memes"><i>😂</i>Мемы</a><a href="#" id="dockTop"><i>⬆️</i>Вверх</a>';
+b.appendChild(dock);
+dock.addEventListener("click",function(e){var a=e.target.closest?e.target.closest("a"):null;if(!a)return;if(a.id==="dockTop"){e.preventDefault();scrollTo({top:0,behavior:"smooth"})}});
+var links=[].slice.call(dock.querySelectorAll('a[href^="#"]:not(#dockTop)'));
+if("IntersectionObserver" in d){var io=new IntersectionObserver(function(es){es.forEach(function(x){if(x.isIntersecting)links.forEach(function(a){a.classList.toggle("active",a.getAttribute("href")==="#"+x.target.id)})})},{threshold:.2});links.forEach(function(a){var el=d.querySelector(a.getAttribute("href"));if(el)io.observe(el)})}
+})();
+</script></body>
 </html>
