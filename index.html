@@ -4057,28 +4057,19 @@ function voteTotal() {
 }
 
 function loadVotes() {
-  var ids = VOTE_IDS.slice();
-  return Promise.all(ids.map(function (id) {
-    return fetch(VOTE_API + "/get/" + VOTE_NS + "/" + id)
-      .then(function (r) { return r.json(); })
-      .then(function (d) {
-        if (d && typeof d.value === "number") serverVotes[id] = d.value;
-      })
-      .catch(function () {});
-  })).then(function () {
-    votesLoaded = true;
-    renderVotes();
-  });
+  for (var i = 0; i < VOTE_IDS.length; i++) { var id = VOTE_IDS[i]; serverVotes[id] = Number(votes[id]) || 0; }
+  votesLoaded = true;
+  renderVotes();
+  return Promise.resolve();
 }
 
 function sendVote(id) {
-  return fetch(VOTE_API + "/hit/" + VOTE_NS + "/" + id)
-    .then(function (r) { return r.json(); })
-    .then(function (d) {
-      if (d && typeof d.value === "number") serverVotes[id] = d.value;
-      renderVotes();
-    })
-    .catch(function () {});
+  if (!id) return Promise.resolve();
+  votes[id] = (Number(votes[id]) || 0) + 1;
+  serverVotes[id] = votes[id];
+  write(STORE.votes, votes);
+  renderVotes();
+  return Promise.resolve();
 }
 
 function renderVotes() {
@@ -11347,6 +11338,27 @@ b.appendChild(dock);
 dock.addEventListener("click",function(e){var a=e.target.closest?e.target.closest("a"):null;if(!a)return;if(a.id==="dockTop"){e.preventDefault();scrollTo({top:0,behavior:"smooth"})}});
 var links=[].slice.call(dock.querySelectorAll('a[href^="#"]:not(#dockTop)'));
 if("IntersectionObserver" in d){var io=new IntersectionObserver(function(es){es.forEach(function(x){if(x.isIntersecting)links.forEach(function(a){a.classList.toggle("active",a.getAttribute("href")==="#"+x.target.id)})})},{threshold:.2});links.forEach(function(a){var el=d.querySelector(a.getAttribute("href"));if(el)io.observe(el)})}
+})();
+</script><style id="preloaderSkin">
+#preloader{position:fixed;inset:0;z-index:9999;background:radial-gradient(circle at 50% 40%,#12351f,#050f09 72%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .6s,visibility .6s;color:#effff4;font-family:inherit}
+#preloader.off{opacity:0;visibility:hidden;pointer-events:none}
+#preMelon{font-size:76px;animation:preBounce 1.2s ease-in-out infinite;filter:drop-shadow(0 14px 26px rgba(77,255,125,.5))}
+@keyframes preBounce{50%{transform:translateY(-16px) rotate(8deg) scale(1.06)}}
+#preBar{width:min(280px,70vw);height:8px;border-radius:999px;background:rgba(220,255,140,.16);overflow:hidden}
+#preBar i{display:block;height:100%;width:8%;border-radius:999px;background:linear-gradient(90deg,#4dff7d,#dcff90,#ff7aa2);animation:preLoad 1.4s ease forwards}
+@keyframes preLoad{to{width:100%}}
+#preText{font-weight:900;letter-spacing:.06em;color:#dcff90;text-align:center;padding:0 20px}
+#preSub{color:#c9efd6;font-size:12px;opacity:.8}
+</style>
+<script>
+(function(){
+var d=document,b=d.body,pre=d.createElement("div");pre.id="preloader";
+pre.innerHTML='<div id="preMelon">🍉</div><div id="preText">Сжимаем арбуз…</div><div id="preBar"><i></i></div><div id="preSub">Pereprodazhniki · сезон 2026</div>';
+b.insertBefore(pre,b.firstChild);
+var lines=["Сжимаем арбуз…","Считаем семечки…","Зовём бабушку…","Проверяем сочность…","Наценка на грех…","Готово!"],i=0,t=setInterval(function(){var e=d.getElementById("preText");if(e)e.textContent=lines[i++%lines.length]},260);
+function hide(){clearInterval(t);setTimeout(function(){pre.classList.add("off");setTimeout(function(){if(pre.parentNode)pre.remove()},700)},Math.max(0,1500-(performance.now()|0)))}
+if(d.readyState==="complete")hide();else addEventListener("load",hide);
+setTimeout(hide,2600);
 })();
 </script></body>
 </html>
