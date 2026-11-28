@@ -9721,7 +9721,7 @@ function upgHideResult() {
 function upgSpinWheel(win, chance, ms, done) {
   var arrow = document.getElementById("upgArrow");
   if (!arrow) { done(); return; }
-  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var reduce = false; /* анимация апгрейдера включена на всех устройствах */
   chance = Math.max(0.5, Math.min(99.5, Number(chance) || 50));
   var greenEnd = chance * 3.6;
   var nearMiss = upgNearMissRoll(chance);
@@ -11231,5 +11231,11 @@ var tt=d.createElement("button");tt.id="toTopV";tt.textContent="↑";b.appendChi
 tt.onclick=function(){scrollTo({top:0,behavior:"smooth"})};
 addEventListener("scroll",function(){tt.style.display=scrollY>700?"block":"none"},{passive:true});
 })();
-</script></body>
+</script><style id="animAlways">
+@media (prefers-reduced-motion: reduce){
+  #upgArrow,.upg-arrow,.upg-arrow *{animation-duration:3.2s!important;animation-iteration-count:1!important;transition-duration:3.2s!important}
+  #casePopTrack,#casePopRoll,#casePopWin,#casePopWinGlow,.casepop__card,.casepop__track,.casepop__win,.casepop__win-glow{animation-duration:3.2s!important;animation-iteration-count:1!important;transition-duration:3.2s!important}
+  .reveal,.vibe-item{opacity:1!important;transform:none!important;animation:none!important;transition:none!important}
+}
+</style></body>
 </html>
