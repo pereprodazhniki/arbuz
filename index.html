@@ -10919,9 +10919,20 @@ function arbAdminRender(){var m=document.getElementById("arbAdminModal"),box=doc
 var ARB_ON_BASE=["https://ntfy.envs.net/prz-arbuz-online-k7m2p4","https://ntfy.adminforge.de/prz-arbuz-online-k7m2p4","https://ntfy.sh/prz-arbuz-online-k7m2p4"];
 var arbOnId="t_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,10);
 var arbRot=0;function arbOnFetch(path,opt){var k=arbRot++%ARB_ON_BASE.length,bs=ARB_ON_BASE.slice(k).concat(ARB_ON_BASE.slice(0,k));return bs.reduce(function(p,b){return p.then(function(r){return r?r:fetch(b+path,opt).then(function(x){return x.ok?x:null}).catch(function(){return null})})},Promise.resolve(null))}
-function arbOnPing(){try{arbOnFetch("",{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:"ONLINE|"+arbOnId+"|"+Date.now()})}catch(e){}}
-var arbBusy=false,arbLast=1,arbLastOk=0;function arbOnCount(){if(arbBusy)return Promise.resolve(arbLast);arbBusy=true;return arbOnFetch("/json?poll=1&since=3m",{cache:"no-store"}).then(function(r){if(!r)throw new Error("offline");return r.text().then(function(text){var seen={},t=Date.now(),n=0;String(text||"").split("\n").forEach(function(line){if(!line)return;var ev;try{ev=JSON.parse(line)}catch(e){return}var m=String(ev.message||"").split("|");if(m[0]!=="ONLINE"||!m[1])return;if(t-(+m[2]||0)>90000)return;if(!seen[m[1]]){seen[m[1]]=1;n++}});arbLast=n||1;arbLastOk=Date.now();return arbLast})}).catch(function(){return Date.now()-arbLastOk>30000?1:arbLast}).finally(function(){arbBusy=false})}
-function arbOnNet(){arbOnCount().then(function(n){arbLast=n||1})} function arbOnlineTick(){var b=document.getElementById("arbOnBox"),v=document.getElementById("arbOnVal");if(!b||!v)return;if(!adOn(ONK)){b.hidden=true;return}b.hidden=false;v.textContent=String(arbLast||1)}
+var arbSeen={};
+try{var rel0=JSON.parse(localStorage.getItem("arbOnlineRelay")||"{}");if(rel0.id&&rel0.ts)arbSeen[rel0.id]=rel0.ts}catch(e){}
+function arbOnPing(){
+  var t=Date.now();arbSeen[arbOnId]=t;
+  try{localStorage.setItem("arbOnlineRelay",JSON.stringify({id:arbOnId,ts:t}))}catch(e){}
+  try{arbOnFetch("",{method:"POST",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:"ONLINE|"+arbOnId+"|"+t})}catch(e){}
+}
+window.addEventListener("storage",function(e){if(e&&e.key==="arbOnlineRelay"&&e.newValue){try{var o=JSON.parse(e.newValue);if(o&&o.id&&o.ts)arbSeen[o.id]=o.ts}catch(err){}}});
+function arbLocalCount(){var t=Date.now(),n=0;for(var k in arbSeen)if(t-arbSeen[k]<90000)n++;return n}
+var arbBusy=false,arbLast=1,arbLastOk=0;
+function arbOnCount(){if(arbBusy)return Promise.resolve(arbLast);arbBusy=true;return arbOnFetch("/json?poll=1&since=3m",{cache:"no-store"}).then(function(r){if(!r)throw new Error("offline");return r.text().then(function(text){var seen={},t=Date.now();String(text||"").split("\n").forEach(function(line){if(!line)return;var ev;try{ev=JSON.parse(line)}catch(e){return}var m=String(ev.message||"").split("|");if(m[0]!=="ONLINE"||!m[1])return;if(t-(+m[2]||0)>90000)return;seen[m[1]]=1});for(var k in arbSeen)if(t-arbSeen[k]<90000)seen[k]=1;var n=0;for(var k2 in seen)n++;arbLast=n||1;arbLastOk=Date.now();return arbLast})}).catch(function(){arbLast=Math.max(1,arbLocalCount());return arbLast}).finally(function(){arbBusy=false})}
+function arbOnNet(){arbOnCount().then(function(n){arbLast=n||1})}
+arbOnPing();setInterval(function(){arbOnPing();if(adOn(ONK))arbOnNet()},30000);setInterval(function(){if(adOn(ONK))arbOnNet()},10000);setInterval(arbOnlineTick,1000);
+document.addEventListener("visibilitychange",function(){if(!document.hidden){arbOnPing();if(adOn(ONK))arbOnNet()}});function arbOnlineTick(){var b=document.getElementById("arbOnBox"),v=document.getElementById("arbOnVal");if(!b||!v)return;if(!adOn(ONK)){b.hidden=true;return}b.hidden=false;v.textContent=String(arbLast||1)}
 function arbBind(){var x=document.getElementById("arbAdX"),r=document.getElementById("arbAdRefresh");if(x)x.onclick=function(){document.getElementById("arbAdminModal").style.display="none"};if(r)r.onclick=arbAdminRender;}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",arbBind);else arbBind();function init() {
   renderCatalog();
