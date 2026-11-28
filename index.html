@@ -9185,7 +9185,7 @@ function cbRoomStartSync() {
   try { var rel = JSON.parse(localStorage.getItem("cbRoomRelay") || "{}"); if (rel.body) cbRoomHandle({ event: "message", message: rel.body }); } catch (e) {}
   cbRoomFetch();
   cbRoomStreamStart();
-  CB.room.pollTimer = setInterval(function () { if (!document.hidden) cbRoomFetch(); }, 2000);
+  CB.room.pollTimer = setInterval(function () { if (!document.hidden) cbRoomFetch(); }, 4000);
 }
 
 function cbRoomCreate() {
@@ -10453,7 +10453,7 @@ function upgTopSubmit(auto) {
 
 /* автосинк топов каждые 10 секунд. В топ апгрейдера попадают все зарегистрированные
    на этом устройстве аккаунты, у которых есть хоть один предмет в инвентаре. */
-var AUTO_TOP_MS = 10000;
+var AUTO_TOP_MS = 20000;
 function autoTopReady() {
   return typeof authCurrent === "function" && !!authCurrent() && !document.hidden;
 }
@@ -10896,7 +10896,7 @@ function arbAdminRender(){var m=document.getElementById("arbAdminModal"),box=doc
  rows.sort(function(a,b){return (b.created||0)-(a.created||0)});
  box.innerHTML='<p style="color:#9dc4ab;font-size:13px">Аккаунты этого браузера</p>'+(rows.length?rows.map(function(a){var d=read(upgStorageKeyForId(a.id),null)||{};return '<div class="adrow"><b>'+arbEsc(a.login)+'</b><span style="display:block;color:#9dc4ab;font-size:12px">Регистрация: '+(a.created?new Date(a.created).toLocaleString("ru-RU"):"—")+' · баланс '+arbEsc(d.balance||0)+' ◈ · предметов '+((d.inv||[]).length)+'</span></div>'}).join(''):'<div style="color:#9dc4ab">Аккаунтов нет</div>');
 }
-var ARB_ON_BASE=["https://ntfy.envs.net/prz-arbuz-online-k7m2p4","https://ntfy.adminforge.de/prz-arbuz-online-k7m2p4","https://ntfy.sh/prz-arbuz-online-k7m2p4"];
+var ARB_ON_BASE=["https://ntfy.envs.net/prz-arbuz-online-k7m2p4","https://ntfy.sh/prz-arbuz-online-k7m2p4"];
 var arbOnId="t_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,10);
 var arbRot=0;function arbOnFetch(path,opt){var k=arbRot++%ARB_ON_BASE.length,bs=ARB_ON_BASE.slice(k).concat(ARB_ON_BASE.slice(0,k));return bs.reduce(function(p,b){return p.then(function(r){return r?r:fetch(b+path,opt).then(function(x){return x.ok?x:null}).catch(function(){return null})})},Promise.resolve(null))}
 var arbSeen={};
@@ -11165,7 +11165,7 @@ header{backdrop-filter:blur(16px);background:rgba(7,22,13,.82)!important;box-sha
 (function(){
 var d=document,be=d.body;
 var trail=d.createElement('div');trail.id='seedTrail';be.appendChild(trail),last=0;
-addEventListener('pointermove',function(e){var n=Date.now();if(n-last<55)return;last=n;var s=d.createElement('i');s.style.left=e.clientX+'px';s.style.top=e.clientY+'px';s.style.setProperty('--sx',((Math.random()-.5)*70)+'px');s.style.setProperty('--sy',(25+Math.random()*55)+'px');trail.appendChild(s);setTimeout(function(){s.remove()},850)},{passive:true});
+addEventListener('pointermove',function(e){var n=Date.now();if(n-last<130)return;last=n;var s=d.createElement('i');s.style.left=e.clientX+'px';s.style.top=e.clientY+'px';s.style.setProperty('--sx',((Math.random()-.5)*70)+'px');s.style.setProperty('--sy',(25+Math.random()*55)+'px');trail.appendChild(s);if(trail.children.length>10)trail.firstChild.remove();setTimeout(function(){s.remove()},850)},{passive:true});
 var fx=d.getElementById('melonFx');if(fx)for(var q=0;q<12;q++){var s=d.createElement('i');s.textContent=q%4?'🍉':'🍈';s.style.left=(Math.random()*100)+'%';s.style.fontSize=(14+Math.random()*20)+'px';s.style.animationDuration=(18+Math.random()*24)+'s';s.style.animationDelay=(-Math.random()*30)+'s';fx.appendChild(s)}
 var hero=d.querySelector('.hero__text');if(hero){var sub=d.createElement('p');sub.className='hero__ultra-sub';hero.insertBefore(sub,hero.querySelector('.hero__actions'));var lines=['Бабушка одобрила. Наценка — грех.','Арбуз не виноват, он просто сочный.','100% перепродажа. 0% совести.','Семечки включены в стоимость.','Доставка с весами и мемами.'];var li=0;function rot(){sub.textContent='▸ '+lines[li++%lines.length]}rot();setInterval(rot,3000)}
 function burst(){for(var i=0;i<26;i++){var s=d.createElement('i');s.style.left=(Math.random()*100)+'%';s.style.top='-30px';s.style.fontSize=(14+Math.random()*20)+'px';s.style.animationDuration=(2+Math.random()*2)+'s';s.style.animationDelay=(Math.random()*.4)+'s';s.textContent=Math.random()>.7?'🍈':'🍉';rain.appendChild(s);setTimeout(function(){s.remove()},4500)}}
@@ -11214,7 +11214,7 @@ var d=document,b=d.body;
 var cg=d.createElement("div");cg.id="cursorGlow";b.appendChild(cg);
 var tx=innerWidth/2,ty=innerHeight/2,cx=tx,cy=ty;
 addEventListener("pointermove",function(e){tx=e.clientX;ty=e.clientY},{passive:true});
-function loop(){cx+=(tx-cx)*.13;cy+=(ty-cy)*.13;cg.style.left=cx+"px";cg.style.top=cy+"px";requestAnimationFrame(loop)}loop();
+var fineGlow=(window.matchMedia&&matchMedia("(pointer:fine)").matches);if(!fineGlow)cg.style.display="none";function loop(){if(!d.hidden&&fineGlow){cx+=(tx-cx)*.16;cy+=(ty-cy)*.16;cg.style.left=cx+"px";cg.style.top=cy+"px"}if(fineGlow)requestAnimationFrame(loop)}if(fineGlow)loop();
 d.addEventListener("click",function(e){var btn=e.target&&e.target.closest?e.target.closest(".btn"):null;if(!btn)return;var r=d.createElement("span"),rect=btn.getBoundingClientRect(),s=Math.max(rect.width,rect.height);r.className="rip";r.style.left=((e.clientX||rect.left+rect.width/2)-rect.left)+"px";r.style.top=((e.clientY||rect.top+rect.height/2)-rect.top)+"px";r.style.width=s+"px";r.style.height=s+"px";btn.appendChild(r);setTimeout(function(){r.remove()},650)},true);
 var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.12});
 d.querySelectorAll(".card,.meme").forEach(function(el,i){el.classList.add("vibe-item");el.style.transitionDelay=(i%4*55)+"ms";io.observe(el)});
@@ -11249,7 +11249,8 @@ var melon=d.getElementById("bigMelon");
 if(melon&&!melon.querySelector(".melon-face")){
   melon.insertAdjacentHTML("beforeend",'<div class="melon-face"><span class="leaf">🍃</span><i class="eye left"></i><i class="eye right"></i><b class="mouth"></b></div>');
   var eyes=melon.querySelectorAll(".eye");
-  addEventListener("pointermove",function(e){
+  var lastLook=0;addEventListener("pointermove",function(e){
+    var nw=Date.now();if(nw-lastLook<90)return;lastLook=nw;
     var r=melon.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
     var dx=Math.max(-4,Math.min(4,(e.clientX-cx)/40)),dy=Math.max(-3,Math.min(3,(e.clientY-cy)/50));
     for(var i=0;i<eyes.length;i++)eyes[i].style.transform="translate("+dx+"px,"+dy+"px)";
@@ -11396,8 +11397,18 @@ if("IntersectionObserver" in d){
 d.querySelectorAll(".card,.meme").forEach(function(el){
   if(el.querySelector(":scope > .spot"))return;
   var s=d.createElement("span");s.className="spot";el.appendChild(s);
-  el.addEventListener("pointermove",function(e){var r=el.getBoundingClientRect();el.style.setProperty("--mx",((e.clientX-r.left)/r.width*100)+"%");el.style.setProperty("--my",((e.clientY-r.top)/r.height*100)+"%")},{passive:true});
+  var lastSpot=0;el.addEventListener("pointermove",function(e){var nw=Date.now();if(nw-lastSpot<70)return;lastSpot=nw;var r=el.getBoundingClientRect();el.style.setProperty("--mx",((e.clientX-r.left)/r.width*100)+"%");el.style.setProperty("--my",((e.clientY-r.top)/r.height*100)+"%")},{passive:true});
 });
 })();
-</script></body>
+</script><style id="perfMode">
+@media(max-width:700px){
+  body::before{display:none!important}
+  body::after{animation:none!important;filter:blur(48px)!important;opacity:.35!important}
+  .card,.meme{backdrop-filter:none!important}
+  #cursorGlow{display:none!important}
+  #melonFx i:nth-child(n+8){display:none}
+}
+body.tab-hidden *{animation-play-state:paused!important}
+</style>
+<script>document.addEventListener("visibilitychange",function(){document.body.classList.toggle("tab-hidden",document.hidden)});</script></body>
 </html>
