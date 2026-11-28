@@ -11294,5 +11294,25 @@ if(win)new MutationObserver(function(){
   was=now;
 }).observe(win,{attributes:true,attributeFilter:["hidden"]});
 })();
-</script></body>
+</script><style id="brightSkin">
+:root{--bg:#0a2113;--bg-2:#113719;--surface:rgba(26,74,44,.84);--surface-2:rgba(36,92,55,.9);--surface-solid:#17492a;--line:rgba(150,255,190,.32);--line-strong:rgba(220,255,140,.5);--green:#4dff7d;--green-dim:#2fd35f;--lime:#dcff90;--red:#ff6b7d;--pink:#ffa8c4;--text:#ffffff;--muted:#c9efd6;--shadow:0 26px 70px rgba(0,0,0,.38);--shadow-soft:0 16px 40px rgba(0,0,0,.24);--glow:0 0 0 1px rgba(220,255,140,.2),0 26px 90px rgba(77,255,125,.2)}
+body.light{--bg:#eafff2;--bg-2:#d5ffe6;--surface:rgba(255,255,255,.82);--surface-2:rgba(240,255,246,.9);--text:#082012;--muted:#2d6240;--line:rgba(24,120,60,.25)}
+body{background:radial-gradient(ellipse at 8% -10%,rgba(77,255,125,.2),transparent 46%),radial-gradient(ellipse at 96% 18%,rgba(255,168,196,.16),transparent 44%),radial-gradient(ellipse at 50% 112%,rgba(220,255,140,.14),transparent 52%),var(--bg)}
+body::after{opacity:.6!important}
+.hero__title{text-shadow:0 0 42px rgba(77,255,125,.6),0 0 100px rgba(220,255,140,.3)}
+.btn{box-shadow:0 12px 32px rgba(77,255,125,.38)!important}
+.btn--big{background:linear-gradient(90deg,#4dff7d,#dcff90,#4dff7d)!important;color:#081a10!important}
+.card{background:linear-gradient(180deg,rgba(38,98,58,.92),rgba(22,62,36,.88))!important;border-color:rgba(220,255,140,.34)!important}
+.card .upg-item__icon{background:rgba(220,255,140,.18)!important}
+.section__title{filter:brightness(1.2) saturate(1.3)}
+.section__sub{color:var(--muted)!important}
+.meme__img{filter:saturate(1.22) brightness(1.1)}
+.meme{background:rgba(20,62,36,.86)!important;border-color:rgba(220,255,140,.3)!important}
+.header,.header header{background:rgba(10,33,19,.9)!important;border-color:rgba(220,255,140,.22)!important}
+#memeFab{box-shadow:0 14px 38px rgba(77,255,125,.65)!important}
+#cursorGlow{background:radial-gradient(circle,rgba(220,255,140,.2),transparent 70%)!important}
+#melonFx i{opacity:.24!important}
+#juiceFx i{filter:brightness(1.3)}
+.ultra-like{border-color:rgba(220,255,140,.6)!important;background:rgba(24,74,44,.9)!important}
+</style></body>
 </html>
